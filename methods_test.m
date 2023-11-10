@@ -14,15 +14,3 @@ r2.K(repmat(q_test, N_B, 1), 'double')
 disp("Gravity force...")
 r1.GravityForce(repmat(q_test, N_B, 1), 'double')
 r2.GravityForce(repmat(q_test, N_B, 1), 'double')
-
-% %% Convert the object to struct and back
-% sr1 = TreeStructConverter.ObjectToStruct(r1);
-% sr2 = TreeStructConverter.ObjectToStruct(r2);
-% 
-% r1n = TreeStructConverter.StructToObject(sr1);
-% r2n = TreeStructConverter.StructToObject(sr2);
-% 
-% r1n.MassMatrix(q_test, 'double')
-% r2n.MassMatrix(q_test, 'double')
-
-

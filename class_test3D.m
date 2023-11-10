@@ -8,7 +8,7 @@ PoissonRatio    = 0.5;
 MaterialDamping = 0.1;
 NGaussPoints    = 10;
 n               = 3;
-N_B             = 2;
+N_B             = 1;
 StrainBasis     = @(s) [   0,   -1/L0, 0;
                         1/L0,       0, 0;
                            0,       0, 0;

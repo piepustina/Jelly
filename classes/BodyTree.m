@@ -83,14 +83,22 @@ classdef BodyTree < handle
             obj.Joints = Joints;
             obj.Bodies = Bodies;
             %Allocate the augmeneted bodies
-            obj.BodiesInternal = cell(2*BodyTree.MaxBodiesNumber, 1);
-            j = 1;
-            for i = 1:2:2*obj.N_B
-                obj.BodiesInternal{i}   = Joints{j};
-                obj.BodiesInternal{i+1} = Bodies{j};
-                j = j + 1;
+            obj.N_B_Internal    = 2*obj.N_B;
+            obj.BodiesInternal  = cell(2*BodyTree.MaxBodiesNumber, 1);
+            j                   = 1;
+            if coder.target("MATLAB")
+                for i = 1:2:obj.N_B_Internal
+                    obj.BodiesInternal{i}   = obj.Joints{j};
+                    obj.BodiesInternal{i+1} = obj.Bodies{j};
+                    j = j + 1;
+                end
+            else
+                for i = 1:2:2*BodyTree.MaxBodiesNumber
+                    obj.BodiesInternal{i}   = obj.Joints{j};
+                    obj.BodiesInternal{i+1} = obj.Bodies{j};
+                    j = j + 1;
+                end
             end
-            obj.N_B_Internal = 2*obj.N_B;
             %Compute the configuration tresholds if not provided as
             %arguments
             if computeConfigurationLimits

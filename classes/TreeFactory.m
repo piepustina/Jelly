@@ -9,7 +9,11 @@ classdef TreeFactory < handle
             %Get the class constructor from the type
             Constructor = str2func(Type);
             %Call the class constructor to build the joint
-            J = Constructor(Parameters{1});
+            if isempty(Parameters{1})
+                J = Constructor();
+            else
+                J = Constructor(Parameters{1});
+            end
         end
         
         %Body creation
