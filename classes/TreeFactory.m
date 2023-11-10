@@ -21,7 +21,11 @@ classdef TreeFactory < handle
             %Get the class contructor from the type
             Constructor = str2func(Type);
             %Call the class constructor to build the body
-            B = Constructor(Parameters{1});
+            if isempty(Parameters{1})
+                B = Constructor();
+            else
+                B = Constructor(Parameters{1});
+            end
         end
     end
 end
