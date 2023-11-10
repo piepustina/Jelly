@@ -33,56 +33,142 @@ classdef BodyNew < handle
     end
 
     properties(Abstract, Constant)
-        %Type;
-        %Number of DoFs
+        %Number of degrees of freedom of the body
         n;
     end
 
     properties(Abstract)
-        %Dynamic parameters
+        %Parameters of the body
         Parameters;
-        %Rest length
-        RestLength;
     end
 
     %Methods required to update the body state
-    methods(Abstract)
-            %Kinematic terms
-            T_                  = T(q);
-            T_s_                = T_s(q, s);
-            v_rel_              = v_rel(q, dq);
-            omega_rel_          = omega_rel(q, dq);
-            a_rel_              = a_rel(q, dq, ddq);
-            domega_rel_         = domega_rel(q, dq, ddq);
-            v_par_              = v_par(q);
-            omega_par_          = omega_par(q);
-            %Inertial terms
-            p_com_              = p_com(q);
-            v_com_rel_          = v_com_rel(q, dq);
-            a_com_rel_          = a_com_rel(q, dq, ddq);
-            I_                  = I(q);
-            m_                  = m();
-            J_                  = J(q, dq);
-            int_dr_             = int_dr(q, dq);
-            int_ddr_            = int_ddr(q, dq, ddq);
-            int_r_X_dr_         = int_r_X_dr(q, dq);
-            int_r_X_ddr_        = int_r_X_ddr(q, dq, ddq);
-            int_dr_X_pv_r_      = int_dr_X_pv_r(q, dq);
-            int_pv_r_O_dd_r_    = int_pv_r_O_dd_r(q, dq, ddq);
-            int_dr_O_dr_        = int_dr_O_dr(q, dq);
-            grad_int_dr_        = grad_int_dr(q);
-            grad_int_r_X_dr_    = grad_int_r_X_dr(q);
-            grad_J_             = grad_J(q);
-            grad_v_com_         = grad_v_com(q);
-            xi_                 = xi(q, s);
-            %Generalized elastic and damping forces
-            K_ = K(q);
-            D_ = D(q, dq);
+    methods(Access = public)
+            %% Kinematic terms
+            %Transformation matrix from tip to the base
+            function T_ = T(~, q)
+                T_ = eye(4, 'like', q);
+            end
+            %Transformation matrix from s to the base
+            function T_s_ = T_s(~, q, ~)
+                T_s_ = eye(4, 'like', q);
+            end
+            %Relative velocity of the tip in the base frame
+            function v_rel_ = v_rel(~, q, ~)
+                v_rel_ = zeros(3, 1, 'like', q);
+            end
+            %Relative angular velocity of the body in the base frame
+            function omega_rel_ = omega_rel(~, q, ~)
+                omega_rel_ = zeros(3, 1, 'like', q);
+            end
+            %Relative acceleration of the tip in the base frame
+            function a_rel_ = a_rel(~, q, ~, ~)
+                a_rel_ = zeros(3, 1, 'like', q);
+            end
+            %Relative angular acceleration of the body
+            function domega_rel_ = domega_rel(~, q, ~, ~)
+                domega_rel_ = zeros(3, 1, 'like', q);
+            end
+            %Jacobian of the linear tip velocity in the tip frame
+            function v_par_ = v_par(obj, q)
+                v_par_ = zeros(3, obj.n, 'like', q);
+            end
+            %Jacobian of the angular velocity in the tip frame
+            function omega_par_ = omega_par(obj, q)
+                omega_par_ = zeros(3, obj.n, 'like', q);
+            end
+            
+            %% Inertial terms
+            %Center of mass position in the base frame
+            function p_com_ = p_com(~, q)
+                p_com_ = zeros(3, 1, 'like', q);
+            end
+            %Linear velocity of the center of mass in the base frame
+            function v_com_rel_ = v_com_rel(~, q, ~)
+                v_com_rel_ = zeros(3, 1, 'like', q);
+            end
+            %Linear acceleration of the center of mass in the base frame
+            function a_com_rel_ = a_com_rel(~, q, ~, ~)
+                a_com_rel_ = zeros(3, 1, 'like', q);
+            end
+            %Inertia of the body in the body frame
+            function I_ = I(~, q)
+                I_ = zeros(3, 3, 'like', q);
+            end
+            %Mass of the body
+            function m_ = m(~)
+                m_ = 0;
+            end
+            %Time derivative of the inertia in the body frame
+            function J_ = J(~, q, ~)
+                J_ = zeros(3, 3, 'like', q);
+            end
+            %Integral of \dot{r}
+            function int_dr_ = int_dr(~, q, ~)
+                %TODO: This is always zero, remove
+                int_dr_ = zeros(3, 1, 'like', q);
+            end
+            %Integral of \ddot{r}
+            function int_ddr_ = int_ddr(~, q, ~, ~)
+                %TODO: This is always zero, remove
+                int_ddr_ = zeros(3, 1, 'like', q);
+            end
+            %Integral of \cross(r, \dot{r})
+            function int_r_X_dr_ = int_r_X_dr(~, q, ~)
+                int_r_X_dr_ = zeros(3, 1, 'like', q);
+            end
+            %Integral of \cross(r, \ddot{r})
+            function int_r_X_ddr_ = int_r_X_ddr(~, q, ~, ~)
+                int_r_X_ddr_ = zeros(3, 1, 'like', q);
+            end
+            %Integral of \cross(\dor{r}, \jacobian{r}{q})
+            function int_dr_X_pv_r_ = int_dr_X_pv_r(obj, q, ~)
+                int_dr_X_pv_r_ = zeros(obj.n, 3, 'like', q);
+            end
+            %Integral of \dot(\jacobian{r}{q}, \ddot{r})
+            function int_pv_r_O_dd_r_ = int_pv_r_O_dd_r(obj, q, ~, ~)
+                int_pv_r_O_dd_r_ = zeros(obj.n, 1, 'like', q);
+            end
+            %Integral of \dot(\dot{r}, \dot{r})
+            function int_dr_O_dr_ = int_dr_O_dr(~, ~, ~)
+                %TODO: This is always zero, remove
+                int_dr_O_dr_ = 0;
+            end
+            %Jacobian of the integral of \dot{r}
+            function grad_int_dr_ = grad_int_dr(obj, q)
+                %TODO: This is always zero, remove
+                grad_int_dr_ = zeros(obj.n, 3, 'like', q);
+            end
+            %Jacobian of the integral of \cross{r, \dot{r}}
+            function grad_int_r_X_dr_ = grad_int_r_X_dr(obj, q)
+                grad_int_r_X_dr_ = zeros(obj.n, 3, 'like', q);
+            end
+            %Jacobian of the time derivative of the inertia
+            function grad_J_ = grad_J(obj, q)
+                grad_J_ = zeros(3, 3, obj.n, 'like', q);
+            end
+            %Jacobian of the center of mass velocity
+            function grad_v_com_ = grad_v_com(obj, q)
+                grad_v_com_ = zeros(obj.n, 3, 'like', q);
+            end
+            %Strain function
+            function xi_ = xi(~, q, ~)
+                xi_ = zeros(6, 1, 'like', q);
+            end
+            %Generalized stiffness force
+            function K_ = K(obj, q)
+                K_ = zeros(obj.n, 1, 'like', q);
+            end
+            %Generalized damping force
+            function D_ = D(obj, q, ~)
+                D_ = zeros(obj.n, 1, 'like', q);
+            end
     end
 
     methods (Access = protected)
+        %Class constructor
         function obj = BodyNew(n)
-            %Initialize the terms
+            %Initialize all the variables
             obj.v_par_              = zeros(3, n);
             obj.omega_par_          = zeros(3, n);
             obj.int_dr_X_pv_r_      = zeros(n, 3);
@@ -103,7 +189,7 @@ classdef BodyNew < handle
         end
         
         %Update the body to the current configuration. 
-        function updateBody(obj, q, dq, ddq)
+        function Update(obj, q, dq, ddq)
             %Kinematic terms
             obj.T_                  = obj.T(q);
             obj.v_rel_              = obj.v_rel(q, dq);

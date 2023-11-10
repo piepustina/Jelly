@@ -1,4 +1,4 @@
-classdef PCCCylindricalDelta_Joint < Joint
+classdef PCCCylindricalDelta_Joint < JointOld
     %PCCCYLINDRICAL_JOINT Defines a joint for a isotropic PCC body (thin rod) with
     %elongation
     
@@ -27,7 +27,7 @@ classdef PCCCylindricalDelta_Joint < Joint
 
     methods
         function obj = PCCCylindricalDelta_Joint(L_0)
-            obj = obj@Joint(PCCCylindricalDelta_Joint.n);
+            obj = obj@JointOld(PCCCylindricalDelta_Joint.n);
             obj.Parameters = L_0;
         end
     end

@@ -1,4 +1,4 @@
-classdef PCCPlanar_Joint_no_elongation < Joint
+classdef PCCPlanar_Joint_no_elongation < JointOld
     %PCC_PLANAR_SLENDER_NO_ELONGATION_JOINT
 
     properties(Constant)
@@ -24,7 +24,7 @@ classdef PCCPlanar_Joint_no_elongation < Joint
 
     methods
         function obj = PCCPlanar_Joint_no_elongation(L_0)
-            obj = obj@Joint(PCCPlanar_Joint_no_elongation.n);
+            obj = obj@JointOld(PCCPlanar_Joint_no_elongation.n);
             obj.Parameters = L_0;
         end
     end

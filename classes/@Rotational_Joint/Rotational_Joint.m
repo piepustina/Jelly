@@ -1,4 +1,4 @@
-classdef Rotational_Joint < Joint
+classdef Rotational_Joint < JointOld
     %Rotational Joint
 
     properties(Constant)
@@ -38,7 +38,7 @@ classdef Rotational_Joint < Joint
 
     methods
         function obj = Rotational_Joint(Parameters)
-            obj = obj@Joint(Rotational_Joint.n);
+            obj = obj@JointOld(Rotational_Joint.n);
             obj.Parameters = Parameters;
         end
     end

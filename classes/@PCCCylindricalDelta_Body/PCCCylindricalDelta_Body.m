@@ -1,4 +1,4 @@
-classdef PCCCylindricalDelta_Body < Body
+classdef PCCCylindricalDelta_Body < BodyOld
     %PCCCYLINDRICAL_BODY Defines a linear isotropic PCC body with elongation.
     
     properties(Constant)
@@ -48,7 +48,7 @@ classdef PCCCylindricalDelta_Body < Body
             if isrow(Parameters)
                 Parameters = Parameters';
             end
-            obj = obj@Body(PCCCylindricalDelta_Body.n);
+            obj = obj@BodyOld(PCCCylindricalDelta_Body.n);
             obj.Parameters = Parameters;
             obj.RestLength = Parameters(1);
         end

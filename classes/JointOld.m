@@ -1,4 +1,4 @@
-classdef Joint < handle
+classdef JointOld < handle
     %JOINT Class that represents a generic Joint
     %#codegen
 
@@ -41,7 +41,7 @@ classdef Joint < handle
     end
 
     methods (Access = protected)
-        function obj = Joint(n)
+        function obj = JointOld(n)
             obj.v_par_     = zeros(3, n);
             obj.omega_par_ = zeros(3, n);
         end
@@ -62,15 +62,6 @@ classdef Joint < handle
             obj.domega_rel_ = obj.domega_rel(q, dq, ddq, obj.Parameters);
             obj.v_par_      = obj.v_par(q, obj.Parameters);
             obj.omega_par_  = obj.omega_par(q, obj.Parameters);
-            % disp("[Joint] Update");
-            % obj.T_
-            % obj.v_rel_
-            % obj.omega_rel_
-            % obj.a_rel_
-            % obj.domega_rel_
-            % obj.v_par_
-            % obj.omega_par_
-            % disp("[Joint] End update");
         end
     end
 

@@ -1,4 +1,4 @@
-classdef Rotational_Body < Body
+classdef Rotational_Body < BodyOld
     
     %TODO: This is weird. The entire toolbox has to be changes by removing
     %the Body/Joint for the same type of object.
@@ -57,7 +57,7 @@ classdef Rotational_Body < Body
             if isrow(Parameters)
                 Parameters = Parameters';
             end
-            obj = obj@Body(Rotational_Body.n);
+            obj = obj@BodyOld(Rotational_Body.n);
             obj.Parameters = Parameters;
             obj.RestLength = Parameters(1);
         end

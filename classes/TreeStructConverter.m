@@ -1,7 +1,7 @@
 classdef TreeStructConverter < handle
     %RobotStructConverter Allow the conversion from the robot class as a
     %structure and viceversa.
-
+    
     %#codegen
 
     %TODO: Move the logic for creating the Bodies and Actuators struct

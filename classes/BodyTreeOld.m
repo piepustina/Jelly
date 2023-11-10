@@ -1,12 +1,8 @@
-classdef BodyTree < handle
-    %BODYTREE Class representing an open tree of rigid and soft bodies
+classdef BodyTreeOld < handle
+    %BODYTREEOLD Class representing an open tree of rigid and soft bodies
     %#codegen
 
-    %TODO: Convert Joints and Bodies from cell arrays to simple arrays,
-    %apparently this works for code generation as well. 
-    %TODO: Remove the "type" from all the methods and use "like", q
-    %TODO: Remove computation of the threshold. All the Bodies and Joints
-    %must be responsible of handling it properly.
+    %!!!!!!!!!!!!!!!!!!!!!! THIS CLASS HAS TO BE REMOVED
 
     properties (Constant)
         %Define the maximum number of bodies and joints (required for code generation)
@@ -40,16 +36,9 @@ classdef BodyTree < handle
         %Reference value for q for the Taylor approximation of G
         Q_THSD_G_REF = 0;
     end
-    
-    properties (Access = public)
-        %Joints can be treated as bodies with no inertial parameters. Thus,
-        %the augments the state by considering also the joints as bodies.
-        BodiesInternal;
-        N_B_Internal = 0;
-    end
-    
+
     methods
-        function obj = BodyTree(Joints, Bodies, varargin)
+        function obj = BodyTreeOld(Joints, Bodies, varargin)
             %BODYTREE Construct a BodyTree consisting of at most N joints and
             %bodies whose type is specified by the string arrays joints and
             %bodies
@@ -73,7 +62,7 @@ classdef BodyTree < handle
             for i = 1:BodyTree.MaxBodiesNumber
                 if i <= l_B
                     if ~isnumeric(Bodies{i})
-                        obj.n = obj.n + Bodies{i}.n + Joints{i}.n;
+                        obj.n = obj.n + Bodies{i}.n;
                         obj.N_B = obj.N_B + 1;
                     end
                 end
@@ -82,15 +71,6 @@ classdef BodyTree < handle
             obj.Bodies = cell(BodyTree.MaxBodiesNumber, 1);
             obj.Joints = Joints;
             obj.Bodies = Bodies;
-            %Allocate the augmeneted bodies
-            obj.BodiesInternal = cell(2*BodyTree.MaxBodiesNumber, 1);
-            j = 1;
-            for i = 1:2:2*obj.N_B
-                obj.BodiesInternal{i}   = Joints{j};
-                obj.BodiesInternal{i+1} = Bodies{j};
-                j = j + 1;
-            end
-            obj.N_B_Internal = 2*obj.N_B;
             %Compute the configuration tresholds if not provided as
             %arguments
             if computeConfigurationLimits
@@ -105,7 +85,8 @@ classdef BodyTree < handle
         %Evaluate the joints and bodies in the current configuration
         function obj = TreeUpdate(obj, q, dq, ddq)
             %Initialize variables
-            k_i = 1;
+            k_j = 1;
+            k_b = 1;
             l_B = length(obj.Bodies);
             for i = 1:BodyTree.MaxBodiesNumber
                 if i <= l_B
@@ -115,36 +96,32 @@ classdef BodyTree < handle
                     %JOINT UPDATE
                     %Get the DOFs associated with the joint
                     n_j   = obj.Joints{i}.n;
-                    if n_j ~= 0
-                        %Compute the last index of q associated with the current
-                        %joint
-                        k_i_1 = k_i + n_j - 1;
-                        %Compute (q, dq, ddq) associated with the joint
-                        q_j   = q(k_i:k_i_1);
-                        dq_j  = dq(k_i:k_i_1);
-                        ddq_j = ddq(k_i:k_i_1);
-                        %Update the joint data
-                        obj.Joints{i}.Update(q_j, dq_j, ddq_j);
-                        %Update the joint index for the next iteration
-                        k_i = k_i_1 + 1;
-                    end
+                    %Compute the last index of q associated with the current
+                    %joint
+                    k_j_1 = k_j + n_j - 1;
+                    %Compute (q, dq, ddq) associated with the joint
+                    q_j   = q(k_j:k_j_1);
+                    dq_j  = dq(k_j:k_j_1);
+                    ddq_j = ddq(k_j:k_j_1);
+                    %Update the joint data
+                    obj.Joints{i}.updateJoint(q_j, dq_j, ddq_j);
+                    %Update the joint index for the next iteration
+                    k_j = k_j_1 + 1;
                     
                     %BODY UPDATE
                     %Get the DOFs associated with the body
                     n_b   = obj.Bodies{i}.n;
-                    if n_b ~= 0
-                        %Compute the last index of q associated with the current
-                        %body
-                        k_i_1 = k_i + n_b - 1;
-                        %Compute (q, dq, ddq) associated with the body
-                        q_b   = q(k_i:k_i_1);
-                        dq_b  = dq(k_i:k_i_1);
-                        ddq_b = ddq(k_i:k_i_1);
-                        %Update the body data
-                        obj.Bodies{i}.Update(q_b, dq_b, ddq_b);
-                        %Update the body index for the next iteration
-                        k_i = k_i_1 + 1;
-                    end
+                    %Compute the last index of q associated with the current
+                    %body
+                    k_b_1 = k_b + n_b - 1;
+                    %Compute (q, dq, ddq) associated with the body
+                    q_b   = q(k_b:k_b_1);
+                    dq_b  = dq(k_b:k_b_1);
+                    ddq_b = ddq(k_b:k_b_1);
+                    %Update the body data
+                    obj.Bodies{i}.updateBody(q_b, dq_b, ddq_b);
+                    %Update the body index for the next iteration
+                    k_b = k_b_1 + 1;
                 end
             end
         end
@@ -165,11 +142,9 @@ classdef BodyTree < handle
             %the state (q,dq)
             
             %Define auxiliary variables
-            %The joints are treated as massless bodies thus we augment the
-            %body dimensions
-            N_B_ = obj.N_B_Internal;
-            
+            N_B_ = obj.N_B;
             %Define the output
+            %tau = cell(N_B, 1);
             tau = zeros(obj.n, 1, type);
             %3 x N_B matrix whose i-th column stores the linear velocity of Body i ( origin of frame {S_i} )
             v      = zeros(3, N_B_, type);
@@ -199,23 +174,24 @@ classdef BodyTree < handle
             %********************************************************
             %********************* Forward step *********************
             %********************************************************
-            l_B = length(obj.BodiesInternal);
-            for i = 1:2*BodyTree.MaxBodiesNumber %Iterative over all the augmented bodies
+            %for i = 1:N_B_ %Iterative over all the bodies
+            l_B = length(obj.Bodies);
+            for i = 1:BodyTree.MaxBodiesNumber %Iterative over all the bodies
                 if i <= l_B
-                    if isnumeric(obj.BodiesInternal{i})
+                    if isnumeric(obj.Bodies{i}) || isnumeric(obj.Joints{i})
                         continue;
                     end
                     %Step 1
-                    R_i_T        = real(obj.BodiesInternal{i}.T_(1:3, 1:3)');
-                    t_i          = real(obj.BodiesInternal{i}.T_(1:3, 4));
-                    v_rel_i      = real(obj.BodiesInternal{i}.v_rel_);
-                    omega_rel_i  = real(obj.BodiesInternal{i}.omega_rel_);
-                    dv_rel_i     = real(obj.BodiesInternal{i}.a_rel_);
-                    domega_rel_i = real(obj.BodiesInternal{i}.domega_rel_);
+                    R_i_T        = real(obj.Joints{i}.T_(1:3, 1:3)');
+                    t_i          = real(obj.Joints{i}.T_(1:3, 4));
+                    v_rel_i      = real(obj.Joints{i}.v_rel_);
+                    omega_rel_i  = real(obj.Joints{i}.omega_rel_);
+                    dv_rel_i     = real(obj.Joints{i}.a_rel_);
+                    domega_rel_i = real(obj.Joints{i}.domega_rel_);
                 
-                    p_com_i      = real(obj.BodiesInternal{i}.p_com_);
-                    v_com_rel_i  = real(obj.BodiesInternal{i}.v_com_rel_);
-                    a_com_rel_i  = real(obj.BodiesInternal{i}.a_com_rel_);
+                    p_com_i      = real(obj.Bodies{i}.p_com_);
+                    v_com_rel_i  = real(obj.Bodies{i}.v_com_rel_);
+                    a_com_rel_i  = real(obj.Bodies{i}.a_com_rel_);
                     
                     v(:, i)      = real(R_i_T*(v_i_1 + cross(omega_i_1, t_i) + v_rel_i));
                     omega(:, i)  = real(R_i_T*(omega_i_1 + omega_rel_i));
@@ -229,13 +205,13 @@ classdef BodyTree < handle
                                     cross(omega(:, i), v_com_rel_i) + a_com_rel_i);
                     
                     %Step 2
-                    Gamma(:, i) =real(a_com(:, i)*obj.BodiesInternal{i}.m_ +...
-                                    2*cross(omega(:, i), obj.BodiesInternal{i}.int_dr_) +...
-                                    obj.BodiesInternal{i}.int_ddr_);
-                    Omega(:, i) = real(obj.BodiesInternal{i}.I_*domega(:, i) + cross(omega(:, i), obj.BodiesInternal{i}.I_*omega(:, i)) +...
-                                    obj.BodiesInternal{i}.J_*omega(:, i)+...
-                                    cross(omega(:, i), obj.BodiesInternal{i}.int_r_X_dr_) + ...
-                                    obj.BodiesInternal{i}.int_r_X_ddr_);
+                    Gamma(:, i) =real(a_com(:, i)*obj.Bodies{i}.m_ +...
+                                    2*cross(omega(:, i), obj.Bodies{i}.int_dr_) +...
+                                    obj.Bodies{i}.int_ddr_);
+                    Omega(:, i) = real(obj.Bodies{i}.I_*domega(:, i) + cross(omega(:, i), obj.Bodies{i}.I_*omega(:, i)) +...
+                                    obj.Bodies{i}.J_*omega(:, i)+...
+                                    cross(omega(:, i), obj.Bodies{i}.int_r_X_dr_) + ...
+                                    obj.Bodies{i}.int_r_X_ddr_);
                     
                     %Update the iteration variables
                     v_i_1 = v(:, i);
@@ -250,45 +226,44 @@ classdef BodyTree < handle
             %********************************************************
             %Index for tau vector
             idx_tau = obj.n;
-            for i = 2*BodyTree.MaxBodiesNumber:-1:1
+            %for i = N_B_:-1:1
+            for i = BodyTree.MaxBodiesNumber:-1:1
                 if i <= l_B
-                    if isnumeric(obj.BodiesInternal{i})
+                    if isnumeric(obj.Bodies{i}) || isnumeric(obj.Joints{i})
                         continue;
                     end
                     %Step 3
                     if i == N_B_
                         M(:, i) = real(Gamma(:, i));
-                        N(:, i) = real(Omega(:, i) + cross(obj.BodiesInternal{i}.p_com_, Gamma(:, i)));
+                        N(:, i) = real(Omega(:, i) + cross(obj.Bodies{i}.p_com_, Gamma(:, i)));
                     else
-                        if ~isnumeric(obj.BodiesInternal{i+1})
-                            R_i_1   = real(obj.BodiesInternal{i+1}.T_(1:3, 1:3));
-                            t_i_1   = real(obj.BodiesInternal{i+1}.T_(1:3, 4));
+                        if ~isnumeric(obj.Joints{i+1})
+                            R_i_1   = real(obj.Joints{i+1}.T_(1:3, 1:3));
+                            t_i_1   = real(obj.Joints{i+1}.T_(1:3, 4));
                             M(:, i) = real(Gamma(:, i) + R_i_1*M_i_1);
-                            N(:, i) = real(Omega(:, i) + cross(obj.BodiesInternal{i}.p_com_, Gamma(:, i)) + R_i_1*N_i_1 + cross(t_i_1, R_i_1*M_i_1));
+                            N(:, i) = real(Omega(:, i) + cross(obj.Bodies{i}.p_com_, Gamma(:, i)) + R_i_1*N_i_1 + cross(t_i_1, R_i_1*M_i_1));
                         end
                     end
                     
                     %Step 4
-                    if obj.BodiesInternal{i}.n ~= 0
-                    tau(idx_tau - obj.BodiesInternal{i}.n + 1:idx_tau) = real(obj.BodiesInternal{i}.grad_int_dr_*a_com(:, i) +...
-                                                                     obj.BodiesInternal{i}.grad_int_r_X_dr_*domega(:, i) +...
-                                                                     arrayfun(@(j) -(1/2)*omega(:, i)'*obj.BodiesInternal{i}.grad_J_(:, :, j)*omega(:, i), (1:size(obj.BodiesInternal{i}.grad_J_, 3))')+...
-                                                                     2*obj.BodiesInternal{i}.int_dr_X_pv_r_*omega(:, i) +...
-                                                                     obj.BodiesInternal{i}.int_pv_r_O_dd_r_ +...
-                                                                     obj.BodiesInternal{i}.grad_v_com_*Gamma(:, i) +...
-                                                                     (obj.BodiesInternal{i}.v_par_')*M(:, i) +...
-                                                                     (obj.BodiesInternal{i}.omega_par_')*N(:, i));                   
-                    end
+                    tau(idx_tau - obj.Bodies{i}.n + 1:idx_tau) = real(obj.Bodies{i}.grad_int_dr_*a_com(:, i) +...
+                                                                     obj.Bodies{i}.grad_int_r_X_dr_*domega(:, i) +...
+                                                                     arrayfun(@(j) -(1/2)*omega(:, i)'*obj.Bodies{i}.grad_J_(:, :, j)*omega(:, i), (1:size(obj.Bodies{i}.grad_J_, 3))')+...
+                                                                     2*obj.Bodies{i}.int_dr_X_pv_r_*omega(:, i) +...
+                                                                     obj.Bodies{i}.int_pv_r_O_dd_r_ +...
+                                                                     obj.Bodies{i}.grad_v_com_*Gamma(:, i) +...
+                                                                     (obj.Joints{i}.v_par_')*M(:, i) +...
+                                                                     (obj.Joints{i}.omega_par_')*N(:, i));                   
                     %Update the iteration variables
                     M_i_1 = M(:, i);
                     N_i_1 = N(:, i);
-                    idx_tau = idx_tau - obj.BodiesInternal{i}.n;
+                    idx_tau = idx_tau - obj.Bodies{i}.n;
                 end
             end
         end
         
         %Forward dynamics in state space form
-        function dx = StateSpaceForwardDynamics(obj, ~, x, u, type)
+        function dx = StateSpaceForwardDynamics(obj, t, x, u, type)
             switch nargin
                 case 1 || 2
                     x = zeros(2*obj.n, 1);
@@ -341,18 +316,17 @@ classdef BodyTree < handle
             end
             Kq = zeros(obj.n, 1, type);
             k_b = obj.n;
-            l_B = obj.N_B_Internal;
-            for i = 2*BodyTree.MaxBodiesNumber:-1:1 %Iterative over all the augmeneted bodies
+            l_B = length(obj.Bodies);
+            for i = BodyTree.MaxBodiesNumber:-1:1 %Iterative over all the bodies
                 if i <= l_B
-                    if isnumeric(obj.BodiesInternal{i})
+                    if isnumeric(obj.Bodies{i}) || isnumeric(obj.Joints{i})
                         continue;
                     end
-                    if obj.BodiesInternal{i}.n ~= 0
-                        k_b_1 = k_b - obj.BodiesInternal{i}.n + 1;
-                        Kq(k_b_1:k_b) = obj.BodiesInternal{i}.K_;
-                        %Prepare for the next iteration
-                        k_b = k_b_1 - 1;
-                    end
+                    k_b_1 = k_b - obj.Bodies{i}.n + 1;
+                    %Kq(k_b_1:k_b) = real(obj.Bodies{i}.K_);
+                    Kq(k_b_1:k_b) = obj.Bodies{i}.K_;
+                    %Prepare for the next iteration
+                    k_b = k_b_1 - 1;
                 end
             end
         end
@@ -375,18 +349,17 @@ classdef BodyTree < handle
             end
             Dq = zeros(obj.n, 1, type);
             k_b = obj.n;
-            l_B = obj.N_B_Internal;
-            for i = 2*BodyTree.MaxBodiesNumber:-1:1 %Iterative over all the bodies discarding the fake ones
+            l_B = length(obj.Bodies);
+            for i = BodyTree.MaxBodiesNumber:-1:1 %Iterative over all the bodies discarding the fake ones
                 if i <= l_B
-                    if isnumeric(obj.BodiesInternal{i})
+                    if isnumeric(obj.Bodies{i}) || isnumeric(obj.Joints{i})
                         continue;
                     end
-                    if obj.BodiesInternal{i}.n ~= 0
-                        k_b_1 = k_b - obj.BodiesInternal{i}.n + 1;
-                        Dq(k_b_1:k_b) = obj.BodiesInternal{i}.D_;
-                        %Prepare for the next iteration
-                        k_b = k_b_1 - 1;
-                    end
+                    k_b_1 = k_b - obj.Bodies{i}.n + 1;
+                    %Dq(k_b_1:k_b) = real(obj.Bodies{i}.D_);
+                    Dq(k_b_1:k_b) = obj.Bodies{i}.D_;
+                    %Prepare for the next iteration
+                    k_b = k_b_1 - 1;
                 end
             end
         end

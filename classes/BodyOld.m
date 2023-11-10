@@ -1,4 +1,4 @@
-classdef Body < handle
+classdef BodyOld < handle
     %BODY 
     properties (Access = public)
         p_com_              = zeros(3, 1)
@@ -64,7 +64,7 @@ classdef Body < handle
     end
 
     methods (Access = protected)
-        function obj = Body(n)
+        function obj = BodyOld(n)
             obj.int_dr_X_pv_r_      = zeros(n, 3);
             obj.int_pv_r_O_dd_r_    = zeros(n, 1);
             obj.grad_int_dr_        = zeros(n, 3);

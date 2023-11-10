@@ -1,4 +1,4 @@
-b1.updateBody(q_test, dq_test, ddq_test);
+b1.Update(q_test, dq_test, ddq_test);
 b2.updateBody(q_test, dq_test, ddq_test);
 j2.updateJoint(q_test, dq_test, ddq_test);
 

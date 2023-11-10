@@ -90,7 +90,7 @@ classdef GVSBody < BodyNew
 
         %% Methods implementation
         %Overload the update body method
-        function updateBody(obj, q, dq, ddq)
+        function Update(obj, q, dq, ddq)
             %Update the kinematics
             [T_, omega_, v_, domega_, dv_, J_omega, J_v] = obj.Kinematics(q, dq, ddq);
             obj.T_                  = T_;

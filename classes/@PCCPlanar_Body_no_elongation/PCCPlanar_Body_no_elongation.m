@@ -1,4 +1,4 @@
-classdef PCCPlanar_Body_no_elongation < Body
+classdef PCCPlanar_Body_no_elongation < BodyOld
     
     properties(Constant)
         Type = "PCC_planar_no_elongation";
@@ -48,7 +48,7 @@ classdef PCCPlanar_Body_no_elongation < Body
             if isrow(Parameters)
                 Parameters = Parameters';
             end
-            obj = obj@Body(PCCPlanar_Body_no_elongation.n);
+            obj = obj@BodyOld(PCCPlanar_Body_no_elongation.n);
             obj.Parameters = Parameters;
             obj.RestLength = Parameters(1);
         end
