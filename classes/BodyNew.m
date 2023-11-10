@@ -79,15 +79,15 @@ classdef BodyNew < handle
             end
             
             %% Inertial terms
-            %Center of mass position in the base frame
+            %Center of mass position in the body frame
             function p_com_ = p_com(~, q)
                 p_com_ = zeros(3, 1, 'like', q);
             end
-            %Linear velocity of the center of mass in the base frame
+            %Linear velocity of the center of mass in the body frame
             function v_com_rel_ = v_com_rel(~, q, ~)
                 v_com_rel_ = zeros(3, 1, 'like', q);
             end
-            %Linear acceleration of the center of mass in the base frame
+            %Linear acceleration of the center of mass in the body frame
             function a_com_rel_ = a_com_rel(~, q, ~, ~)
                 a_com_rel_ = zeros(3, 1, 'like', q);
             end
