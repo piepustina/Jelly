@@ -3,8 +3,13 @@ function TA = Tanexpmat(A)
 %symmetric matrix A
 
 Theta = norm(A(1:3));
-adA   = ad(A);
 
+%Approximate theta if too small
+if Theta < 1e-14
+    Theta = 1e-14;
+end
+
+adA   = ad(A);
 TA    = eye(6) + (4-4*cos(Theta)-Theta*sin(Theta))/(2*Theta^2)*adA+...
                  (4*Theta-5*sin(Theta)+Theta*cos(Theta))/(2*Theta^3)*mpower(adA, 2)+...
                  (2-2*cos(Theta)-Theta*sin(Theta))/(2*Theta^4)*mpower(adA, 3)+...

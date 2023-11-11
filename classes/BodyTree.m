@@ -4,7 +4,6 @@ classdef BodyTree < handle
 
     %TODO: Convert Joints and Bodies from cell arrays to simple arrays,
     %apparently this works for code generation as well. 
-    %TODO: Remove the "type" from all the methods and use "like", q
 
     properties (Constant)
         %Define the maximum number of bodies and joints (required for code generation)
