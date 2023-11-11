@@ -36,6 +36,7 @@ classdef BodyTree < handle
     end
     
     methods
+        %Class constructor
         function obj = BodyTree(Joints, Bodies)
             %BODYTREE Construct a BodyTree consisting of at most N joints and
             %bodies whose type is specified by the string arrays joints and
