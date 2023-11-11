@@ -135,6 +135,8 @@ classdef BodyTree < handle
                         obj.Joints{i}.Update(q_j, dq_j, ddq_j);
                         %Update the joint index for the next iteration
                         k_i = k_i_1 + 1;
+                    else
+                        obj.Joints{i}.Update([], [], []);
                     end
                     
                     %BODY UPDATE
@@ -152,6 +154,8 @@ classdef BodyTree < handle
                         obj.Bodies{i}.Update(q_b, dq_b, ddq_b);
                         %Update the body index for the next iteration
                         k_i = k_i_1 + 1;
+                    else
+                        obj.Bodies{i}.Update([], [], []);
                     end
                 end
             end

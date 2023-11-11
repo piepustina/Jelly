@@ -141,7 +141,7 @@ classdef GVSBody < BodyNew
         function omega_rel_ = omega_rel(obj, q, dq)
             [~, omega_rel_, ~, ~, ~, ~, ~] = obj.Kinematics(q, dq, zeros(obj.n, 1, 'like', q));
         end
-        %% Relative linear acceleration of the center of mass
+        %% Relative linear acceleration of the tip
         function a_rel_ = a_rel(obj, q, dq, ddq)
             [~, ~, ~, ~, a_rel_, ~, ~] = obj.Kinematics(q, dq, ddq);
         end
@@ -154,7 +154,7 @@ classdef GVSBody < BodyNew
             [g, ~, ~, ~, ~, ~, v_par_] = obj.Kinematics(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q));
             v_par_ = g(1:3, 1:3)'*v_par_;
         end
-        %% Jacobian of the angular velocity with respect to q
+        %% Jacobian of the angular velocity with respect to q in the tip frame
         function omega_par_ = omega_par(obj, q)
             [g, ~, ~, ~, ~, omega_par_, ~] = obj.Kinematics(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q));
             omega_par_ = g(1:3, 1:3)'*omega_par_;
