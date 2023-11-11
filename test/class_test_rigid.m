@@ -34,27 +34,27 @@ ddq_test    = 1;
 
 %% Test dynamic methods
 
-r1 = BodyTree(J1, B1, 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1));
+r1 = BodyTree(J1, B1);
 r1.g = g;
 r2 = BodyTreeOld(J2, B2, 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1));
 r2.g = g;
 
 %% Numerical test
 disp("Mass matrix...")
-r1.MassMatrix(repmat(q_test, N_B, 1), 'double')
+r1.MassMatrix(repmat(q_test, N_B, 1))
 r2.MassMatrix(repmat(q_test, N_B, 1), 'double')
 
 
 disp("Gravity force...")
-r1.GravityForce(repmat(q_test, N_B, 1), 'double')
+r1.GravityForce(repmat(q_test, N_B, 1))
 r2.GravityForce(repmat(q_test, N_B, 1), 'double')
 
 %% Symbolic test
 q  = sym('q', [n, 1], 'real');
 dq = sym('dq', [n, 1], 'real');
-r1.MassMatrix(q, 'sym')
+r1.MassMatrix(q)
 r2.MassMatrix(q, 'sym')
 
-r1.GravityForce(q, 'sym')
+r1.GravityForce(q)
 r2.GravityForce(q, 'sym')
 

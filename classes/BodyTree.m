@@ -129,17 +129,17 @@ classdef BodyTree < handle
         end
         
         %Implementation of the Inverse Dynamics using Kane's equations
-        %type = 'double' if q is numeric, 'sym' if q is symbolic
         %NOTE: The inverse dynamics does not account for external and
         %generalized forces, except for gravity.
-        function tau = InverseDynamics(obj, q, dq, ddq, type)
+        function tau = InverseDynamics(obj, q, dq, ddq)
             %Update the BodyTree
             obj = obj.TreeUpdate(q, dq, ddq);
-            %Run the ID
-            tau = obj.Kane_aux(obj.g, type);
+            %Run the ID with the Kane algorithm. q is only passed to
+            %retreive its type.
+            tau = obj.Kane_aux(obj.g, q);
         end
 
-        function tau = Kane_aux(obj, g, type)
+        function tau = Kane_aux(obj, g, q_type)
             %KANE_AUX Given a obj model compute the generalized force that realizes ddq in
             %the state (q,dq)
             
@@ -149,32 +149,32 @@ classdef BodyTree < handle
             N_B_ = obj.N_B_Internal;
             
             %Define the output
-            tau = zeros(obj.n, 1, type);
+            tau = zeros(obj.n, 1, "like", q_type);
             %3 x N_B matrix whose i-th column stores the linear velocity of Body i ( origin of frame {S_i} )
-            v      = zeros(3, N_B_, type);
+            v      = zeros(3, N_B_, "like", q_type);
             %3 x N_B matrix whose i-th column stores the angular velocity of Body i
-            omega  = zeros(3, N_B_, type);
+            omega  = zeros(3, N_B_, "like", q_type);
             %3 x N_B matrix whose i-th column stores the linear acceleration of Body i ( origin of frame {S_i} )
-            a      = zeros(3, N_B_, type);
+            a      = zeros(3, N_B_, "like", q_type);
             %3 x N_B matrix whose i-th column stores the angular acceleration of Body i
-            domega = zeros(3, N_B_, type);
+            domega = zeros(3, N_B_, "like", q_type);
             %3 x N_B matrix whose i-th column stores the linear acceleration of CoM_i
-            a_com  = zeros(3, N_B_, type);
+            a_com  = zeros(3, N_B_, "like", q_type);
             %3 x N_B matrix whose i-th column stores vector Gamma_i
-            Gamma  = zeros(3, N_B_, type);
+            Gamma  = zeros(3, N_B_, "like", q_type);
             %3 x N_B matrix whose i-th column stores vector Omega_i
-            Omega  = zeros(3, N_B_, type);
+            Omega  = zeros(3, N_B_, "like", q_type);
             %3 x N_B matrix whose i-th column stores vector M_i
-            M      = zeros(3, N_B_, type);
+            M      = zeros(3, N_B_, "like", q_type);
             %3 x N_B matrix whose i-th column stores vector N_i
-            N      = zeros(3, N_B_, type);
+            N      = zeros(3, N_B_, "like", q_type);
             %Auxiliary vector to represent the velocity of the preceding vector
-            v_i_1       = zeros(3, 1, type);
-            omega_i_1   = zeros(3, 1, type);
+            v_i_1       = zeros(3, 1, "like", q_type);
+            omega_i_1   = zeros(3, 1, "like", q_type);
             a_i_1       = -g;
-            domega_i_1  = zeros(3, 1, type);
-            M_i_1  = zeros(3, 1, type);
-            N_i_1  = zeros(3, 1, type);
+            domega_i_1  = zeros(3, 1, "like", q_type);
+            M_i_1  = zeros(3, 1, "like", q_type);
+            N_i_1  = zeros(3, 1, "like", q_type);
             %********************************************************
             %********************* Forward step *********************
             %********************************************************
@@ -267,37 +267,33 @@ classdef BodyTree < handle
         end
         
         %Forward dynamics in state space form
-        function dx = StateSpaceForwardDynamics(obj, ~, x, u, type)
+        function dx = StateSpaceForwardDynamics(obj, ~, x, u)
             switch nargin
                 case 1 || 2
                     x = zeros(2*obj.n, 1);
                     u = zeros(obj.n, 1);
-                    type = 'double';
                 case 3
-                    u = zeros(obj.n, 1);
-                    type = 'double';
-                case 4
-                    type = 'dobule';
+                    u = zeros(obj.n, 1, "like", x);
             end
             q  = x(1:obj.n);
             dq = x(obj.n+1:end);
-            dx = [dq; obj.ForwardDynamics(q, dq, u, type)];
+            dx = [dq; obj.ForwardDynamics(q, dq, u)];
         end
         
         %Implements the Forward Dynamics using Kane's equations. Cost is
         %cubic in the worst case.
-        function ddq = ForwardDynamics(obj, q, dq, u, type)
+        function ddq = ForwardDynamics(obj, q, dq, u)
             %Compute the mass matrix
-            M = obj.MassMatrix(q, type);
+            M = obj.MassMatrix(q);
             %Improve the condition number of M
             c = obj.MassConditionNumber;
-            M = M + c*eye(size(M));
+            M = M + c*eye(size(M), "like", q);
             %Coriolis and gravitational terms
             %Less efficient but handles better equilibria because different
             %values are used
-            CG = obj.ApparentForce(q, dq, type) + obj.GravityForce(q, type);
+            CG = obj.ApparentForce(q, dq) + obj.GravityForce(q);
             %Overall forces
-            f  =  -CG - obj.K(q, type) - obj.D(q, dq, type) + u;
+            f  =  -CG - obj.K(q) - obj.D(q, dq) + u;
             %Perform scaling to improve simulation accuracy
             %Compute the acceleration
             ddq = pinv(M)*f;
@@ -307,18 +303,15 @@ classdef BodyTree < handle
         %Compute the generalized elastic force in the current
         %configuration.
         %To implement a custom value, just overload this method.
-        function Kq = K(obj, q, type)
+        function Kq = K(obj, q)
             %Update the tree only if q is passed as argument
             switch nargin
                 case 1
-                    type = 'double';
+                    q = zeros(obj.n, 1);
                 case 2
-                    obj.TreeUpdate(q, zeros(obj.n, 1), zeros(obj.n, 1));
-                    type = 'double';
-                case 3
-                    obj.TreeUpdate(q, zeros(obj.n, 1), zeros(obj.n, 1));
+                    obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q));
             end
-            Kq = zeros(obj.n, 1, type);
+            Kq = zeros(obj.n, 1, "like", q);
             k_b = obj.n;
             l_B = obj.N_B_Internal;
             for i = 2*BodyTree.MaxBodiesNumber:-1:1 %Iterative over all the augmeneted bodies
@@ -339,20 +332,17 @@ classdef BodyTree < handle
         %Compute the generalized damping force in the current
         %configuration.
         %To implement a custom value, just overload this method.
-        function Dq = D(obj, q, dq, type)
+        function Dq = D(obj, q, dq)
             %Update the tree only if q and dq are passed as arguments
             switch nargin
                 case 1
-                    type = 'double';
+                    q = zeros(obj.n, 1);
                 case 2
-                    type = 'double';
+                    obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q));
                 case 3
-                    obj.TreeUpdate(q, dq, zeros(obj.n, 1));
-                    type = 'double';
-                case 4
-                    obj.TreeUpdate(q, dq, zeros(obj.n, 1));
+                    obj.TreeUpdate(q, dq, zeros(obj.n, 1, "like", q));
             end
-            Dq = zeros(obj.n, 1, type);
+            Dq = zeros(obj.n, 1, "like", q);
             k_b = obj.n;
             l_B = obj.N_B_Internal;
             for i = 2*BodyTree.MaxBodiesNumber:-1:1 %Iterative over all the bodies discarding the fake ones
@@ -372,36 +362,36 @@ classdef BodyTree < handle
 
         %Mass matrix.
         %NOTE: Current implementation has cost O(n^2)!
-        function M = MassMatrix(obj, q, type)
+        function M = MassMatrix(obj, q)
             %Store value of gravity and set gravity to zero to compute the
             %mass matrix
-            g_ = obj.g;
-            obj.g = zeros(3, 1);
-            M = zeros(obj.n, obj.n, type);
-            Zeron = zeros(obj.n, 1);
-            Id   = eye(obj.n);
+            g_      = obj.g;
+            obj.g   = zeros(3, 1, "like", g_);
+            M       = zeros(obj.n, obj.n, "like", q);
+            Zeron   = zeros(obj.n, 1, "like", q);
+            Id      = eye(obj.n, "like", q);
             for i = 1:obj.n
-                M(:, i) = obj.InverseDynamics(q, Zeron, Id(:, i), type);
+                M(:, i) = obj.InverseDynamics(q, Zeron, Id(:, i));
             end
             %Symmetrize the result because of possible numerical
             %approximations
-            M = 1/2*(M + M');
+            M       = 1/2*(M + M');
             %Restrore gravity and compute the generalized forces
-            obj.g = g_;
+            obj.g   = g_;
         end
 
         %Gravity force
-        function G = GravityForce(obj, q, type)
-            Zeron = zeros(obj.n, 1);
-            G     = obj.InverseDynamics(q, Zeron, Zeron, type);
+        function G = GravityForce(obj, q)
+            Zeron = zeros(obj.n, 1, "like", q);
+            G     = obj.InverseDynamics(q, Zeron, Zeron);
         end
 
-        function C = ApparentForce(obj, q, dq, type)
+        function C = ApparentForce(obj, q, dq)
             %Set gravity force to zero
             g_ = obj.g;
-            obj.g = zeros(3, 1);
+            obj.g = zeros(3, 1, "like", g_);
             %Compute the apparent forces
-            C = obj.InverseDynamics(q, dq, zeros(obj.n, 1), type);
+            C = obj.InverseDynamics(q, dq, zeros(obj.n, 1, "like", q));
             %Restore back gravity
             obj.g = g_;
         end
@@ -410,18 +400,19 @@ classdef BodyTree < handle
         %Computes the apparent (Coriolis/Centrifugal) matrix. We use the
         %approach of [Kawasaki et al., IEEE T-RA 1996]. The cost is
         %quadratic.
-        function C = ApparentMatrix(obj, q, dq, type)
+        function C = ApparentMatrix(obj, q, dq)
             %Set gravity force to zero
-            g_ = obj.g;
-            obj.g = zeros(3, 1);
+            g_      = obj.g;
+            obj.g   = zeros(3, 1, "like", g_);
             %Preallocate the apparent matrix
-            C = zeros(obj.n, obj.n, type);
-            In= eye(obj.n);
+            C       = zeros(obj.n, obj.n, "like", q);
+            In      = eye(obj.n, "like", q);
+            Zeron   = zeros(obj.n, 1, "like", q);
             %Compute the apparent forces
             for i = 1:obj.n
-                C(:, i) = 1/2*( obj.InverseDynamics(q, dq + In(:, i), zeros(obj.n, 1), type) ...
-                               -obj.InverseDynamics(q, dq           , zeros(obj.n, 1), type) ...
-                               -obj.InverseDynamics(q, In(:, i)     , zeros(obj.n, 1), type));
+                C(:, i) = 1/2*( obj.InverseDynamics(q, dq + In(:, i), Zeron) ...
+                               -obj.InverseDynamics(q, dq           , Zeron) ...
+                               -obj.InverseDynamics(q, In(:, i)     , Zeron));
             end
             %Restore back gravity
             obj.g = g_;
