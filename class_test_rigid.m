@@ -1,10 +1,10 @@
 %% Create an instance of the class
 clear; clc;
 DHTable         = [0 1 0 0; 
-                   -1 0 1 0];
+                  -1 0 1 0];
 m               = 1;
 I               = eye(3);
-pcom            = [0; 0; 0];
+pcom            = [1; 0; -1];
 g               = [-9.81; 0; 0];
 n               = size(DHTable, 1);
 N_B             = n;
@@ -39,7 +39,7 @@ r1.g = g;
 r2 = BodyTreeOld(J2, B2, 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1));
 r2.g = g;
 
-%%
+%% Numerical test
 disp("Mass matrix...")
 r1.MassMatrix(repmat(q_test, N_B, 1), 'double')
 r2.MassMatrix(repmat(q_test, N_B, 1), 'double')
@@ -49,4 +49,12 @@ disp("Gravity force...")
 r1.GravityForce(repmat(q_test, N_B, 1), 'double')
 r2.GravityForce(repmat(q_test, N_B, 1), 'double')
 
+%% Symbolic test
+q  = sym('q', [n, 1], 'real');
+dq = sym('dq', [n, 1], 'real');
+r1.MassMatrix(q, 'sym')
+r2.MassMatrix(q, 'sym')
+
+r1.GravityForce(q, 'sym')
+r2.GravityForce(q, 'sym')
 
