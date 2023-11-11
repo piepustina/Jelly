@@ -84,22 +84,18 @@ classdef SoftRobot < BodyTree
                     n1 = norm(R(:, 1))/p.Results.FrameScale;
                     n2 = norm(R(:, 2))/p.Results.FrameScale;
                     n3 = norm(R(:, 3))/p.Results.FrameScale;
-                    % plot3([x(i), x(i)+R(1, 1, i)/n1], [y(i), y(i)+R(2, 1, i)/n1], [z(i), z(i)+R(3, 1, i)/n1], 'Color', 'r', 'Marker', ">");
-                    % plot3([x(i), x(i)+R(1, 2, i)/n2], [y(i), y(i)+R(2, 2, i)/n2], [z(i), z(i)+R(3, 2, i)/n2], 'Color', 'g', 'Marker', ">");
-                    % plot3([x(i), x(i)+R(1, 3, i)/n3], [y(i), y(i)+R(2, 3, i)/n3], [z(i), z(i)+R(3, 3, i)/n3], 'Color', 'b', 'Marker', ">");
                     quiver3(x(i), y(i), z(i), R(1, 1, i)/n1, R(2, 1, i)/n1, R(3, 1, i)/n1, 'Color', 'r');
                     quiver3(x(i), y(i), z(i), R(1, 2, i)/n2, R(2, 2, i)/n2, R(3, 2, i)/n2, 'Color', 'g');
                     quiver3(x(i), y(i), z(i), R(1, 3, i)/n3, R(2, 3, i)/n3, R(3, 3, i)/n3, 'Color', 'b');
                 end
             end
         end
-        
     end
 
     methods(Access = private)
         %Compute the position of the robot backbone
         function [x, y, z, R] = robotBackbone(obj, q)
-                        %Function hyperparameters increase to have a better representation
+            %Function hyperparameters increase to have a better representation
             %Number of disks along each segment
             s_step   = 100;
             
@@ -229,7 +225,6 @@ classdef SoftRobot < BodyTree
             idx_verts = 1;
         
             %Build the faces of the mesh
-            %for idx_verts = 1:n_faces-phi_step
             for idx_faces = idx_faces+1:n_faces-phi_step
                 if mod(idx_verts, phi_step) == 0
                     faces(idx_faces, :) = idx_verts + [0 1 phi_step -phi_step+1];
