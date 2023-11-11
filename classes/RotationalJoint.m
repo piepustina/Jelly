@@ -1,4 +1,4 @@
-classdef RotationalJoint < JointNew
+classdef RotationalJoint < Joint
     %ROTATIONALJOINT Implements a rotational joint between two bodies. 
     
     %Abstract properties implementation
@@ -15,7 +15,7 @@ classdef RotationalJoint < JointNew
     methods
         %Class constructor
         function obj = RotationalJoint(Parameters)
-            obj  = obj@JointNew(RotationalJoint.n);
+            obj  = obj@Joint(RotationalJoint.n);
             if isrow(Parameters)
                 Parameters = Parameters';
             end

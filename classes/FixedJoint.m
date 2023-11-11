@@ -1,4 +1,4 @@
-classdef FixedJoint < JointNew
+classdef FixedJoint < Joint
     %FIXEDJOINT Implements a fixed joint between two bodies. 
     
     %Abstract properties implementation
@@ -13,7 +13,7 @@ classdef FixedJoint < JointNew
     methods
         %Class constructor
         function obj = FixedJoint()
-            obj  = obj@JointNew(FixedJoint.n);
+            obj  = obj@Joint(FixedJoint.n);
         end
     end
 end

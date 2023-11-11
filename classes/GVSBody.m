@@ -1,4 +1,4 @@
-classdef GVSBody < BodyNew
+classdef GVSBody < Body
     %GVSBODY Class representing a slender body modeled under the geometric
     %variable strain approach.
     
@@ -56,7 +56,7 @@ classdef GVSBody < BodyNew
                 Parameters = Parameters';
             end
             %Call the superclass constructor
-            obj                     = obj@BodyNew(n);
+            obj                     = obj@Body(n);
             %Set the parameters
             obj.Parameters          = Parameters;
             obj.RestLength          = Parameters(1);

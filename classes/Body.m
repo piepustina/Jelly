@@ -1,4 +1,4 @@
-classdef BodyNew < handle
+classdef Body < handle
     %BODY 
     properties (Access = public)
         %Kinetic terms
@@ -167,7 +167,7 @@ classdef BodyNew < handle
 
     methods (Access = protected)
         %Class constructor
-        function obj = BodyNew(n)
+        function obj = Body(n)
             %Initialize all the variables
             obj.v_par_              = zeros(3, n);
             obj.omega_par_          = zeros(3, n);

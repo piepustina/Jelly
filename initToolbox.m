@@ -4,3 +4,4 @@ addpath('simulink/');
 addpath('utils/');
 addpath('classes/');
 addpath('test/oldClasses/');%Only required for testing purposes
+addpath('test/');

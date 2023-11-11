@@ -1,4 +1,4 @@
-classdef RigidBody < BodyNew
+classdef RigidBody < Body
     %RIGIDBODY Class representing a rigid body. A rigid body is regarded as
     %a body with zero degrees of freedom. To represent a floating rigid
     %body attach a 6 degrees of freedom joint to the body.
@@ -16,7 +16,7 @@ classdef RigidBody < BodyNew
     
     methods
         function obj = RigidBody(Parameters)
-            obj             = obj@BodyNew(RigidBody.n);
+            obj             = obj@Body(RigidBody.n);
             if isrow(Parameters)
                 Parameters = Parameters';
             end
