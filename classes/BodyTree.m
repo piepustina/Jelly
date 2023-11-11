@@ -5,8 +5,6 @@ classdef BodyTree < handle
     %TODO: Convert Joints and Bodies from cell arrays to simple arrays,
     %apparently this works for code generation as well. 
     %TODO: Remove the "type" from all the methods and use "like", q
-    %TODO: Remove computation of the threshold. All the Bodies and Joints
-    %must be responsible of handling it properly.
 
     properties (Constant)
         %Define the maximum number of bodies and joints (required for code generation)
@@ -29,19 +27,8 @@ classdef BodyTree < handle
         %Mass condition numer
         MassConditionNumber = 0;
     end
-
-    properties (Access = public)
-        %Threshold for the mass matrix and Coriolis term
-        Q_THSD_M     = 0;
-        %Reference value for q for the Taylor approximation of M and C
-        Q_THSD_M_REF = 0;
-        %Threshold for the gravity vector
-        Q_THSD_G     = 0;
-        %Reference value for q for the Taylor approximation of G
-        Q_THSD_G_REF = 0;
-    end
     
-    properties (Access = public)
+    properties (Access = private)
         %Joints can be treated as bodies with no inertial parameters. Thus,
         %the augments the state by considering also the joints as bodies.
         BodiesInternal;
@@ -49,24 +36,11 @@ classdef BodyTree < handle
     end
     
     methods
-        function obj = BodyTree(Joints, Bodies, varargin)
+        function obj = BodyTree(Joints, Bodies)
             %BODYTREE Construct a BodyTree consisting of at most N joints and
             %bodies whose type is specified by the string arrays joints and
             %bodies
-            %Transform the input to handle the code generation issues
-            %
-            computeConfigurationLimits = false;
-            switch nargin
-                case 2
-                    computeConfigurationLimits = true;
-                case 6
-                    obj.Q_THSD_M = varargin{1};
-                    obj.Q_THSD_M_REF = varargin{2};
-                    obj.Q_THSD_G = varargin{3};
-                    obj.Q_THSD_G_REF = varargin{4};
-                otherwise
-                    error("Incorrect number of arguments.");
-            end
+            %Compute the number of bodies
             obj.N_B = 0;
             obj.n   = 0;
             l_B     = length(Bodies);
@@ -78,6 +52,7 @@ classdef BodyTree < handle
                     end
                 end
             end
+            %Assign the joints and bodies
             obj.Joints = cell(BodyTree.MaxBodiesNumber, 1);
             obj.Bodies = cell(BodyTree.MaxBodiesNumber, 1);
             obj.Joints = Joints;
@@ -98,15 +73,6 @@ classdef BodyTree < handle
                     obj.BodiesInternal{i+1} = obj.Bodies{j};
                     j = j + 1;
                 end
-            end
-            %Compute the configuration tresholds if not provided as
-            %arguments
-            if computeConfigurationLimits
-                obj.Q_THSD_M = zeros(obj.n, 1);
-                obj.Q_THSD_M_REF = zeros(obj.n, 1);
-                obj.Q_THSD_G = zeros(obj.n, 1);
-                obj.Q_THSD_G_REF = zeros(obj.n, 1);
-                obj.ComputeConfigurationThresholds();
             end
         end
         
@@ -414,7 +380,6 @@ classdef BodyTree < handle
             Zeron = zeros(obj.n, 1);
             Id   = eye(obj.n);
             for i = 1:obj.n
-                %M(:, i) = obj.RobustInverseDynamics(q, Zeron, Id(:, i), type, obj.Q_THSD_M, obj.Q_THSD_M_REF);
                 M(:, i) = obj.InverseDynamics(q, Zeron, Id(:, i), type);
             end
             %Symmetrize the result because of possible numerical
@@ -427,7 +392,7 @@ classdef BodyTree < handle
         %Gravity force
         function G = GravityForce(obj, q, type)
             Zeron = zeros(obj.n, 1);
-            G     = obj.RobustInverseDynamics(q, Zeron, Zeron, type, obj.Q_THSD_G, obj.Q_THSD_G_REF);
+            G     = obj.InverseDynamics(q, Zeron, Zeron, type);
         end
 
         function C = ApparentForce(obj, q, dq, type)
@@ -435,7 +400,7 @@ classdef BodyTree < handle
             g_ = obj.g;
             obj.g = zeros(3, 1);
             %Compute the apparent forces
-            C = obj.RobustInverseDynamics(q, dq, zeros(obj.n, 1), type, obj.Q_THSD_M, obj.Q_THSD_M_REF);
+            C = obj.InverseDynamics(q, dq, zeros(obj.n, 1), type);
             %Restore back gravity
             obj.g = g_;
         end
@@ -453,9 +418,9 @@ classdef BodyTree < handle
             In= eye(obj.n);
             %Compute the apparent forces
             for i = 1:obj.n
-                C(:, i) = 1/2*( obj.RobustInverseDynamics(q, dq + In(:, i), zeros(obj.n, 1), type, obj.Q_THSD_M, obj.Q_THSD_M_REF) ...
-                               -obj.RobustInverseDynamics(q, dq           , zeros(obj.n, 1), type, obj.Q_THSD_M, obj.Q_THSD_M_REF) ...
-                               -obj.RobustInverseDynamics(q, In(:, i)     , zeros(obj.n, 1), type, obj.Q_THSD_M, obj.Q_THSD_M_REF));
+                C(:, i) = 1/2*( obj.InverseDynamics(q, dq + In(:, i), zeros(obj.n, 1), type) ...
+                               -obj.InverseDynamics(q, dq           , zeros(obj.n, 1), type) ...
+                               -obj.InverseDynamics(q, In(:, i)     , zeros(obj.n, 1), type));
             end
             %Restore back gravity
             obj.g = g_;
@@ -471,162 +436,12 @@ classdef BodyTree < handle
     end
 
     methods (Access = protected)
-        %Check if we need the computation of a limit
-        function [q_approx, approximated] = ApproxQ(~, q, thsd, q_thsd)
-            q_approx = q;
-            approximated = false;
-            for i = 1:length(q)
-                if abs(q(i)) <= thsd(i)
-                    approximated = true;
-                    if q(i) ~= 0
-                        q_approx(i) = q_thsd(i)*sign(q(i));
-                    else
-                        q_approx(i) = q_thsd(i);
-                    end
-                end
-            end
-        end
-
-        %A robustified version of the inverse dynamics that uses
-        %a Taylor expansion of order 1 when the configuration is close to a
-        %limit value
-        function tau = RobustInverseDynamics(obj, q, dq, ddq, type, thsd, q_thsd)
-            
-            if strcmp(type, 'sym')
-                %Call directly the inverse dynamics
-                tau = obj.InverseDynamics(q, dq, ddq, type);
-            else
-                [Q, approximated] = obj.ApproxQ(q, thsd, q_thsd);
-                %If no approximation of q is required just use the
-                %procedure, otherwise Taylor approximate
-                if ~approximated
-                    tau = obj.InverseDynamics(q, dq, ddq, type);
-                else
-                    %Compute tau at Q
-                    tauQ              = obj.InverseDynamics(Q, dq, ddq, type);
-                    %Compute the Jacobian of the inverse dynamics in Q
-                    epsilon           = min(q_thsd);%Do a step that is safe for the computation of the inverse dynamics
-                    JtauQ             = obj.InverseDynamicsJacobian(Q, dq, ddq, epsilon, tauQ);
-                    tau               = tauQ + JtauQ*(q - Q);
-                end
-            end
-        end
         
         %Implements the equlibrium equation
         function eq = EquilibriumEquation(obj, q, tau)
             eq = obj.GravityForce(q, 'double') + obj.K(q, 'double') - tau;
         end
         
-
-        %Numerical computation of the jacobian of the inverse dynamics
-        %w.r.t. q only. The Jacobian is evaluated in q and epsilon is the
-        %step size for the computation of the Jacobian. When epsilon is 0,
-        %the function returns a matrix of zeros by default. 
-        %tauq is the value of the inverse dynamics in q so that we do not
-        %have to repear the computation.
-        function jac = InverseDynamicsJacobian(obj, q, dq, ddq, epsilon, tauq)
-        %Output initialization
-        jac = zeros(obj.n, obj.n);
-        if epsilon == 0
-            return;
-        end
-        
-        %Inverse of the step size
-        epsilon_inv = 1/epsilon;
-        
-        % Do perturbation with a forward approach
-        for i = 1 : obj.n
-            %Perturb the configuration
-            q_plus     = q;
-            q_plus(i)  =  q(i) + sign(q(i))*epsilon;
-            %Run the ID in q_plus
-            tau_plus = obj.InverseDynamics(q_plus, dq, ddq, 'double');
-            %Approximate the derivative of the inverse dynamics w.r.t. q(i)
-            jac(:, i) = epsilon_inv * sign(q(i))*(tau_plus - tauq);
-        end
-        end
-    
-        %Compute the thresholds required for the computations of the limits
-        %around the origin
-        function ComputeConfigurationThresholds(obj)
-            %Hyperparameters
-            q_ref = 0.2;%reference value to use for the mass matrix and gravity vector
-            %Compute the limits for M and C starting from 0
-            %The evaluation is made with steps of 10^{-1} starting from
-            %zero up to 10^{-16}
-            q          = q_ref*ones(obj.n, 1);
-            %Compute the order of magnitude of the norm of M in the reference value q
-            M_norm_ref = norm(obj.MassMatrix(q, 'double'));
-            n_M_norm_ref = floor(log10(M_norm_ref));
-            for i = 1:obj.n
-                %Compute the reference value for q(i)
-                q(i) = obj.Q_THSD_M_REF(i);
-                for j = -16:-1
-                    %As a measure of how good the approximation is we use
-                    %the norm of M
-                    M_q      = obj.MassMatrix(q, 'double');
-                    M_norm   = norm(M_q);
-                    lambda   = eig(M_q);
-                    n_M_Norm = floor(log10(M_norm));
-                    if n_M_Norm <= n_M_norm_ref && all(lambda > 0)
-                        break;
-                    else
-                        q(i) = 10^(j);
-                    end
-                end
-                obj.Q_THSD_M_REF(i) = q(i);
-                %Compute the interval in which to use the approximation
-                obj.Q_THSD_M(i)     = q(i);
-                n_M_norm_tshd = n_M_Norm;
-                for k=j:-1
-                    M_norm   = norm(obj.MassMatrix(q, 'double'));
-                    n_M_Norm = floor(log10(M_norm));
-                    if n_M_Norm <= n_M_norm_tshd
-                        break;
-                    else
-                        q(i) = 10^(k);
-                    end
-                end
-                obj.Q_THSD_M(i)     = q(i);
-                %Reset q
-                q(i) = q_ref;
-            end
-            %Repeat the process for the gravitational force
-            %Compute the order of magnitude of the norm of M in the reference value q
-            G_norm_ref = norm(obj.GravityForce(q, 'double'));
-            n_G_norm_ref = floor(log10(G_norm_ref));
-            for i = 1:obj.n
-                %Compute the reference value for q(i)
-                q(i) = obj.Q_THSD_G_REF(i);
-                for j = -16:-1
-                    %As a measure of how good the approximation is we use
-                    %the norm of M
-                    G_norm   = norm(obj.GravityForce(q, 'double'));
-                    n_G_Norm = floor(log10(G_norm));
-                    if n_G_Norm <= n_G_norm_ref
-                        break;
-                    else
-                        q(i) = 10^(j);
-                    end
-                end
-                obj.Q_THSD_G_REF(i) = q(i);
-                %Compute the interval in which to use the approximation
-                obj.Q_THSD_G(i)     = q(i);
-                n_G_norm_thsd = n_G_Norm;
-                for k=j:-1
-                    G_norm   = norm(obj.GravityForce(q, 'double'));
-                    n_G_Norm = floor(log10(G_norm));
-                    if n_G_Norm <= n_G_norm_thsd
-                        break;
-                    else
-                        q(i) = 10^(k);
-                    end
-                end
-                obj.Q_THSD_G(i)     = q(i);
-                %Reset q
-                q(i) = q_ref;
-            end
-        end
     end
 end
 

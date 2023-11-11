@@ -1,5 +1,5 @@
 %% Build the body trees
-r1 = BodyTree(J1, B1, 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1));
+r1 = BodyTree(J1, B1);
 r2 = BodyTreeOld(J2, B2, 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1), 1e-4*ones(n*N_B, 1));
 
 %%
