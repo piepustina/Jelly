@@ -97,8 +97,8 @@ assert(~all(simplify(int(r_i*rho_L, s, [0, L]))))
 %Set to true to leave the integrals in implicit form
 hold_integrals = false;
 
-destination_folder_j = "./classes/@PCCPlanar_Joint_no_elongation";
-destination_folder_b = "./classes/@PCCPlanar_Body_no_elongation";
+destination_folder_j = "./oldClasses/@PCCPlanar_Joint_no_elongation";
+destination_folder_b = "./oldClasses/@PCCPlanar_Body_no_elongation";
 
 compute_model_data;
 

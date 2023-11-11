@@ -67,8 +67,8 @@ dr_i   = simplify(matrix_derivative(r_i, q, dq));
 ddr_i  = simplify(matrix_derivative(dr_i, [q;dq], [dq;ddq]));
 
 %% Compute all the required terms
-destination_folder_b = "./classes/@Rotational_Body";
-destination_folder_j = "./classes/@Rotational_Joint";
+destination_folder_b = "./oldClasses/@Rotational_Body";
+destination_folder_j = "./oldClasses/@Rotational_Joint";
 
 
 %% Compute the kinematic data

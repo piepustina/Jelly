@@ -112,8 +112,8 @@ w_gauss = vpa(2./((1-x_gauss.^2).*subs(dlegendre_poly, x, x_gauss).^2), 4);
 int      = @(varargin) int_approx(varargin{1}, varargin{2}, varargin{3}, x_gauss, w_gauss);
 
 %Compute all the required terms
-destination_folder_b = "./classes/@PCCCylindricalDelta_Body";
-destination_folder_j = "./classes/@PCCCylindricalDelta_Joint";
+destination_folder_b = "./oldClasses/@PCCCylindricalDelta_Body";
+destination_folder_j = "./oldClasses/@PCCCylindricalDelta_Joint";
 
 compute_model_data;
 
