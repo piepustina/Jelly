@@ -1,13 +1,8 @@
 classdef TreeStructConverter < handle
-    %RobotStructConverter Allow the conversion from the robot class as a
-    %structure and viceversa.
+    %TREESTRUCTCONVERTER Conversion a BodyTree class into a struct and
+    %viceversa. Used for code generation in Simulink.
     
     %#codegen
-
-    %TODO: Move the logic for creating the Bodies and Actuators struct
-    %inside the Body by defining a static
-    %method that converts into objects. This way the code is (relatively) more robust to
-    %new additions...
     
     %Define the maximum size of the parameters of the struct (required for code generation). 
     properties (Constant)
