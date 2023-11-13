@@ -1,10 +1,6 @@
 classdef PCC3D < GVSBody
     %GVSBODY Class representing a slender 3D body modeled under the PCC
-    %hypothesis. The configuration variables are q = [\kappa_{x};
-    %\kappa_{y}; \delta_{L}], where :
-    % \kappa_{x} is the curvature along x,
-    % \kappa_{y} is the curvature along y,
-    % \delta_{L} is the elongation of the body.
+    %hypothesis.
     
     %Number of DoFs
     properties(Constant)

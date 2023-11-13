@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="Welcome to Kane Toolbox documentation!" href="index.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API" href="api.html" /><link rel="prev" title="Welcome to Kane Toolbox documentation!" href="index.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>Usage - KaneToolbox 1 documentation</title>
@@ -157,6 +157,26 @@
   <ul class="current">
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Usage</a></li>
 </ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="bodytree.html">BodyTree</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="body.html">Body</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Body</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="gvsbody.html">GVSBody</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of GVSBody</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="PCC/pcc3d.html">PCC3D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="PCC/pcc2d.html">PCC2D</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rigidbody.html">RigidBody</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="joint.html">Joint</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Joint</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="fixedjoint.html">FixedJoint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rotationaljoint.html">RotationalJoint</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 
 </div>
 </div>
@@ -194,9 +214,21 @@
 <h1>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h1>
 <section id="installation">
 <span id="id1"></span><h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<p>To use Kane Toolbox, first download it from the GitHub page</p>
+<p>Download the source code from the GitHub page</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(.venv)</span> <span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>lumache
 </pre></div>
+</div>
+<p>and place it in your working directory.</p>
+</section>
+<section id="initialization">
+<h2>Initialization<a class="headerlink" href="#initialization" title="Link to this heading">#</a></h2>
+<p>Add the library to the MATLAB path by running the <code class="docutils literal notranslate"><span class="pre">initToolbox.m</span></code> script.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">initToolbox</span><span class="p">.</span><span class="n">m</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The script has to be run every time a new instance of MATLAB is started.</p>
 </div>
 </section>
 </section>
@@ -206,7 +238,15 @@
       <footer>
         
         <div class="related-pages">
-          
+          <a class="next-page" href="api.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">API</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
           <a class="prev-page" href="index.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
@@ -250,6 +290,7 @@
             <ul>
 <li><a class="reference internal" href="#">Usage</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#initialization">Initialization</a></li>
 </ul>
 </li>
 </ul>

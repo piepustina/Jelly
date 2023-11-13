@@ -1,8 +1,7 @@
 classdef Joint < Body
-    %JOINT Class that represents a generic Joint. The class is represented
-    %as a body with no inertial parameters.
+    %Class that represents a generic joint of the kinematic tree.
+    
     %#codegen
-
     methods (Access = protected)
         function obj = Joint(n)
             obj = obj@Body(n);
@@ -12,6 +11,7 @@ classdef Joint < Body
     methods (Access = public)
         %Overload the structure representation
         function s = toStruct(obj)
+            % Convert object to a struct representation.
             s = struct('JointType', class(obj), 'JointParameters', {{obj.Parameters}}, 'JointDoF', obj.n);
         end
     end

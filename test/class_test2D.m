@@ -32,7 +32,7 @@ for i = 1:N_B
 end
 
 %Test configurations
-q_test          = 1;
+q_test          = 0*1;
 dq_test         = 1;
 ddq_test        = -1;
 

@@ -1,5 +1,6 @@
 classdef BodyTree < handle
-    %BODYTREE Class representing an open tree of rigid and soft bodies
+    %Class representing an open tree of joints and bodies serially connected. 
+    
     %#codegen
 
     %TODO: Convert Joints and Bodies from cell arrays to simple arrays,
@@ -37,9 +38,14 @@ classdef BodyTree < handle
     methods
         %Class constructor
         function obj = BodyTree(Joints, Bodies)
-            %BODYTREE Construct a BodyTree consisting of at most N joints and
-            %bodies whose type is specified by the string arrays joints and
-            %bodies
+            %Construct a BodyTree consisting of joints and
+            %bodies.
+            %
+            %Args:
+                %    Joints (Joint): Cell array of joints
+                %    Bodies (Body): Cell array of bodies
+                %               
+            
             %Compute the number of bodies
             obj.N_B = 0;
             obj.n   = 0;
@@ -78,6 +84,8 @@ classdef BodyTree < handle
         
         %Evaluate the joints and bodies in the current configuration
         function obj = TreeUpdate(obj, q, dq, ddq)
+            %Update the state of the tree. 
+            
             %Initialize variables
             k_i = 1;
             l_B = length(obj.Bodies);

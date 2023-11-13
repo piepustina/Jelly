@@ -23,15 +23,17 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
+    'sphinx.ext.imgmath',
     'sphinxcontrib.matlab',
 ]
 
 templates_path = ['_templates']
 exclude_patterns = []
 
-# Set the primary domain for the MATLAB code
+# Configure the matlab extension
 primary_domain = "mat"
 matlab_src_dir = "/media/Dati/Desktop/Sapienza/Dottorato/KaneToolboxV2/"
+matlab_short_links = True
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

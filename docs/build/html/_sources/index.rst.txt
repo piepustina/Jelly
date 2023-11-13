@@ -17,8 +17,9 @@ Contents
 Check out the :doc:`usage` section for further information, including how to
 :ref:`install <installation>` the project.
 
-This is a test to the handle class.
+API
+---
 
 .. toctree::
 
-   handleClass
+   api

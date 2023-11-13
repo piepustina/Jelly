@@ -1,7 +1,6 @@
 classdef PCC2D < GVSBody
-    %GVSBODY Class representing a slender 2D body modeled under the PCC
-    %hypothesis. The configuration variables is q = [\kappa_{y}], where :
-    % \kappa_{y} is the curvature along y
+    %GVSBODY Class representing a slender body modeled under the PCC
+    %hypothesis without elongation.
     
     %Number of DoFs
     properties(Constant)

@@ -1,7 +1,6 @@
 classdef Body < handle
-    %BODY 
+    %Abstract class representsing a generic body of the kinematic tree.
     properties (Access = public)
-        %Kinetic terms
         T_                  = eye(4)
         v_rel_              = zeros(3, 1)
         omega_rel_          = zeros(3, 1)
@@ -9,7 +8,6 @@ classdef Body < handle
         domega_rel_         = zeros(3, 1)
         v_par_
         omega_par_
-        %Inertial terms
         p_com_              = zeros(3, 1)
         v_com_rel_          = zeros(3, 1)
         a_com_rel_          = zeros(3, 1)
@@ -38,22 +36,30 @@ classdef Body < handle
     end
 
     properties(Abstract)
-        %Parameters of the body
+        %Vector of parameters of the body
         Parameters;
     end
 
     %Methods required to update the body state
     methods(Access = public)
-            %% Kinematic terms
-            %Transformation matrix from tip to the base
-            function T_ = T(~, q)
+            %Kinematic terms
+            function T_ = T(obj, q)
+                %Transformation matrix from the distal end of the body to
+                %the base.
+                %
+                %Args:
+                %    q (double, symbolic): Configuration at which the transformation is evaluated
+                %               
+                %Returns:
+                %    (double, symbolic): 4x4 homogeneous transformation matrix
+
                 T_ = eye(4, 'like', q);
             end
-            %Relative velocity of the tip in the base frame
+            %% Relative velocity of the tip in the base frame
             function v_rel_ = v_rel(~, q, ~)
                 v_rel_ = zeros(3, 1, 'like', q);
             end
-            %Relative angular velocity of the body in the base frame
+            %% Relative angular velocity of the body in the base frame
             function omega_rel_ = omega_rel(~, q, ~)
                 omega_rel_ = zeros(3, 1, 'like', q);
             end
@@ -101,12 +107,14 @@ classdef Body < handle
             end
             %Integral of \dot{r}
             function int_dr_ = int_dr(~, q, ~)
-                %TODO: This is always zero, remove
+                %Todo: This is always zero, remove.
+
                 int_dr_ = zeros(3, 1, 'like', q);
             end
             %Integral of \ddot{r}
             function int_ddr_ = int_ddr(~, q, ~, ~)
-                %TODO: This is always zero, remove
+                %Todo: This is always zero, remove.
+                
                 int_ddr_ = zeros(3, 1, 'like', q);
             end
             %Integral of \cross(r, \dot{r})
@@ -127,12 +135,14 @@ classdef Body < handle
             end
             %Integral of \dot(\dot{r}, \dot{r})
             function int_dr_O_dr_ = int_dr_O_dr(~, ~, ~)
-                %TODO: This is always zero, remove
+                %Todo: This is always zero, remove.
+                
                 int_dr_O_dr_ = 0;
             end
             %Jacobian of the integral of \dot{r}
             function grad_int_dr_ = grad_int_dr(obj, q)
-                %TODO: This is always zero, remove
+                %Todo: This is always zero, remove.
+
                 grad_int_dr_ = zeros(obj.n, 3, 'like', q);
             end
             %Jacobian of the integral of \cross{r, \dot{r}}
@@ -179,13 +189,19 @@ classdef Body < handle
     end
 
     methods (Access = public)
-        %Convert body to a struct
         function s = toStruct(obj)
+            % Convert object to a struct representation.
             s = struct('BodyType', class(obj), 'BodyParameters', {{obj.Parameters}}, 'BodyDoF', obj.n);
         end
-        
-        %Update the body to the current configuration. 
+         
         function Update(obj, q, dq, ddq)
+            %Update the current state of the body.
+            %
+            %Args:
+                %    q (double, symbolic): Current configuration
+                %    dq (double, symbolic): First time derivative of q
+                %    ddq (double, symbolic): Second time derivative of q
+
             %Kinematic terms
             obj.T_                  = obj.T(q);
             obj.v_rel_              = obj.v_rel(q, dq);
