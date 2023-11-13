@@ -43,7 +43,7 @@ classdef MassMatrixSystem < matlab.System
         function M = stepImpl(obj, q)
             % Run a step of the forward dynamics
             M = cast(zeros(numel(q), numel(q)), 'like', q);
-            M(:, :) = cast(obj.Tree.MassMatrix(double(q), 'double'), 'like', q);
+            M(:, :) = cast(obj.Tree.MassMatrix(double(q)), 'like', q);
         end
 
         function resetImpl(~)

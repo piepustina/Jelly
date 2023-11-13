@@ -33,7 +33,7 @@ classdef InverseDynamicsSystem < matlab.System
         function u = stepImpl(obj, q, dq, ddq)
             % Run a step of the forward dynamics
             u = cast(zeros(size(q)), 'like', q);
-            u(:) = cast(obj.Tree.InverseDynamics(double(q), double(dq), double(ddq), 'double'), 'like', q);
+            u(:) = cast(obj.Tree.InverseDynamics(double(q), double(dq), double(ddq)), 'like', q);
         end
 
         function resetImpl(~)

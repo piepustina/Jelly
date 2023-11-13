@@ -38,7 +38,7 @@ classdef ElasticForceSystem < matlab.System
         function K = stepImpl(obj, q)
             % Run a step of the forward dynamics
             K = cast(zeros(size(q)), 'like', q);
-            K(:) = cast(obj.Tree.K(double(q), 'double'), 'like', q);
+            K(:) = cast(obj.Tree.K(double(q)), 'like', q);
         end
 
         function resetImpl(~)

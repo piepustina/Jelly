@@ -19,17 +19,17 @@ classdef SoftRobot < BodyTree
         %several errors.
         %Note that we can use the input parser because this method is never
         %called during code generation in simulink.
-        function obj = SoftRobot(Joints, Bodies, SegmentRadius, T0)
-            if nargin <= 3
-                N_B = length(Bodies);
-                SegmentRadius = cell(N_B, 1);
-                for i = 1:N_B
-                    SegmentRadius{i, 1} = [Bodies{i}.Parameters(2), Bodies{i}.Parameters(2)];
-                end
-            end
-            if nargin <= 4
+        function obj = SoftRobot(Joints, Bodies, T0)
+            if nargin <= 2
                 T0 = eye(4);
             end
+            %Store the radius of each body
+            N_B = length(Bodies);
+            SegmentRadius = cell(N_B, 1);
+            for i = 1:N_B
+                SegmentRadius{i, 1} = [Bodies{i}.Parameters(2), Bodies{i}.Parameters(3)];
+            end
+            %Build the body tree
             obj = obj@BodyTree(Joints, Bodies)
             
             %Process the input

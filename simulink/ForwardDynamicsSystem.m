@@ -44,7 +44,7 @@ classdef ForwardDynamicsSystem < matlab.System
         function ddq = stepImpl(obj, q, dq, u)
             % Run a step of the forward dynamics
             ddq = cast(zeros(size(q)), 'like', q);
-            ddq(:) = cast(obj.Tree.ForwardDynamics(double(q), double(dq), double(u), 'double'), 'like', q);
+            ddq(:) = cast(obj.Tree.ForwardDynamics(double(q), double(dq), double(u)), 'like', q);
         end
 
         function resetImpl(~)

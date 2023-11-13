@@ -38,7 +38,7 @@ classdef DampingForceSystem < matlab.System
         function D = stepImpl(obj, q, dq)
             % Run a step of the forward dynamics
             D = cast(zeros(size(q)), 'like', q);
-            D(:) = cast(obj.Tree.D(double(q), double(dq), 'double'), 'like', q);
+            D(:) = cast(obj.Tree.D(double(q), double(dq)), 'like', q);
         end
 
         function resetImpl(~)

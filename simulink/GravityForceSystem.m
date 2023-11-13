@@ -38,7 +38,7 @@ classdef GravityForceSystem < matlab.System
         function G = stepImpl(obj, q)
             % Run a step of the forward dynamics
             G = cast(zeros(size(q)), 'like', q);
-            G(:) = cast(obj.Tree.GravityForce(double(q), 'double'), 'like', q);
+            G(:) = cast(obj.Tree.GravityForce(double(q)), 'like', q);
         end
 
         function resetImpl(~)

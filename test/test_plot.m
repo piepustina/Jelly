@@ -2,14 +2,15 @@
 %Create an instance of the class
 clear; clc;
 L0              = 0.5;
-Radius          = 0.01;
+BaseRadius      = 0.01;
+TipRadius       = 0.001;
 MassDensity     = 1062;
 YoungModulus    = 6.66e5;
 PoissonRatio    = 0.5;
 MaterialDamping = 0.1;
 NGaussPoints    = 10;
 N_B             = 1;
-Parameters      = [L0, Radius, MassDensity, YoungModulus, PoissonRatio, MaterialDamping]';
+Parameters      = [L0, BaseRadius, TipRadius, MassDensity, YoungModulus, PoissonRatio, MaterialDamping]';
 b1              = PCC3D([Parameters; NGaussPoints]);
 j1              = FixedJoint();
 B1              = cell(N_B, 1);
@@ -20,7 +21,7 @@ for i = 1:N_B
 end
 
 %Build the soft robot
-sr = SoftRobot(J1, B1, {[Radius, Radius]}, eye(4));
+sr = SoftRobot(J1, B1);
 
 
 %% Plot the robot

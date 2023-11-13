@@ -34,7 +34,7 @@ classdef ApparentForceSystem < matlab.System
         function C = stepImpl(obj, q, dq)
             % Run a step of the forward dynamics
             C = cast(zeros(size(q)), 'like', q);
-            C(:) = cast(obj.Tree.ApparentForce(double(q), double(dq), 'double'), 'like', q);
+            C(:) = cast(obj.Tree.ApparentForce(double(q), double(dq)), 'like', q);
         end
 
         function resetImpl(~)

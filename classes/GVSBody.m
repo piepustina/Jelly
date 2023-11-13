@@ -9,24 +9,25 @@ classdef GVSBody < Body
 
     properties
         %Parameters are in this order:
-        %L_0 = rest length
-        %R   = radius
-        %rho = mass density
-        %E   = Young's modulus
-        %Poi = Poisson's ratio
-        %Eta = Material damping
-        %GaussPoints = Number of Gaussian Points
+        % -Rest length
+        % -Base radius
+        % -Tip radius
+        % -Mass density
+        % -Young modulus
+        % -Poisson ratio
+        % -Material damping
+        % -Number of Gaussian Points
         Parameters;
         RestLength  = 0;
-        %Number of DoFs
-        %n           = 0;
         %Reference strain
         ReferenceStrain = [0;0;0;0;0;1];
     end
 
     %Private properties extracted from the parameters for ease of use
     properties (Access = private)
-        Radius          = 0;
+        %Radius          = 0;
+        BaseRadius      = 0;
+        TipRadius       = 0;
         MassDensity     = 0;
         YoungModulus    = 0;
         ShearModulus    = 0;
@@ -46,7 +47,7 @@ classdef GVSBody < Body
         drGauss;
         JdrGauss;
         ddrGauss;
-        LinearMassDensity = 0;%Mass density aling the curvilinear abscissa
+        %LinearMassDensity = @(s) 0;%Mass density aling the curvilinear abscissa
     end
     
     methods
@@ -60,14 +61,16 @@ classdef GVSBody < Body
             %Set the parameters
             obj.Parameters          = Parameters;
             obj.RestLength          = Parameters(1);
-            obj.Radius              = Parameters(2);
-            obj.MassDensity         = Parameters(3);
-            obj.LinearMassDensity   = pi*obj.Radius^2*obj.MassDensity;
-            obj.YoungModulus        = Parameters(4);
-            obj.PoissonRatio        = Parameters(5);
+            %obj.Radius              = Parameters(2);
+            obj.BaseRadius          = Parameters(2);
+            obj.TipRadius           = Parameters(3);
+            obj.MassDensity         = Parameters(4);
+            %obj.LinearMassDensity   = pi*obj.Radius^2*obj.MassDensity;
+            obj.YoungModulus        = Parameters(5);
+            obj.PoissonRatio        = Parameters(6);
             obj.ShearModulus        = obj.YoungModulus/(2*(1+obj.PoissonRatio));
-            obj.MaterialDamping     = Parameters(6);
-            obj.NGaussPoints        = Parameters(7);
+            obj.MaterialDamping     = Parameters(7);
+            obj.NGaussPoints        = Parameters(8);
             [obj.GaussPoints, obj.GaussWeights] = lgwt(obj.NGaussPoints, 0, obj.RestLength);
             obj.GaussPoints         = [obj.GaussPoints; obj.RestLength];
             obj.GaussWeights        = [obj.GaussWeights; 0];
@@ -80,6 +83,16 @@ classdef GVSBody < Body
             obj.drGauss             = zeros(3, obj.NGaussPointsInt);
             obj.JdrGauss            = zeros(3, obj.n, obj.NGaussPointsInt);
             obj.ddrGauss            = zeros(3, obj.NGaussPointsInt);
+        end
+
+        %% Radius function
+        function R = Radius(obj, s)
+            R = obj.TipRadius + (obj.RestLength - s)/obj.RestLength*(obj.BaseRadius - obj.TipRadius);
+        end
+
+        %% Mass density along the curvliniear abscissa
+        function rhos = LinearMassDensity(obj, s)
+            rhos = pi*obj.Radius(s)^2*obj.MassDensity;
         end
 
         %% Methods implementation
@@ -202,12 +215,15 @@ classdef GVSBody < Body
             I_ = zeros(3, 3);
             for i = 1:obj.NGaussPointsInt
                 Sr_i = skew(obj.rGauss(:, i));
-                I_  = I_ + obj.GaussWeights(i)*(Sr_i'*Sr_i*obj.LinearMassDensity);
+                I_  = I_ + obj.GaussWeights(i)*(Sr_i'*Sr_i*obj.LinearMassDensity(obj.GaussPoints(i)));
             end
         end
         %% Mass
         function m_ = m(obj)
-            m_ = obj.RestLength*obj.MassDensity*pi*obj.Radius^2;
+            m_ = 0;
+            for i = 1:obj.NGaussPointsInt
+                m_ = m_ + obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
+            end
         end
         %% Time derivative of the inertia matrix
         function J_ = J(obj, q, dq)
@@ -224,7 +240,7 @@ classdef GVSBody < Body
             for i = 1:obj.NGaussPointsInt
                 Sr_i  = skew(obj.rGauss(:, i));
                 Sdr_i = skew(obj.drGauss(:, i));
-                J_ = J_ + (Sdr_i'*Sr_i + Sr_i'*Sdr_i)*obj.LinearMassDensity*obj.GaussWeights(i);
+                J_ = J_ + (Sdr_i'*Sr_i + Sr_i'*Sdr_i)*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
             end
         end
         %% Integral of \dot{r}
@@ -250,7 +266,7 @@ classdef GVSBody < Body
             %Compute the term
             int_r_X_dr_ = zeros(3, 1);
             for i = 1:obj.NGaussPointsInt
-                int_r_X_dr_ = int_r_X_dr_ + cross(obj.rGauss(:, i), obj.drGauss(:, i))*obj.LinearMassDensity*obj.GaussWeights(i);
+                int_r_X_dr_ = int_r_X_dr_ + cross(obj.rGauss(:, i), obj.drGauss(:, i))*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
             end
         end
         %% Integral of \cross(r, \ddot{r})
@@ -270,7 +286,7 @@ classdef GVSBody < Body
             %Compute the term
             int_r_X_ddr_ = zeros(3, 1);
             for i = 1:obj.NGaussPointsInt
-                int_r_X_ddr_ = int_r_X_ddr_ + cross(obj.rGauss(:, i), obj.ddrGauss(:, i))*obj.LinearMassDensity*obj.GaussWeights(i);
+                int_r_X_ddr_ = int_r_X_ddr_ + cross(obj.rGauss(:, i), obj.ddrGauss(:, i))*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
             end
         end
         %% Integral of \cross(\dor{r}, \jacobian{r}{q})
@@ -286,7 +302,7 @@ classdef GVSBody < Body
             %Compute the term
             int_dr_X_pv_r_ = zeros(obj.n, 3);
             for i = 1:obj.NGaussPointsInt
-                int_dr_X_pv_r_ = int_dr_X_pv_r_ + (skew(obj.drGauss(:, i))*obj.JdrGauss(1:3, 1:obj.n, i))'*obj.LinearMassDensity*obj.GaussWeights(i);
+                int_dr_X_pv_r_ = int_dr_X_pv_r_ + (skew(obj.drGauss(:, i))*obj.JdrGauss(1:3, 1:obj.n, i))'*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
             end
         end
         %% Integral of \dot(\jacobian{r}{q}, \ddot{r})
@@ -306,7 +322,7 @@ classdef GVSBody < Body
             %Compute the term
             int_pv_r_O_dd_r_ = zeros(obj.n, 1);
             for i = 1:obj.NGaussPointsInt
-                int_pv_r_O_dd_r_ = int_pv_r_O_dd_r_ + (obj.JdrGauss(1:3, 1:obj.n, i)'*obj.ddrGauss(:, i))*obj.LinearMassDensity*obj.GaussWeights(i);
+                int_pv_r_O_dd_r_ = int_pv_r_O_dd_r_ + (obj.JdrGauss(1:3, 1:obj.n, i)'*obj.ddrGauss(:, i))*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
             end
         end
         %% Integral of \dot(\dot{r}, \dot{r})
@@ -328,7 +344,7 @@ classdef GVSBody < Body
             %Compute the term
             grad_int_r_X_dr_ = zeros(obj.n, 3);
             for i = 1:obj.NGaussPointsInt
-                grad_int_r_X_dr_ = grad_int_r_X_dr_ +  (skew(obj.rGauss(:, i))*obj.JdrGauss(1:3, 1:obj.n, i))'*obj.LinearMassDensity*obj.GaussWeights(i);
+                grad_int_r_X_dr_ = grad_int_r_X_dr_ +  (skew(obj.rGauss(:, i))*obj.JdrGauss(1:3, 1:obj.n, i))'*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
             end
         end
         %% Jacobian of the time derivative of the inertia
@@ -347,7 +363,7 @@ classdef GVSBody < Body
                     ri                   = obj.rGauss(1:3, i);
                     %Gradient of i-th Gaussian point with respect to q(j)
                     dri_qj               = obj.JdrGauss(1:3, j, i);
-                    grad_J_(1:3, 1:3, j) = grad_J_(1:3, 1:3, j) + (skew(dri_qj)'*skew(ri) + skew(ri)'*skew(dri_qj))*obj.GaussWeights(i)*obj.LinearMassDensity;
+                    grad_J_(1:3, 1:3, j) = grad_J_(1:3, 1:3, j) + (skew(dri_qj)'*skew(ri) + skew(ri)'*skew(dri_qj))*obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i));
                 end
             end
             %diff(skew(dr_i)'*skew(r_i)*rho_L + skew(r_i)'*skew(dr_i)*rho_L, dq(i))
@@ -384,8 +400,8 @@ classdef GVSBody < Body
             K_  = zeros(obj.n, 1, 'like', q);
             for i = 1:obj.NGaussPointsInt
                 %Linear and angular stiffness
-                K_l         = pi*obj.Radius^2*diag([G, G, E]);
-                BodyInertia = pi*obj.Radius^4*[1/4, 1/4, 1/2];
+                K_l         = pi*obj.Radius(obj.GaussPoints(i))^2*diag([G, G, E]);
+                BodyInertia = pi*obj.Radius(obj.GaussPoints(i))^4*[1/4, 1/4, 1/2];
                 K_a         = diag([E*BodyInertia(1), E*BodyInertia(2), G*BodyInertia(3)]);
                 %Body stiffness
                 K_b         = blkdiag(K_a, K_l);
@@ -403,8 +419,8 @@ classdef GVSBody < Body
             D_ = zeros(obj.n, 1, 'like', q);
             for i = 1:obj.NGaussPointsInt
                 %Linear and angular damping
-                D_l         = pi*obj.Radius^2*diag([G, G, E]);
-                BodyInertia = pi*obj.Radius^4*[1/4, 1/4, 1/2];
+                D_l         = pi*obj.Radius(obj.GaussPoints(i))^2*diag([G, G, E]);
+                BodyInertia = pi*obj.Radius(obj.GaussPoints(i))^4*[1/4, 1/4, 1/2];
                 D_a         = diag([E*BodyInertia(1), E*BodyInertia(2), G*BodyInertia(3)]);
                 %Body damping
                 D_b         = blkdiag(D_a, D_l)*obj.MaterialDamping;
@@ -446,25 +462,25 @@ classdef GVSBody < Body
             obj.p_com_  = zeros(3, 1);
             m       = obj.m();
             for i = 1:obj.NGaussPointsInt
-                obj.p_com_  = obj.p_com_ + pGauss(:, i)*obj.GaussWeights(i)*obj.LinearMassDensity;
+                obj.p_com_  = obj.p_com_ + pGauss(:, i)*obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i));
             end
             obj.p_com_ = (1/m)*obj.p_com_;
             %Compute the CoM velocity
             obj.v_com_rel_   = zeros(3, 1);
             for i = 1:obj.NGaussPointsInt
-                obj.v_com_rel_  = obj.v_com_rel_ + obj.GaussWeights(i)*obj.LinearMassDensity*dpGauss(:, i);
+                obj.v_com_rel_  = obj.v_com_rel_ + obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i))*dpGauss(:, i);
             end
             obj.v_com_rel_      = (1/m)*obj.v_com_rel_;
             %Compute the CoM acceleration
             obj.a_com_rel_ = zeros(3, 1);
             for i = 1:obj.NGaussPointsInt
-                obj.a_com_rel_  = obj.a_com_rel_ + obj.GaussWeights(i)*obj.LinearMassDensity*ddpGauss(:, i);
+                obj.a_com_rel_  = obj.a_com_rel_ + obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i))*ddpGauss(:, i);
             end
             obj.a_com_rel_ = (1/m)*obj.a_com_rel_;
             %% Update the relative position vector
             J_p_comi = zeros(3, obj.n, 'like', q);
             for i = 1:obj.NGaussPointsInt
-                J_p_comi = J_p_comi + obj.GaussWeights(i)*obj.LinearMassDensity*JdpGauss(1:3, 1:obj.n, i);
+                J_p_comi = J_p_comi + obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i))*JdpGauss(1:3, 1:obj.n, i);
             end
             J_p_comi        = (1/m)*J_p_comi;
             for i = 1:obj.NGaussPointsInt
@@ -478,7 +494,7 @@ classdef GVSBody < Body
             %Gradient of the CoM in the base frame
             grad_v_com_i_1  = zeros(3, obj.n, 'like', q);
             for i = 1:obj.NGaussPointsInt
-                grad_v_com_i_1 = grad_v_com_i_1 + obj.JEtaGauss(4:6, 1:obj.n, i)*obj.GaussWeights(i)*obj.LinearMassDensity;
+                grad_v_com_i_1 = grad_v_com_i_1 + obj.JEtaGauss(4:6, 1:obj.n, i)*obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i));
             end
             grad_v_com_i_1  = (1/m)*grad_v_com_i_1;
             obj.grad_v_com_ = (RT*(obj.grad_v_com_ + grad_v_com_i_1))';
