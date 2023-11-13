@@ -47,7 +47,6 @@ classdef GVSBody < Body
         drGauss;
         JdrGauss;
         ddrGauss;
-        %LinearMassDensity = @(s) 0;%Mass density aling the curvilinear abscissa
     end
     
     methods
@@ -61,11 +60,9 @@ classdef GVSBody < Body
             %Set the parameters
             obj.Parameters          = Parameters;
             obj.RestLength          = Parameters(1);
-            %obj.Radius              = Parameters(2);
             obj.BaseRadius          = Parameters(2);
             obj.TipRadius           = Parameters(3);
             obj.MassDensity         = Parameters(4);
-            %obj.LinearMassDensity   = pi*obj.Radius^2*obj.MassDensity;
             obj.YoungModulus        = Parameters(5);
             obj.PoissonRatio        = Parameters(6);
             obj.ShearModulus        = obj.YoungModulus/(2*(1+obj.PoissonRatio));
@@ -95,7 +92,7 @@ classdef GVSBody < Body
             rhos = pi*obj.Radius(s)^2*obj.MassDensity;
         end
 
-        %% Methods implementation
+        %% Body methods implementation
         %Overload the update body method
         function Update(obj, q, dq, ddq)
             %Update the kinematics
