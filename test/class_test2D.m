@@ -10,12 +10,12 @@ NGaussPoints    = 20;
 n               = 1;
 N_B             = 1;
 Parameters      = [L0, Radius, MassDensity, YoungModulus, PoissonRatio, MaterialDamping]';
-b1              = GVSBodyPlanar([Parameters; NGaussPoints]);
+b1              = PCC2D([Parameters; NGaussPoints]);
 j1              = FixedJoint();
 B1 = cell(N_B, 1);
 J1 = cell(N_B, 1);
 for i = 1:N_B
-    B1{i} = GVSBodyPlanar([Parameters; NGaussPoints]);
+    B1{i} = PCC2D([Parameters; NGaussPoints]);
     J1{i} = FixedJoint();
 end
 %

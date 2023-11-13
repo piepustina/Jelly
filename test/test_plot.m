@@ -10,12 +10,12 @@ MaterialDamping = 0.1;
 NGaussPoints    = 10;
 N_B             = 1;
 Parameters      = [L0, Radius, MassDensity, YoungModulus, PoissonRatio, MaterialDamping]';
-b1              = GVSBody3D([Parameters; NGaussPoints]);
+b1              = PCC3D([Parameters; NGaussPoints]);
 j1              = FixedJoint();
 B1              = cell(N_B, 1);
 J1              = cell(N_B, 1);
 for i = 1:N_B
-    B1{i} = GVSBody3D([Parameters; NGaussPoints]);
+    B1{i} = PCC3D([Parameters; NGaussPoints]);
     J1{i} = FixedJoint();
 end
 
