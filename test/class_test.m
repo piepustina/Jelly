@@ -8,7 +8,6 @@ j2.T(q_test, Parameters(1))
 %% Compute transformation matrix at half rest length
 disp("Transformation matrix at s = L0/2");
 b1.T_s(q_test, L0/2)
-j1.T_s(q_test, L0/2)
 j2.T_s(q_test, Parameters(1), L0/2)
 
 %% Compute the linear and angular velocity

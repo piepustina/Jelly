@@ -49,10 +49,6 @@ classdef Body < handle
             function T_ = T(~, q)
                 T_ = eye(4, 'like', q);
             end
-            %Transformation matrix from s to the base
-            function T_s_ = T_s(~, q, ~)
-                T_s_ = eye(4, 'like', q);
-            end
             %Relative velocity of the tip in the base frame
             function v_rel_ = v_rel(~, q, ~)
                 v_rel_ = zeros(3, 1, 'like', q);

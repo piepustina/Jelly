@@ -72,12 +72,6 @@ classdef GVSBody < Body
             obj.GaussPoints         = [obj.GaussPoints; obj.RestLength];
             obj.GaussWeights        = [obj.GaussWeights; 0];
             obj.NGaussPointsInt     = obj.NGaussPoints + 1;
-            %obj.n                   = size(obj.StrainBasis(0), 2);
-            % if isstring(StrainBasis) || ischar(StrainBasis)
-            %     obj.StrainBasis         = str2func(StrainBasis);
-            % else
-            %     obj.StrainBasis         = StrainBasis;
-            % end
             obj.gGauss              = repmat(eye(4)     , [1, 1, obj.NGaussPointsInt]);
             obj.EtaGauss            = zeros(6, obj.NGaussPointsInt);
             obj.JEtaGauss           = zeros(6, obj.n, obj.NGaussPointsInt);

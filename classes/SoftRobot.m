@@ -107,15 +107,23 @@ classdef SoftRobot < BodyTree
             R     = zeros(3, 3, n_points);
         
             s  = linspace(0, 1, s_step);
-            
-            %Approximate the configuration vector to run the limits
-            q = obj.ApproxQ(q);
 
             T_prev = obj.T0;
             idx_verts = 1;
             idx_q     = 1;
-            %Iterate over the bodies
+            %Iterate over the jointa and bodies
             for i = 1:obj.N_B
+                if obj.Joints{i}.n ~= 0
+                    %Get the configuration variables of the joint
+                    q_i      = q(idx_q:idx_q + obj.Joints{i}.n - 1);
+                    obj.Joints{i}.Update(q_i, zeros(size(q_i)), zeros(size(q_i)));
+                else
+                    obj.Joints{i}.Update([], [], []);
+                end
+                %Update the transformation matrix
+                T_prev   = T_prev*obj.Joints{i}.T_;
+                %Update the index of the configuration variables
+                idx_q    = idx_q + obj.Joints{i}.n;
                 %Get the configuration variables of the current body
                 q_i      = q(idx_q:idx_q + obj.Bodies{i}.n - 1);
                 for j=1:s_step
@@ -123,7 +131,7 @@ classdef SoftRobot < BodyTree
                     if s(j) == 0%We use the limit expression at the base to avoid numerical problems
                         T_s_j = eye(4);
                     else
-                        T_s_j = obj.Joints{i}.T_s(q_i, obj.Bodies{i}.Parameters, s(j)*obj.Bodies{i}.RestLength);
+                        T_s_j = obj.Bodies{i}.T_s(q_i, s(j)*obj.Bodies{i}.RestLength);
                     end
                     T_ = T_prev*T_s_j;
                     verts(:, idx_verts) = T_(1:3, 4);
@@ -131,7 +139,6 @@ classdef SoftRobot < BodyTree
                     idx_verts = idx_verts + 1;
                 end
                 %Prepare for the next iteration
-                %T_prev = T_prev*obj.Joints{i}.T(q_i, obj.Joints{i}.Parameters);
                 T_prev = T_;
                 %Update the index of the configuration variables
                 idx_q    = idx_q + obj.Bodies{i}.n;
@@ -153,7 +160,6 @@ classdef SoftRobot < BodyTree
             %tip of the backbone (+2)
             n_verts = obj.N_B*s_step*phi_step + 2;
             n_faces = obj.N_B*s_step*phi_step + phi_step;
-
             
             verts = zeros(n_verts, 3);
             faces = zeros(n_faces, 4);
@@ -166,9 +172,6 @@ classdef SoftRobot < BodyTree
         
             s  = linspace(0, 1, s_step);
             phi= linspace(0, 2*pi, phi_step);
-            
-            %Approximate the configuration vector to run the limits
-            q = obj.ApproxQ(q);
 
             T_prev = obj.T0;
             %Body origin
@@ -176,8 +179,20 @@ classdef SoftRobot < BodyTree
 
             idx_verts = 1;
             idx_q     = 1;
-            %Iterate over the bodies
+            %Iterate over the joints and bodies
             for i = 1:obj.N_B
+                if obj.Joints{i}.n ~= 0
+                    %Get the configuration variables of the joint
+                    q_i      = q(idx_q:idx_q + obj.Joints{i}.n - 1);
+                    obj.Joints{i}.Update(q_i, zeros(size(q_i)), zeros(size(q_i)));
+                else
+                    obj.Joints{i}.Update([], [], []);
+                end
+                %Update the transformation matrix
+                T_prev   = T_prev*obj.Joints{i}.T_;
+                %Update the index of the configuration variables
+                idx_q    = idx_q + obj.Joints{i}.n;
+                %Compute the position for the body points
                 r_base   = obj.SegmentRadius{i}(1);
                 r_tip    = obj.SegmentRadius{i}(2);
                 %Get the configuration variables of the current body
@@ -188,7 +203,7 @@ classdef SoftRobot < BodyTree
                     if s(j) == 0%We use the limit expression at the base to avoid numerical problems
                         T_s_j = eye(4);
                     else
-                        T_s_j = obj.Joints{i}.T_s(q_i, obj.Bodies{i}.Parameters, s(j)*obj.Bodies{i}.RestLength);
+                        T_s_j = obj.Bodies{i}.T_s(q_i, s(j)*obj.Bodies{i}.RestLength);
                     end
                     T_ = T_prev*T_s_j;
                     %Linearly interpolate the radius of the segment base
@@ -204,7 +219,7 @@ classdef SoftRobot < BodyTree
                     end
                 end
                 %Prepare for the next iteration
-                T_prev = T_prev*obj.Joints{i}.T(q_i, obj.Joints{i}.Parameters);
+                T_prev = T_prev*obj.Bodies{i}.T(q_i);
                 %Update the index of the configuration variables
                 idx_q    = idx_q + obj.Bodies{i}.n;
             end

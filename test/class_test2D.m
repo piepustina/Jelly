@@ -9,7 +9,6 @@ MaterialDamping = 0.1;
 NGaussPoints    = 20;
 n               = 1;
 N_B             = 1;
-StrainBasis     = @(s) [0;-1/L0;0;0;0;0];
 Parameters      = [L0, Radius, MassDensity, YoungModulus, PoissonRatio, MaterialDamping]';
 b1              = GVSBodyPlanar([Parameters; NGaussPoints]);
 j1              = FixedJoint();
