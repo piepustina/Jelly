@@ -3,8 +3,10 @@ function expmA = expmat(A)
 Theta = norm(skew_inv(A(1:3, 1:3)));
 
 %Approximate theta if too small
-if Theta < 1e-14
-    Theta = 1e-14;
+if isnumeric(Theta)
+    if Theta < 1e-14
+        Theta = 1e-14;
+    end
 end
 
 %Compute the exponential

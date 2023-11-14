@@ -58,6 +58,14 @@ classdef BodyTree < handle
                     end
                 end
             end
+            % if coder.target("MEX")
+            %     Zeron  = cell(obj.MaxBodiesNumber-obj.N_B, 1);
+            %     for i = 1:obj.MaxBodiesNumber-obj.N_B
+            %         Zeron{i} = [0];
+            %     end
+            %     JointsAug = [Joints; Zeron];
+            %     BodiesAug = [Bodies; Zeron];
+            % end
             %Assign the joints and bodies
             obj.Joints = cell(BodyTree.MaxBodiesNumber, 1);
             obj.Bodies = cell(BodyTree.MaxBodiesNumber, 1);
@@ -77,9 +85,9 @@ classdef BodyTree < handle
                 end
             else
                 for i = 1:2:2*BodyTree.MaxBodiesNumber
-                    obj.BodiesInternal{i}   = obj.Joints{j};
-                    obj.BodiesInternal{i+1} = obj.Bodies{j};
-                    j = j + 1;
+                   obj.BodiesInternal{i}   = obj.Joints{j};
+                   obj.BodiesInternal{i+1} = obj.Bodies{j};
+                   j = j + 1;
                 end
             end
         end

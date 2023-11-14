@@ -14,3 +14,7 @@ r2.K(repmat(q_test, N_B, 1), 'double')
 disp("Gravity force...")
 r1.GravityForce(repmat(q_test, N_B, 1))
 r2.GravityForce(repmat(q_test, N_B, 1), 'double')
+
+%% Test symbolic
+q  = sym('q', [n, 1], 'real');
+r1.MassMatrix(q)
