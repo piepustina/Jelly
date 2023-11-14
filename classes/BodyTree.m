@@ -63,9 +63,11 @@ classdef BodyTree < handle
             obj.Bodies = cell(BodyTree.MaxBodiesNumber, 1);
             obj.Joints = Joints;
             obj.Bodies = Bodies;
+        
             %Allocate the augmeneted bodies
             obj.N_B_Internal    = 2*obj.N_B;
-            obj.BodiesInternal  = cell(2*BodyTree.MaxBodiesNumber, 1);
+            obj.BodiesInternal  = cell(2*BodyTree.MaxBodiesNumber+1, 1);
+            obj.BodiesInternal{2*BodyTree.MaxBodiesNumber+1} = 0;
             j                   = 1;
             if coder.target("MATLAB")
                 for i = 1:2:obj.N_B_Internal
@@ -185,9 +187,10 @@ classdef BodyTree < handle
             %********************************************************
             %********************* Forward step *********************
             %********************************************************
-            l_B = length(obj.BodiesInternal);
+            %l_B = length(obj.BodiesInternal);
             for i = 1:2*BodyTree.MaxBodiesNumber %Iterative over all the augmented bodies
-                if i <= l_B
+                %if i <= l_B
+                if i <= N_B_
                     if isnumeric(obj.BodiesInternal{i})
                         continue;
                     end
@@ -237,7 +240,8 @@ classdef BodyTree < handle
             %Index for tau vector
             idx_tau = obj.n;
             for i = 2*BodyTree.MaxBodiesNumber:-1:1
-                if i <= l_B
+                %if i <= l_B
+                if i <= N_B_
                     if isnumeric(obj.BodiesInternal{i})
                         continue;
                     end
