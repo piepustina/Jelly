@@ -432,6 +432,45 @@ classdef BodyTree < handle
             %q_eq = fsolve(@(q) obj.EquilibriumEquation(q, tau), q0, options);
             [q_eq, f_val] = fsolve(@(q) obj.EquilibriumEquation(q, tau), q0);
         end
+        
+
+        function E = Energy(obj, q, dq, q_ref)
+            % Compute the system energy.
+            %q_ref is the reference configuration for the computation of
+            %the elastic and gravitational energy. If it is not provided as
+            %argument, 0 is assumed.
+            switch nargin
+                case 2
+                    dq   = zeros(obj.n, 1, "like", q);
+                    q_ref = zeros(obj.n, 1, "like", q);
+                case 3
+                    q_ref = zeros(obj.n, 1, "like", q);
+            end
+            
+            %Kinetic energy
+            E_kinetic = 1/2*dq'*obj.MassMatrix(q)*dq;
+            %Potential energy
+            E_elastic = 1/2*(q - q_ref)'*obj.K(q);
+            if ~isnumeric(q)
+                E_gravity = potential(obj.GravityForce(q), q, q_ref);
+            else
+                E_gravity = integral(@(s) (q - q_ref)'*obj.GravityForce(q_ref + s.*(q - q_ref)), 0, 1, 'ArrayValued', true);
+            end
+            %Overall energy
+            E = E_kinetic + E_elastic + E_gravity;
+        end
+
+        function T = DirectKinematics(obj, q)
+            %Compute the direct kinematics for each body. 
+            % T is a cell array of transformation matrices from the base to the tip.
+            T   = cell(obj.N_B, 1);
+            T_i = obj.T0;
+            obj = obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q));
+            for i = 1:obj.N_B
+                T_i  = T_i*obj.Joints{i}.T_*obj.Bodies{i}.T_;
+                T{i} = T_i;
+            end
+        end
     end
 
     methods (Access = protected)
