@@ -15,9 +15,12 @@ classdef Plotter
         PBaspect = [2.4, 1, 1];
         LegendColumns = 1;
         LegendLocation = 'best';
+        %Change this to change the length of the lines in the legend
+        LegendItemTokenSize = [30, 18];
         LogScale = false;
         YScale   = 'linear'; % or 'log'
         XScale   = 'linear'; % or 'log'
+        DrawNow  = false;
     end
     
     methods
@@ -52,6 +55,8 @@ classdef Plotter
            addParameter(p, 'LogScale', obj.LogScale);
            addParameter(p, 'YScale', obj.YScale);
            addParameter(p, 'XScale', obj.XScale);
+           addParameter(p, 'Drawnow', obj.DrawNow);
+           addParameter(p, 'LegendItemTokenSize', obj.LegendItemTokenSize);
 
            parse(p, X_data, Y_data, varargin{:});
            
@@ -77,12 +82,17 @@ classdef Plotter
 
            
            if strcmp(p.Results.Legend, 'on')
-                legend(p.Results.LegendLabels, ...
-                    'Interpreter', p.Results.Interpreter, ...
-                    'FontSize', p.Results.FontSize, ...
-                    'Orientation', p.Results.LegendOrientation, ...
-                    'Location', p.Results.LegendLocation, ...
-                    'NumColumns', p.Results.LegendColumns);
+                lg = legend(p.Results.LegendLabels, ...
+                        'Interpreter', p.Results.Interpreter, ...
+                        'FontSize', p.Results.FontSize, ...
+                        'Orientation', p.Results.LegendOrientation, ...
+                        'Location', p.Results.LegendLocation, ...
+                        'NumColumns', p.Results.LegendColumns);
+                lg.ItemTokenSize = p.Results.LegendItemTokenSize;
+           end
+
+           if p.Results.Drawnow
+               drawnow;
            end
         end
 
@@ -126,4 +136,3 @@ classdef Plotter
 
     end
 end
-
