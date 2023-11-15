@@ -95,6 +95,17 @@ classdef BodyTree < handle
         %Evaluate the joints and bodies in the current configuration
         function obj = TreeUpdate(obj, q, dq, ddq)
             %Update the state of the tree. 
+
+            %Check that the vectors q, dq and ddq are columns.
+            if ~iscolumn(q)
+                q = q';
+            end
+            if ~iscolumn(dq)
+                dq = dq';
+            end
+            if ~iscolumn(ddq)
+                ddq = ddq';
+            end
             
             %Initialize variables
             k_i = 1;
