@@ -149,6 +149,16 @@ classdef BodyTree < handle
         %NOTE: The inverse dynamics does not account for external and
         %generalized forces, except for gravity.
         function tau = InverseDynamics(obj, q, dq, ddq)
+            %Check that the vectors q, dq and ddq are columns.
+            if ~iscolumn(q)
+                q = q';
+            end
+            if ~iscolumn(dq)
+                dq = dq';
+            end
+            if ~iscolumn(ddq)
+                ddq = ddq';
+            end
             %Update the BodyTree
             obj = obj.TreeUpdate(q, dq, ddq);
             %Run the ID with the Kane algorithm. q is only passed to
