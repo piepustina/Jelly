@@ -489,7 +489,7 @@ classdef BodyTree < handle
         
         %Implements the equlibrium equation
         function eq = EquilibriumEquation(obj, q, tau)
-            eq = obj.GravityForce(q, 'double') + obj.K(q, 'double') - tau;
+            eq = obj.GravityForce(q) + obj.K(q) - tau;
         end
         
     end
