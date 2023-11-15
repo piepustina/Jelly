@@ -14,7 +14,7 @@ Parameters      = [L0, BaseRadius, TipRadius, MassDensity, YoungModulus, Poisson
 B1              = cell(N_B, 1);
 J1              = cell(N_B, 1);
 for i = 1:N_B
-    B1{i} = PCC3D([Parameters; NGaussPoints]);
+    B1{i} = PAC2D([Parameters; NGaussPoints]);
     J1{i} = FixedJoint();
 end
 
@@ -27,8 +27,8 @@ figure; hold on; grid on;
 
 light; lighting gouraud
 %Generate a random configuration
-q_lb   = repmat([-pi; -pi; -0.05], N_B, 1);
-q_ub   = repmat([ pi;  pi;  0.05], N_B, 1);
+q_lb   = repmat([-pi; -pi;], N_B, 1);
+q_ub   = repmat([ pi;  pi;], N_B, 1);
 q_test = q_lb + (q_ub-q_lb).*rand(sr.n,1);
 sr.plot(q_test);
 
