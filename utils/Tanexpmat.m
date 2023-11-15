@@ -6,8 +6,8 @@ Theta = norm(A(1:3));
 
 %Approximate theta if too small
 if isnumeric(Theta)
-    if Theta < 1e-5
-        Theta = 1e-5;
+    if Theta < 1e-6
+        Theta = 1e-6;
     end
 end
 
