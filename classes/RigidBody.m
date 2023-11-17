@@ -13,7 +13,7 @@ classdef RigidBody < Body
         % Parameters = [Mass; P_com_x; P_com_y; P_com_z; I_xx; I_yy; I_zz; I_xy; I_xz; I_yz];
         Parameters = zeros(10, 1);
     end
-    
+
     methods
         function obj = RigidBody(Parameters)
             obj             = obj@Body(RigidBody.n);

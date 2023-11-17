@@ -191,7 +191,7 @@ classdef Body < handle
     methods (Access = public)
         function s = toStruct(obj)
             % Convert object to a struct representation.
-            s = struct('BodyType', class(obj), 'BodyParameters', {{obj.Parameters}}, 'BodyDoF', obj.n);
+            s = struct('BodyType', class(obj), 'BodyParameters', obj.Parameters, 'BodyDoF', obj.n);
         end
          
         function Update(obj, q, dq, ddq)

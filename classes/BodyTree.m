@@ -58,14 +58,6 @@ classdef BodyTree < handle
                     end
                 end
             end
-            % if coder.target("MEX")
-            %     Zeron  = cell(obj.MaxBodiesNumber-obj.N_B, 1);
-            %     for i = 1:obj.MaxBodiesNumber-obj.N_B
-            %         Zeron{i} = [0];
-            %     end
-            %     JointsAug = [Joints; Zeron];
-            %     BodiesAug = [Bodies; Zeron];
-            % end
             %Assign the joints and bodies
             obj.Joints = cell(BodyTree.MaxBodiesNumber, 1);
             obj.Bodies = cell(BodyTree.MaxBodiesNumber, 1);
@@ -74,8 +66,7 @@ classdef BodyTree < handle
         
             %Allocate the augmeneted bodies
             obj.N_B_Internal    = 2*obj.N_B;
-            obj.BodiesInternal  = cell(2*BodyTree.MaxBodiesNumber+1, 1);
-            obj.BodiesInternal{2*BodyTree.MaxBodiesNumber+1} = 0;
+            obj.BodiesInternal  = cell(2*BodyTree.MaxBodiesNumber, 1);
             j                   = 1;
             if coder.target("MATLAB")
                 for i = 1:2:obj.N_B_Internal
@@ -479,7 +470,7 @@ classdef BodyTree < handle
                 case 3
                     q_ref = zeros(obj.n, 1, "like", q);
             end
-            
+
             %Kinetic energy
             E_kinetic = 1/2*dq'*obj.MassMatrix(q)*dq;
             %Potential energy

@@ -12,7 +12,7 @@ classdef Joint < Body
         %Overload the structure representation
         function s = toStruct(obj)
             % Convert object to a struct representation.
-            s = struct('JointType', class(obj), 'JointParameters', {{obj.Parameters}}, 'JointDoF', obj.n);
+            s = struct('JointType', class(obj), 'JointParameters', obj.Parameters, 'JointDoF', obj.n);
         end
     end
 end

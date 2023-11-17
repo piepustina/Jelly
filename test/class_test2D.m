@@ -18,6 +18,7 @@ J1 = cell(N_B, 1);
 for i = 1:N_B
     B1{i} = PCC2D([Parameters; NGaussPoints]);
     J1{i} = FixedJoint();
+    %J1{i} = RotationalJoint([0; 0; 0; 0]);
 end
 %
 %Build an equivalent body for comparison

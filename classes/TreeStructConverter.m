@@ -6,8 +6,8 @@ classdef TreeStructConverter < handle
     
     %Define the maximum size of the parameters of the struct (required for code generation). 
     properties (Constant)
-        StringSize = 40;%Used for the BodyType and JointType fields
-        ParametersSize = 20;%Used for the size of the parameters
+        StringSize      = 40;%Used for the BodyType and JointType fields
+        ParametersSize  = 20;%Used for the size of the parameters
     end
     
     methods (Static)
@@ -16,16 +16,15 @@ classdef TreeStructConverter < handle
             if ~isa(R, 'BodyTree')
                 error("R is not an instance of BodyTree.m");
             end
-
             %Iterate over the bodies of the robot
             BodyStruct = struct('BodyType', char('#'*ones(1, TreeStructConverter.StringSize)),...
                                 'LengthBodyType', 0, ...
-                                'BodyParameters', {cell(TreeStructConverter.ParametersSize, 1)}, ...
+                                'BodyParameters', nan(TreeStructConverter.ParametersSize, 1), ...
                                 'NumberBodyParameters', 0, ...
                                 'BodyDoF', 0, ...
                                 'JointType', char('#'*ones(1, TreeStructConverter.StringSize)), ...
                                 'LengthJointType', 0, ...
-                                'JointParameters', {cell(TreeStructConverter.ParametersSize, 1)},...
+                                'JointParameters', nan(TreeStructConverter.ParametersSize, 1),...
                                 'NumberJointParameters', 0, ...
                                 'JointDoF', 0);
             TreeStruct = struct('n', R.n, ...
@@ -44,24 +43,14 @@ classdef TreeStructConverter < handle
                 TreeStruct.Bodies(i).LengthBodyType = length(cBodyType);
                 TreeStruct.Bodies(i).BodyType(1:TreeStruct.Bodies(i).LengthBodyType) = cBodyType;
                 TreeStruct.Bodies(i).NumberBodyParameters = length(S_body.BodyParameters);
-                for j = 1:TreeStruct.Bodies(i).NumberBodyParameters
-                    TreeStruct.Bodies(i).BodyParameters{j} = S_body.BodyParameters{j};
-                end
-                for j = TreeStruct.Bodies(i).NumberBodyParameters+1:TreeStructConverter.ParametersSize
-                    TreeStruct.Bodies(i).BodyParameters{j} = 0;
-                end
+                TreeStruct.Bodies(i).BodyParameters(1:TreeStruct.Bodies(i).NumberBodyParameters) = S_body.BodyParameters;
                 TreeStruct.Bodies(i).BodyDoF = S_body.BodyDoF;
                 %Save the joint
                 cJointType = char(S_joint.JointType);
                 TreeStruct.Bodies(i).LengthJointType = length(cJointType);
                 TreeStruct.Bodies(i).JointType(1:TreeStruct.Bodies(i).LengthJointType) = cJointType;
                 TreeStruct.Bodies(i).NumberJointParameters = length(S_joint.JointParameters);
-                for j = 1:TreeStruct.Bodies(i).NumberJointParameters
-                    TreeStruct.Bodies(i).JointParameters{j} = S_joint.JointParameters{j};
-                end
-                for j = TreeStruct.Bodies(i).NumberJointParameters+1:TreeStructConverter.ParametersSize
-                    TreeStruct.Bodies(i).JointParameters{j} = 0;
-                end
+                TreeStruct.Bodies(i).JointParameters(1:TreeStruct.Bodies(i).NumberJointParameters) = S_joint.JointParameters;
                 TreeStruct.Bodies(i).JointDoF = S_joint.JointDoF;
             end
         end
@@ -77,17 +66,11 @@ classdef TreeStructConverter < handle
             for i = 1:N_B
                 %Create the joint
                 JointType = S.Bodies(i).JointType(1:S.Bodies(i).LengthJointType);
-                JointParameters = cell(S.Bodies(i).NumberJointParameters, 1);
-                for j = 1:S.Bodies(i).NumberJointParameters
-                    JointParameters{j} = S.Bodies(i).JointParameters{j};
-                end
+                JointParameters = S.Bodies(i).JointParameters(1:S.Bodies(i).NumberJointParameters);
                 Joints{i} = TreeFactory.CreateJoint(JointType, S.Bodies(i).JointDoF, JointParameters);
                 %Create the body
                 BodyType = S.Bodies(i).BodyType(1:S.Bodies(i).LengthBodyType);
-                BodyParameters = cell(S.Bodies(i).NumberBodyParameters, 1);
-                for j = 1:S.Bodies(i).NumberBodyParameters
-                    BodyParameters{j} = S.Bodies(i).BodyParameters{j};
-                end
+                BodyParameters = S.Bodies(i).BodyParameters(1:S.Bodies(i).NumberBodyParameters);
                 Bodies{i} = TreeFactory.CreateBody(BodyType, S.Bodies(i).BodyDoF, BodyParameters);
             end
             

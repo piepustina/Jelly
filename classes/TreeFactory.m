@@ -9,10 +9,10 @@ classdef TreeFactory < handle
             %Get the class constructor from the type
             Constructor = str2func(Type);
             %Call the class constructor to build the joint
-            if isempty(Parameters{1})
+            if isempty(Parameters)
                 J = Constructor();
             else
-                J = Constructor(Parameters{1});
+                J = Constructor(Parameters);
             end
         end
         
@@ -21,10 +21,10 @@ classdef TreeFactory < handle
             %Get the class contructor from the type
             Constructor = str2func(Type);
             %Call the class constructor to build the body
-            if isempty(Parameters{1})
+            if isempty(Parameters)
                 B = Constructor();
             else
-                B = Constructor(Parameters{1});
+                B = Constructor(Parameters);
             end
         end
     end

@@ -58,3 +58,12 @@ r2.MassMatrix(q, 'sym')
 r1.GravityForce(q)
 r2.GravityForce(q, 'sym')
 
+
+%%
+
+rStruct = TreeStructConverter.ObjectToStruct(r1);
+
+r3      = TreeStructConverter.StructToObject(rStruct);
+
+
+
