@@ -7,7 +7,7 @@ MassDensity     = 1062;
 YoungModulus    = 6.66e5;
 PoissonRatio    = 0.5;
 MaterialDamping = 0.1;
-NGaussPoints    = 1;
+NGaussPoints    = 10;
 n               = 1;
 N_B             = 1;
 Parameters      = [L0, BaseRadius, TipRadius, MassDensity, YoungModulus, PoissonRatio, MaterialDamping]';
@@ -33,7 +33,7 @@ for i = 1:N_B
 end
 
 %Test configurations
-q_test          = 0*1;
+q_test          = 1;
 dq_test         = 1;
 ddq_test        = -1;
 

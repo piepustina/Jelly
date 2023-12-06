@@ -1,6 +1,7 @@
-classdef GVSBody < Body
-    %GVSBODY Class representing a slender body modeled under the geometric
+classdef VGVSBody < Body
+    %VGVSBODY Class representing a volumetric body modeled under the geometric
     %variable strain approach.
+    %The volumetric integrals are computed in cylindrical coordinates.
     
     methods (Abstract)
         %Strain basis as a function of the arc length
@@ -25,24 +26,27 @@ classdef GVSBody < Body
 
     %Private properties extracted from the parameters for ease of use
     properties (Access = private)
-        %Radius          = 0;
-        BaseRadius      = 0;
-        TipRadius       = 0;
-        MassDensity     = 0;
-        YoungModulus    = 0;
-        ShearModulus    = 0;
-        PoissonRatio    = 0.5;
-        MaterialDamping = 0;
-        NGaussPoints    = 0;
-        GaussPoints     = 0;
-        GaussWeights    = 0;
-        NGaussPointsInt = 0;
+        BaseRadius          = 0;
+        TipRadius           = 0;
+        MassDensity         = 0;
+        YoungModulus        = 0;
+        ShearModulus        = 0;
+        PoissonRatio        = 0.5;
+        MaterialDamping     = 0;
+        NGaussPoints        = 0;
+        GaussPointsLength   = 0;
+        GaussPointsRadius   = 0;
+        GaussPointsAngle    = 0;
+        GaussWeightsLength  = 0;
+        GaussWeightsRadius  = 0;
+        GaussWeightsAngle   = 0;
+        NGaussPointsInt     = 0;
         %Properties used for the internal computation, all the quantities
         %are expressed in the global frame
-        gGauss;
-        EtaGauss;
-        JEtaGauss;
-        dEtaGauss;
+        gGaussLength;%Transformation matrix at the Gaussian points along the backbone
+        EtaGaussLength;%Velocity twist of the Gaussian points along the backbone
+        JEtaGaussLength;%Jacobian of the velocity twist w.r.t. \dot{q} along the backbone
+        dEtaGaussLength;%Acceleration twist of the Gaussian points along the backbone
         rGauss;
         drGauss;
         JdrGauss;
@@ -51,7 +55,7 @@ classdef GVSBody < Body
     
     methods
         %% Class constructor
-        function obj = GVSBody(n, Parameters)
+        function obj = VGVSBody(n, Parameters)
             if isrow(Parameters)
                 Parameters = Parameters';
             end
@@ -68,34 +72,78 @@ classdef GVSBody < Body
             obj.ShearModulus        = obj.YoungModulus/(2*(1+obj.PoissonRatio));
             obj.MaterialDamping     = Parameters(7);
             obj.NGaussPoints        = Parameters(8);
-            [obj.GaussPoints, obj.GaussWeights] = lgwt(obj.NGaussPoints, 0, obj.RestLength);
-            obj.GaussPoints         = [obj.GaussPoints; obj.RestLength];
-            obj.GaussWeights        = [obj.GaussWeights; 0];
+            %Compute the Gaussian points and weights for integration along
+            %the length
+            [obj.GaussPointsLength, obj.GaussWeightsLength] = lgwt(obj.NGaussPoints, 0, obj.RestLength);
+            obj.GaussPointsLength         = [obj.GaussPointsLength; obj.RestLength];
+            obj.GaussWeightsLength        = [obj.GaussWeightsLength; 0];
+            %Compute the Gaussian points and weights for integration along
+            %the section radius
+            obj.GaussPointsRadius  = zeros(obj.NGaussPoints+1, obj.NGaussPoints+1);
+            obj.GaussWeightsRadius = zeros(obj.NGaussPoints+1, obj.NGaussPoints+1);
+            for i = 1:obj.NGaussPoints+1
+                %Evaluate the radius at the i-th Gaussian points of the
+                %legnth
+                Ri                                      = obj.Radius(obj.GaussPointsLength(i), zeros(n, 1));
+                %Compute the Gaussian points and weights for the current
+                %value of the radius
+                [GaussPointsRadius, GaussWeightsRadius] = lgwt(obj.NGaussPoints, 0, Ri);
+                obj.GaussPointsRadius(i, :)             = [GaussPointsRadius; Ri]';
+                obj.GaussWeightsRadius(i, :)            = [GaussWeightsRadius; 0]';
+            end
+            %Compute the Gaussian points and weights for integration along
+            %the section angle
+            [obj.GaussPointsAngle, obj.GaussWeightsAngle]   = lgwt(obj.NGaussPoints, 0, 2*pi);
+            obj.GaussPointsAngle                            = [obj.GaussPointsAngle; 2*pi];
+            obj.GaussWeightsAngle                           = [obj.GaussWeightsAngle; 0];
+            %Preallocate the tensors used in the computations
             obj.NGaussPointsInt     = obj.NGaussPoints + 1;
-            obj.gGauss              = repmat(eye(4)     , [1, 1, obj.NGaussPointsInt]);
-            obj.EtaGauss            = zeros(6, obj.NGaussPointsInt);
-            obj.JEtaGauss           = zeros(6, obj.n, obj.NGaussPointsInt);
-            obj.dEtaGauss           = zeros(6, obj.NGaussPointsInt);
-            obj.rGauss              = zeros(3, obj.NGaussPointsInt);
-            obj.drGauss             = zeros(3, obj.NGaussPointsInt);
-            obj.JdrGauss            = zeros(3, obj.n, obj.NGaussPointsInt);
-            obj.ddrGauss            = zeros(3, obj.NGaussPointsInt);
+            obj.gGaussLength        = repmat(eye(4), [1, 1, obj.NGaussPointsInt]);
+            obj.EtaGaussLength      = zeros(6, obj.NGaussPointsInt);
+            obj.JEtaGaussLength     = zeros(6, obj.n, obj.NGaussPointsInt);
+            obj.dEtaGaussLength     = zeros(6, obj.NGaussPointsInt);
+            obj.rGauss              = zeros(3, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt);
+            obj.drGauss             = zeros(3, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt);
+            obj.JdrGauss            = zeros(3, obj.n, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt);
+            obj.ddrGauss            = zeros(3, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt);
         end
 
         %% Radius function
-        function R = Radius(obj, s)
-            R = obj.TipRadius + (obj.RestLength - s)/obj.RestLength*(obj.BaseRadius - obj.TipRadius);
+        function R = Radius(obj, s, q)
+            if nargin == 3
+                deltaR = obj.RadiusBasis(s)*q;
+            else
+                deltaR = 0;
+            end
+            R_ref   = obj.TipRadius + (obj.RestLength - s)/obj.RestLength*(obj.BaseRadius - obj.TipRadius);
+            R       = deltaR + R_ref;
         end
 
-        %% Mass density along the curvliniear abscissa
-        function rhos = LinearMassDensity(obj, s)
-            rhos = pi*obj.Radius(s)^2*obj.MassDensity;
+        %Default basis for the radius
+        function B = RadiusBasis(obj, s)
+            B = zeros(1, obj.n);
+        end
+
+        %Jacobian of the radius with respect to q
+        function JR = JRadius(obj, s, q)
+            JR = obj.RadiusBasis(s);
+        end
+
+        %First order time derivative of the radius
+        function dR = dRadius(obj, s, q, dq)
+            dR = obj.JRadius(s, q)*dq;
+        end
+
+        %Second order time derivative of the radius
+        function ddR = ddRadius(obj, s, q, dq, ddq)
+            ddR = obj.JRadius(s, q)*ddq;
         end
 
         %% Body methods implementation
         %Overload the update body method
         function Update(obj, q, dq, ddq)
-            %Update the kinematics
+            %Update the kinematics for the tip of the body at the center of
+            %the backbone
             [T_, omega_, v_, domega_, dv_, J_omega, J_v] = obj.Kinematics(q, dq, ddq);
             obj.T_                  = T_;
             obj.v_rel_              = v_;
@@ -133,7 +181,7 @@ classdef GVSBody < Body
         function T_ = T(obj, q)
             T_ = obj.T_s(q, obj.RestLength);
         end
-        %% Transformation matrix from base to s
+        %% Transformation matrix from base to s at the backbone
         function Ts_ = T_s(obj, q, s)
             [Ts_, ~, ~, ~, ~, ~, ~] = obj.Kinematics_s(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q), s);
         end
@@ -211,15 +259,25 @@ classdef GVSBody < Body
             %Compute the inertia
             I_ = zeros(3, 3);
             for i = 1:obj.NGaussPointsInt
-                Sr_i = skew(obj.rGauss(:, i));
-                I_  = I_ + obj.GaussWeights(i)*(Sr_i'*Sr_i*obj.LinearMassDensity(obj.GaussPoints(i)));
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk   = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
+                        Sr_ijk  = skew(obj.rGauss(1:3, i, j, k));
+                        I_      = I_ + w_ijk*(Sr_ijk'*Sr_ijk);
+                    end
+                end
             end
         end
         %% Mass
         function m_ = m(obj)
             m_ = 0;
             for i = 1:obj.NGaussPointsInt
-                m_ = m_ + obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk   = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
+                        m_      = m_ + w_ijk;
+                    end
+                end
             end
         end
         %% Time derivative of the inertia matrix
@@ -235,9 +293,14 @@ classdef GVSBody < Body
             %Compute the time derivative of the inertia
             J_ = zeros(3, 3, 'like', obj.rGauss(1:3, 1));
             for i = 1:obj.NGaussPointsInt
-                Sr_i  = skew(obj.rGauss(:, i));
-                Sdr_i = skew(obj.drGauss(:, i));
-                J_ = J_ + (Sdr_i'*Sr_i + Sr_i'*Sdr_i)*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk   = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
+                        Sr_ijk    = skew(obj.rGauss(1:3, i, j, k));
+                        Sdr_ijk   = skew(obj.drGauss(1:3, i, j, k));
+                        J_      = J_ + (Sdr_ijk'*Sr_ijk + Sr_ijk'*Sdr_ijk)*w_ijk;
+                    end
+                end
             end
         end
         %% Integral of \dot{r}
@@ -263,7 +326,12 @@ classdef GVSBody < Body
             %Compute the term
             int_r_X_dr_ = zeros(3, 1, 'like', obj.rGauss(1:3, 1));
             for i = 1:obj.NGaussPointsInt
-                int_r_X_dr_ = int_r_X_dr_ + cross(obj.rGauss(:, i), obj.drGauss(:, i))*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk       = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
+                        int_r_X_dr_ = int_r_X_dr_ + cross(obj.rGauss(1:3, i, j, k), obj.drGauss(1:3, i, j, k))*w_ijk;
+                    end
+                end
             end
         end
         %% Integral of \cross(r, \ddot{r})
@@ -283,7 +351,12 @@ classdef GVSBody < Body
             %Compute the term
             int_r_X_ddr_ = zeros(3, 1, 'like', obj.rGauss(1:3, 1));
             for i = 1:obj.NGaussPointsInt
-                int_r_X_ddr_ = int_r_X_ddr_ + cross(obj.rGauss(:, i), obj.ddrGauss(:, i))*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk           = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
+                        int_r_X_ddr_    = int_r_X_ddr_ + cross(obj.rGauss(1:3, i, j, k), obj.ddrGauss(1:3, i, j, k))*w_ijk;
+                    end
+                end
             end
         end
         %% Integral of \cross(\dor{r}, \jacobian{r}{q})
@@ -299,7 +372,12 @@ classdef GVSBody < Body
             %Compute the term
             int_dr_X_pv_r_ = zeros(obj.n, 3, 'like', obj.rGauss(1:3, 1));
             for i = 1:obj.NGaussPointsInt
-                int_dr_X_pv_r_ = int_dr_X_pv_r_ + (skew(obj.drGauss(:, i))*obj.JdrGauss(1:3, 1:obj.n, i))'*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk           = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
+                        int_dr_X_pv_r_  = int_dr_X_pv_r_ + (skew(obj.drGauss(1:3, i, j, k))*obj.JdrGauss(1:3, 1:obj.n, i, j, k))'*w_ijk;
+                    end
+                end
             end
         end
         %% Integral of \dot(\jacobian{r}{q}, \ddot{r})
@@ -319,7 +397,12 @@ classdef GVSBody < Body
             %Compute the term
             int_pv_r_O_dd_r_ = zeros(obj.n, 1, 'like', obj.rGauss(1:3, 1));
             for i = 1:obj.NGaussPointsInt
-                int_pv_r_O_dd_r_ = int_pv_r_O_dd_r_ + (obj.JdrGauss(1:3, 1:obj.n, i)'*obj.ddrGauss(:, i))*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk               = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
+                        int_pv_r_O_dd_r_    = int_pv_r_O_dd_r_ + (obj.JdrGauss(1:3, 1:obj.n, i, j, k)'*obj.ddrGauss(1:3, i, j, k))*w_ijk;
+                    end
+                end
             end
         end
         %% Integral of \dot(\dot{r}, \dot{r})
@@ -341,7 +424,12 @@ classdef GVSBody < Body
             %Compute the term
             grad_int_r_X_dr_ = zeros(obj.n, 3, 'like', obj.rGauss(1:3, 1));
             for i = 1:obj.NGaussPointsInt
-                grad_int_r_X_dr_ = grad_int_r_X_dr_ +  (skew(obj.rGauss(:, i))*obj.JdrGauss(1:3, 1:obj.n, i))'*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk   = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
+                        grad_int_r_X_dr_ = grad_int_r_X_dr_ +  (skew(obj.rGauss(1:3, i, j, k))*obj.JdrGauss(1:3, 1:obj.n, i, j, k))'*w_ijk;
+                    end
+                end
             end
         end
         %% Jacobian of the time derivative of the inertia
@@ -353,14 +441,19 @@ classdef GVSBody < Body
             %Compute the term
             grad_J_ = zeros(3, 3, obj.n, 'like', obj.rGauss(1:3, 1));
             %Iterate over all DoFs
-            for j = 1:obj.n
+            for l = 1:obj.n
                 %Iterate over all the Gaussian points
                 for i = 1:obj.NGaussPointsInt
-                    %i-th Gaussian point
-                    ri                   = obj.rGauss(1:3, i);
-                    %Gradient of i-th Gaussian point with respect to q(j)
-                    dri_qj               = obj.JdrGauss(1:3, j, i);
-                    grad_J_(1:3, 1:3, j) = grad_J_(1:3, 1:3, j) + (skew(dri_qj)'*skew(ri) + skew(ri)'*skew(dri_qj))*obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i));
+                    for j = 1:obj.NGaussPointsInt
+                        for k = 1:obj.NGaussPointsInt
+                            w_ijk   = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
+                            %i-th Gaussian point
+                            r_ijk      = obj.rGauss(1:3, i, j, k);
+                            %Gradient of i-th Gaussian point with respect to q(j)
+                            dr_ijk_qj  = obj.JdrGauss(1:3, l, i, j, k);
+                            grad_J_(1:3, 1:3, l) = grad_J_(1:3, 1:3, l) + (skew(dr_ijk_qj)'*skew(r_ijk) + skew(r_ijk)'*skew(dr_ijk_qj))*w_ijk;
+                        end
+                    end
                 end
             end
         end
@@ -395,16 +488,29 @@ classdef GVSBody < Body
             E   = obj.YoungModulus;
             K_  = zeros(obj.n, 1, 'like', q);
             for i = 1:obj.NGaussPointsInt
+                %Compute the radius
+                R_q             = obj.Radius(obj.GaussPointsLength(i), q);
                 %Linear and angular stiffness
-                K_l         = pi*obj.Radius(obj.GaussPoints(i))^2*diag([G, G, E]);
-                BodyInertia = pi*obj.Radius(obj.GaussPoints(i))^4*[1/4, 1/4, 1/2];
+                K_l         = pi*R_q^2*diag([G, G, E]);
+                BodyInertia = pi*R_q^4*[1/4, 1/4, 1/2];
                 K_a         = diag([E*BodyInertia(1), E*BodyInertia(2), G*BodyInertia(3)]);
                 %Body stiffness
                 K_b         = blkdiag(K_a, K_l);
                 %Update the elastic force
-                xiGauss     = obj.xi(q, obj.GaussPoints(i));
-                JxiGauss    = obj.Jxi(q, obj.GaussPoints(i));
-                K_          = K_ + (JxiGauss'*K_b*(xiGauss - obj.ReferenceStrain))*obj.GaussWeights(i);
+                xiGauss     = obj.xi(q, obj.GaussPointsLength(i));
+                JxiGauss    = obj.Jxi(q, obj.GaussPointsLength(i));
+                K_          = K_ + (JxiGauss'*K_b*(xiGauss - obj.ReferenceStrain))*obj.GaussWeightsLength(i);
+                %Add elastic force for the radius based on the strain
+                %elastic force
+                %K_R     = pi*obj.Radius(obj.GaussPointsLength(i), q)^2*E;
+                JR      = obj.JRadius(obj.GaussPointsLength(i), q);
+                %K_      = K_ + JR'*K_R*(obj.Radius(obj.GaussPointsLength(i), q) - obj.Radius(obj.GaussPointsLength(i), zeros(obj.n, 1)));
+                K_R_l           = pi*R_q*diag([G, G, E]);
+                dBodyInertia    = 1/2*pi*R_q^3*[1/4, 1/4, 1/2];
+                K_R_a           = diag([E*dBodyInertia(1), E*dBodyInertia(2), G*dBodyInertia(3)]);
+                K_R             = blkdiag(K_R_a, K_R_l);
+                K_              = K_ + JR'*(xiGauss - obj.ReferenceStrain)'*K_R*(xiGauss - obj.ReferenceStrain);
+                
             end
         end
         %% Generalized damping force
@@ -414,16 +520,29 @@ classdef GVSBody < Body
             E   = obj.YoungModulus;
             D_ = zeros(obj.n, 1, 'like', q);
             for i = 1:obj.NGaussPointsInt
+                %Compute the radius
+                R_q         = obj.Radius(obj.GaussPointsLength(i), q);
                 %Linear and angular damping
-                D_l         = pi*obj.Radius(obj.GaussPoints(i))^2*diag([G, G, E]);
-                BodyInertia = pi*obj.Radius(obj.GaussPoints(i))^4*[1/4, 1/4, 1/2];
+                D_l         = pi*R_q^2*diag([G, G, E]);
+                BodyInertia = pi*R_q^4*[1/4, 1/4, 1/2];
                 D_a         = diag([E*BodyInertia(1), E*BodyInertia(2), G*BodyInertia(3)]);
                 %Body damping
                 D_b         = blkdiag(D_a, D_l)*obj.MaterialDamping;
                 %Update the damping force
-                dxiGauss    = obj.dxi(q, dq, obj.GaussPoints(i));
-                JxiGauss    = obj.Jxi(q, obj.GaussPoints(i));
-                D_          = D_ + (JxiGauss'*D_b*dxiGauss)*obj.GaussWeights(i);
+                dxiGauss    = obj.dxi(q, dq, obj.GaussPointsLength(i));
+                JxiGauss    = obj.Jxi(q, obj.GaussPointsLength(i));
+                D_          = D_ + (JxiGauss'*D_b*dxiGauss)*obj.GaussWeightsLength(i);
+                %Add damping force for the radius
+                %D_R         = pi*obj.Radius(obj.GaussPointsLength(i), q)^2*E*obj.MaterialDamping;
+                %JR          = obj.JRadius(obj.GaussPointsLength(i), q);
+                %D_          = D_ + JR'*D_R*obj.dRadius(obj.GaussPointsLength(i), q, dq);
+                JR              = obj.JRadius(obj.GaussPointsLength(i), q);
+                D_R_l           = pi*R_q*diag([G, G, E])*(JR*dq);
+                dBodyInertia    = 1/2*pi*R_q^3*[1/4, 1/4, 1/2]*(JR*dq);
+                D_R_a           = diag([E*dBodyInertia(1), E*dBodyInertia(2), G*dBodyInertia(3)]);
+                D_R             = blkdiag(D_R_a, D_R_l)*obj.MaterialDamping;
+                xiGauss         = obj.xi(q, obj.GaussPointsLength(i));
+                D_              = D_ + JR'*(xiGauss - obj.ReferenceStrain)'*D_R*(xiGauss - obj.ReferenceStrain);
             end
         end
     end
@@ -432,77 +551,113 @@ classdef GVSBody < Body
     methods (Access = private)
         %% Compute the kinematics
         function [g, omega, v, domega, dv, J_omega, J_v] = Kinematics(obj, q, dq, ddq)
-            %% Compute the direct and differential kinamtics at the tip
+            %% Compute the direct and differential kinamtics at the tip of the central backbone
             [g, omega, v, domega, dv, J_omega, J_v] = obj.Kinematics_s(q, dq, ddq, obj.RestLength);
-            %% Update the position of Gauss points of the backbone in the tip frame
+            %% Update the position of all the Gaussian points of body
             RT          = g(1:3, 1:3)';
-            dRT         = -RT*skew(obj.EtaGauss(1:3, end));
-            ddRT        = -RT*skew(obj.dEtaGauss(1:3, end)) + ...
-                          -dRT*skew(obj.EtaGauss(1:3, end));
+            dRT         = -RT*skew(obj.EtaGaussLength(1:3, end));
+            ddRT        = -RT*skew(obj.dEtaGaussLength(1:3, end)) + ...
+                          -dRT*skew(obj.EtaGaussLength(1:3, end));
             d           = g(1:3, 4);
-            pGauss      = zeros(3, obj.NGaussPointsInt, 'like', q);
-            dpGauss     = zeros(3, obj.NGaussPointsInt, 'like', q);
-            JdpGauss    = zeros(3, obj.n, obj.NGaussPointsInt, 'like', q);
-            ddpGauss    = zeros(3, obj.NGaussPointsInt, 'like', q);
+            pGauss      = zeros(3, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt, 'like', q);
+            dpGauss     = zeros(3, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt, 'like', q);
+            JdpGauss    = zeros(3, obj.n, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt, 'like', q);
+            ddpGauss    = zeros(3, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt, 'like', q);
             
             if coder.target("MATLAB")
-                obj.rGauss              = zeros(3, obj.NGaussPointsInt, 'like', q);
-                obj.drGauss             = zeros(3, obj.NGaussPointsInt, 'like', q);
-                obj.JdrGauss            = zeros(3, obj.n, obj.NGaussPointsInt, 'like', q);
-                obj.ddrGauss            = zeros(3, obj.NGaussPointsInt, 'like', q);
+                obj.rGauss              = zeros(3, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt, 'like', q);
+                obj.drGauss             = zeros(3, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt, 'like', q);
+                obj.JdrGauss            = zeros(3, obj.n, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt, 'like', q);
+                obj.ddrGauss            = zeros(3, obj.NGaussPointsInt, obj.NGaussPointsInt, obj.NGaussPointsInt, 'like', q);
             end
+            %Iterate over all the Gaussian points
             for i = 1:obj.NGaussPointsInt
-                pGauss(:, i)    = RT*(obj.gGauss(1:3, 4, i) - d);
-                dpGauss(:, i)   = (dRT*(obj.gGauss(1:3, 4, i) - obj.gGauss(1:3, 4, end)) + ...
-                                         RT*(obj.EtaGauss(4:6, i)  - obj.EtaGauss(4:6, end)));
-                JdpGauss(:, 1:obj.n, i) = RT*(obj.JEtaGauss(4:6, 1:obj.n, i) + skew(obj.gGauss(1:3, 4, i))*obj.JEtaGauss(1:3, 1:obj.n, end));
-                ddpGauss(:, i)  = (ddRT*(obj.gGauss(1:3, 4, i) - obj.gGauss(1:3, 4, end)) + ...
-                                         2*dRT*(obj.EtaGauss(4:6, i)  - obj.EtaGauss(4:6, end)) + ...
-                                          RT*(obj.dEtaGauss(4:6, i)  - obj.dEtaGauss(4:6, end)));
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        %Compute the section radius and time derivatives
+                        Radius_ij   = obj.GaussPointsRadius(i, j);
+                        dRadius_ij  = obj.dRadius(obj.GaussPointsLength(i), q, dq);
+                        ddRadius_ij = obj.ddRadius(obj.GaussPointsLength(i), q, dq, ddq);
+                        %Compute the section angle
+                        Angle_k     = obj.GaussPointsAngle(k);
+                        %Compute the rotation matrix of the current section
+                        %and its time derivatives
+                        Ri          = obj.gGaussLength(1:3, 1:3, i);
+                        dRi         = skew(obj.EtaGaussLength(1:3, i))*Ri;
+                        ddRi        = skew(obj.dEtaGaussLength(1:3, i))*Ri + ...
+                                      skew(obj.EtaGaussLength(1:3, i))*dRi;
+                        %Position
+                        p_ijk       = Ri*[cos(Angle_k); sin(Angle_k); 0]*Radius_ij;
+                        pGauss(:, i, j, k)    = RT*(obj.gGaussLength(1:3, 4, i) + p_ijk - d);
+                        %Velocity
+                        dp_ijk      = dRi*[cos(Angle_k); sin(Angle_k); 0]*Radius_ij + ...
+                                      Ri*[cos(Angle_k); sin(Angle_k); 0]*dRadius_ij;
+                        dpGauss(:, i, j, k)   = (dRT*pGauss(:, i, j, k) + ...
+                                                 RT*(obj.EtaGaussLength(4:6, i) + dp_ijk - obj.EtaGaussLength(4:6, end)));
+                        %Jacobian
+                        J_p_ijk     = Ri*[cos(Angle_k); sin(Angle_k); 0]*obj.JRadius(obj.GaussPointsLength(i));
+                        JdpGauss(:, 1:obj.n, i, j, k) = RT*(obj.JEtaGaussLength(4:6, 1:obj.n, i) + J_p_ijk + skew(obj.gGaussLength(1:3, 4, i))*obj.JEtaGaussLength(1:3, 1:obj.n, end));
+                        %Acceleration
+                        ddp_ijk     = ddRi*[cos(Angle_k); sin(Angle_k); 0]*Radius_ij + ...
+                                      2*dRi*[cos(Angle_k); sin(Angle_k); 0]*dRadius_ij + ...
+                                      Ri*[cos(Angle_k); sin(Angle_k); 0]*ddRadius_ij;
+                        ddpGauss(:, i, j, k)  = (ddRT*pGauss(:, i, j, k) + ...
+                                                 2*dRT*(obj.EtaGaussLength(4:6, i) + dp_ijk - obj.EtaGaussLength(4:6, end)) + ...
+                                                  RT*(obj.dEtaGaussLength(4:6, i) + ddp_ijk - obj.dEtaGaussLength(4:6, end)));
+                    end
+                end
             end
             %% Update the CoM position and its time derivatives
-            %Compute the CoM position
-            obj.p_com_  = zeros(3, 1, 'like', q);
-            m       = obj.m();
-            for i = 1:obj.NGaussPointsInt
-                obj.p_com_  = obj.p_com_ + pGauss(:, i)*obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i));
-            end
-            obj.p_com_ = (1/m)*obj.p_com_;
-            %Compute the CoM velocity
+            %Variables initialization
+            obj.p_com_       = zeros(3, 1, 'like', q);
             obj.v_com_rel_   = zeros(3, 1, 'like', q);
+            obj.a_com_rel_   = zeros(3, 1, 'like', q);
+            J_p_comi         = zeros(3, obj.n, 'like', q);
+            m                = obj.m();
             for i = 1:obj.NGaussPointsInt
-                obj.v_com_rel_  = obj.v_com_rel_ + obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i))*dpGauss(:, i);
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk           = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k);
+                        obj.p_com_      = obj.p_com_        + pGauss(1:3, i, j, k)*w_ijk*obj.MassDensity;
+                        obj.v_com_rel_  = obj.v_com_rel_    + dpGauss(1:3, i, j, k)*w_ijk*obj.MassDensity;
+                        obj.a_com_rel_  = obj.a_com_rel_    + ddpGauss(1:3, i, j, k)*w_ijk*obj.MassDensity;
+                        J_p_comi        = J_p_comi          + JdpGauss(1:3, 1:obj.n, i, j, k)*w_ijk*obj.MassDensity;
+                    end
+                end
             end
-            obj.v_com_rel_      = (1/m)*obj.v_com_rel_;
-            %Compute the CoM acceleration
-            obj.a_com_rel_ = zeros(3, 1, 'like', q);
-            for i = 1:obj.NGaussPointsInt
-                obj.a_com_rel_  = obj.a_com_rel_ + obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i))*ddpGauss(:, i);
-            end
-            obj.a_com_rel_ = (1/m)*obj.a_com_rel_;
-            %% Update the relative position vector
-            J_p_comi = zeros(3, obj.n, 'like', q);
-            for i = 1:obj.NGaussPointsInt
-                J_p_comi = J_p_comi + obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i))*JdpGauss(1:3, 1:obj.n, i);
-            end
+            obj.p_com_      = (1/m)*obj.p_com_;
+            obj.v_com_rel_  = (1/m)*obj.v_com_rel_;
+            obj.a_com_rel_  = (1/m)*obj.a_com_rel_;
             J_p_comi        = (1/m)*J_p_comi;
+            %% Update the relative position vector
             for i = 1:obj.NGaussPointsInt
-                obj.rGauss(1:3, i)              = pGauss(1:3, i) - obj.p_com_;
-                obj.drGauss(1:3, i)             = dpGauss(1:3, i) - obj.v_com_rel_;
-                obj.JdrGauss(1:3, 1:obj.n, i)   = JdpGauss(1:3, 1:obj.n, i) - J_p_comi;
-                obj.ddrGauss(1:3, i)            = ddpGauss(1:3, i) - obj.a_com_rel_;
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        obj.rGauss(1:3, i, j, k)              = pGauss(1:3, i, j, k) - obj.p_com_;
+                        obj.drGauss(1:3, i, j, k)             = dpGauss(1:3, i, j, k) - obj.v_com_rel_;
+                        obj.JdrGauss(1:3, 1:obj.n, i, j, k)   = JdpGauss(1:3, 1:obj.n, i, j, k) - J_p_comi;
+                        obj.ddrGauss(1:3, i, j, k)            = ddpGauss(1:3, i, j, k) - obj.a_com_rel_;
+                    end
+                end
             end
             %% Update the gradient of the CoM velocity in the local frame
-            obj.grad_v_com_ = skew(RT'*obj.p_com_)*obj.JEtaGauss(1:3, 1:obj.n, end) - obj.JEtaGauss(4:6, 1:obj.n, end);
+            obj.grad_v_com_ = skew(RT'*obj.p_com_)*obj.JEtaGaussLength(1:3, 1:obj.n, end) - obj.JEtaGaussLength(4:6, 1:obj.n, end);
             %Gradient of the CoM in the base frame
             grad_v_com_i_1  = zeros(3, obj.n, 'like', q);
             for i = 1:obj.NGaussPointsInt
-                grad_v_com_i_1 = grad_v_com_i_1 + obj.JEtaGauss(4:6, 1:obj.n, i)*obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i));
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk          = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k);
+                        Angle_k        = obj.GaussPointsAngle(k);
+                        J_p_ijk        = obj.gGaussLength(1:3, 1:3, i)*[cos(Angle_k); sin(Angle_k); 0]*obj.RadiusBasis(obj.GaussPointsLength(i));
+                        grad_v_com_i_1 = grad_v_com_i_1 + (obj.JEtaGaussLength(4:6, 1:obj.n, i) + J_p_ijk)*w_ijk*obj.MassDensity;
+                    end
+                end
             end
             grad_v_com_i_1  = (1/m)*grad_v_com_i_1;
             obj.grad_v_com_ = (RT*(obj.grad_v_com_ + grad_v_com_i_1))';
         end
-        %% Compute all the kinematic quantities at point s
+        %% Compute all the kinematic quantities at point s along the backbone
         function [g, omega, v, domega, dv, J_omega, J_v] = Kinematics_s(obj, q, dq, ddq, s)
             %Transformation matrix from s to base 
             g        = eye(4, 'like', q);
@@ -524,10 +679,10 @@ classdef GVSBody < Body
             %Body acceleration
             dEta     = zeros(6, 1, 'like', q);
             if coder.target("MATLAB")
-                obj.gGauss              = repmat(eye(4, 'like', q), [1, 1, obj.NGaussPointsInt]);
-                obj.EtaGauss            = zeros(6, obj.NGaussPointsInt, 'like', q);
-                obj.JEtaGauss           = zeros(6, obj.n, obj.NGaussPointsInt, 'like', q);
-                obj.dEtaGauss           = zeros(6, obj.NGaussPointsInt, 'like', q);
+                obj.gGaussLength              = repmat(eye(4, 'like', q), [1, 1, obj.NGaussPointsInt]);
+                obj.EtaGaussLength            = zeros(6, obj.NGaussPointsInt, 'like', q);
+                obj.JEtaGaussLength           = zeros(6, obj.n, obj.NGaussPointsInt, 'like', q);
+                obj.dEtaGaussLength           = zeros(6, obj.NGaussPointsInt, 'like', q);
             end
             %Check trivial position, i.e., base
             if s == 0
@@ -541,16 +696,16 @@ classdef GVSBody < Body
             for i = 1:obj.NGaussPointsInt
                 %Compute the distance h between two Gaussian points
                 if i == 1
-                    h   = obj.GaussPoints(i);
+                    h   = obj.GaussPointsLength(i);
                 else
-                    h   = obj.GaussPoints(i)-obj.GaussPoints(i-1);
+                    h   = obj.GaussPointsLength(i)-obj.GaussPointsLength(i-1);
                 end
                 %Check if s is in the current computation window
                 if s >= hTotal && s <= hTotal + h
                     if i == 1
                         h       = s;
                     else
-                        h       = s-obj.GaussPoints(i-1);
+                        h       = s-obj.GaussPointsLength(i-1);
                     end
                     exitFlag= true;
                 end
@@ -582,21 +737,21 @@ classdef GVSBody < Body
                 Eta     = JEta*dq;
                 %Store the values for future use but expressed in the
                 %global frame
-                obj.gGauss(:, :, i)                 = g;
+                obj.gGaussLength(:, :, i)           = g;
                 R                                   = g(1:3, 1:3);
                 omega                               = R*Eta(1:3);
                 dR                                  = skew(omega)*R;
-                obj.EtaGauss(1:6, i)                = blkdiag(R, R)*Eta;
-                obj.JEtaGauss(1:6, 1:obj.n, i)      = blkdiag(R, R)*JEta;
-                obj.dEtaGauss(1:6, i)               = blkdiag(dR, dR)*Eta + blkdiag(R, R)*dEta;
+                obj.EtaGaussLength(1:6, i)                = blkdiag(R, R)*Eta;
+                obj.JEtaGaussLength(1:6, 1:obj.n, i)      = blkdiag(R, R)*JEta;
+                obj.dEtaGaussLength(1:6, i)               = blkdiag(dR, dR)*Eta + blkdiag(R, R)*dEta;
                 if exitFlag
                     break;
                 end
                 %Prepare for the next iteration
                 hTotal = hTotal + h;
-                S      = obj.GaussPoints(i);
+                S      = obj.GaussPointsLength(i);
             end
-            %NOTE: All the results must be rotated in the intertial frame
+            %NOTE: All the results must be rotated in the inertial frame
             %since the above quantities are computed in body coordinates
             %Compute the angular velocity and its Jacobian
             R       = g(1:3, 1:3);
