@@ -25,8 +25,8 @@ classdef VPCC2D < VGVSBody
 
         %Radius basis
         function B = RadiusBasis(obj, s, phi)
-            B = obj.GaussianRadiusBasis(s, phi);
-            %B = obj.BumpRadiusBasis(s, phi);
+            %B = obj.GaussianRadiusBasis(s, phi);
+            B = obj.BumpRadiusBasis(s, phi);
         end
 
         %Gaussian radius basis
