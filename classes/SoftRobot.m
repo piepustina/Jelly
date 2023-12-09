@@ -151,9 +151,9 @@ classdef SoftRobot < BodyTree
         function [verts, faces, faces_color] = robotGeometry(obj, q, color, segmentBaseColor, segmentBaseColorExtension)
             %Function hyperparameters increase to have a better representation
             %Number of disks along each segment
-            s_step   = 40;
+            s_step   = 100;
             %Number of points representing each cross sectional area (disk)
-            phi_step = 40;
+            phi_step = 100;
         
             %Preallocate vertex and face matrices
             %The total number of vertexes includes also the origin and the
@@ -208,8 +208,13 @@ classdef SoftRobot < BodyTree
                     T_ = T_prev*T_s_j;
                     %Linearly interpolate the radius of the segment base
                     %and tip.
-                    rho = (1-s(j))*r_base + s(j)*r_tip;
+                    %rho = (1-s(j))*r_base + s(j)*r_tip;
                     for k = 1:phi_step
+                        try
+                            rho = obj.Bodies{i}.Radius(s(j)*obj.Bodies{i}.RestLength, phi(k), q_i);
+                        catch
+                            rho = obj.Bodies{i}.Radius(s(j)*obj.Bodies{i}.RestLength);
+                        end
                         vertex = T_*[rho*cos(phi(k));...
                                      rho*sin(phi(k));...
                                                   0;...

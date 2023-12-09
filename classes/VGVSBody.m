@@ -84,7 +84,7 @@ classdef VGVSBody < Body
             for i = 1:obj.NGaussPoints+1
                 %Evaluate the radius at the i-th Gaussian points of the
                 %legnth
-                Ri                                      = obj.Radius(obj.GaussPointsLength(i), zeros(n, 1));
+                Ri                                      = obj.Radius(obj.GaussPointsLength(i), 0, zeros(n, 1));
                 %Compute the Gaussian points and weights for the current
                 %value of the radius
                 [GaussPointsRadius, GaussWeightsRadius] = lgwt(obj.NGaussPoints, 0, Ri);
@@ -109,9 +109,9 @@ classdef VGVSBody < Body
         end
 
         %% Radius function
-        function R = Radius(obj, s, q)
-            if nargin == 3
-                deltaR = obj.RadiusBasis(s)*q;
+        function R = Radius(obj, s, phi, q)
+            if nargin == 4
+                deltaR = obj.RadiusBasis(s, phi)*q;
             else
                 deltaR = 0;
             end
@@ -120,23 +120,23 @@ classdef VGVSBody < Body
         end
 
         %Default basis for the radius
-        function B = RadiusBasis(obj, s)
+        function B = RadiusBasis(obj, s, phi)
             B = zeros(1, obj.n);
         end
 
         %Jacobian of the radius with respect to q
-        function JR = JRadius(obj, s, q)
-            JR = obj.RadiusBasis(s);
+        function JR = JRadius(obj, s, phi, q)
+            JR = obj.RadiusBasis(s, phi);
         end
 
         %First order time derivative of the radius
-        function dR = dRadius(obj, s, q, dq)
-            dR = obj.JRadius(s, q)*dq;
+        function dR = dRadius(obj, s, phi, q, dq)
+            dR = obj.JRadius(s, phi, q)*dq;
         end
 
         %Second order time derivative of the radius
-        function ddR = ddRadius(obj, s, q, dq, ddq)
-            ddR = obj.JRadius(s, q)*ddq;
+        function ddR = ddRadius(obj, s, phi, q, dq, ddq)
+            ddR = obj.JRadius(s, phi, q)*ddq;
         end
 
         %% Body methods implementation
@@ -489,10 +489,10 @@ classdef VGVSBody < Body
             K_  = zeros(obj.n, 1, 'like', q);
             for i = 1:obj.NGaussPointsInt
                 %Compute the radius
-                R_q             = obj.Radius(obj.GaussPointsLength(i), q);
+                R_q_ref     = obj.Radius(obj.GaussPointsLength(i), 0, zeros(obj.n, 1));
                 %Linear and angular stiffness
-                K_l         = pi*R_q^2*diag([G, G, E]);
-                BodyInertia = pi*R_q^4*[1/4, 1/4, 1/2];
+                K_l         = pi*R_q_ref^2*diag([G, G, E]);
+                BodyInertia = pi*R_q_ref^4*[1/4, 1/4, 1/2];
                 K_a         = diag([E*BodyInertia(1), E*BodyInertia(2), G*BodyInertia(3)]);
                 %Body stiffness
                 K_b         = blkdiag(K_a, K_l);
@@ -501,16 +501,13 @@ classdef VGVSBody < Body
                 JxiGauss    = obj.Jxi(q, obj.GaussPointsLength(i));
                 K_          = K_ + (JxiGauss'*K_b*(xiGauss - obj.ReferenceStrain))*obj.GaussWeightsLength(i);
                 %Add elastic force for the radius based on the strain
-                %elastic force
-                %K_R     = pi*obj.Radius(obj.GaussPointsLength(i), q)^2*E;
-                JR      = obj.JRadius(obj.GaussPointsLength(i), q);
-                %K_      = K_ + JR'*K_R*(obj.Radius(obj.GaussPointsLength(i), q) - obj.Radius(obj.GaussPointsLength(i), zeros(obj.n, 1)));
-                K_R_l           = pi*R_q*diag([G, G, E]);
-                dBodyInertia    = 1/2*pi*R_q^3*[1/4, 1/4, 1/2];
-                K_R_a           = diag([E*dBodyInertia(1), E*dBodyInertia(2), G*dBodyInertia(3)]);
-                K_R             = blkdiag(K_R_a, K_R_l);
-                K_              = K_ + JR'*(xiGauss - obj.ReferenceStrain)'*K_R*(xiGauss - obj.ReferenceStrain);
-                
+                %elastic force, integrating along the vertical direction
+                for k = 1:obj.NGaussPointsInt
+                    K_R     = E;
+                    JR_ik   = obj.JRadius(obj.GaussPointsLength(i), obj.GaussPointsAngle(k), q);
+                    w_ik    = obj.GaussWeightsLength(i)*obj.GaussWeightsAngle(k);
+                    K_      = K_ + JR_ik'*K_R*(obj.Radius(obj.GaussPointsLength(i), obj.GaussPointsAngle(k), q) - R_q_ref)*w_ik;
+                end
             end
         end
         %% Generalized damping force
@@ -521,10 +518,10 @@ classdef VGVSBody < Body
             D_ = zeros(obj.n, 1, 'like', q);
             for i = 1:obj.NGaussPointsInt
                 %Compute the radius
-                R_q         = obj.Radius(obj.GaussPointsLength(i), q);
+                R_q_ref     = obj.Radius(obj.GaussPointsLength(i), 0, zeros(obj.n, 1));
                 %Linear and angular damping
-                D_l         = pi*R_q^2*diag([G, G, E]);
-                BodyInertia = pi*R_q^4*[1/4, 1/4, 1/2];
+                D_l         = pi*R_q_ref^2*diag([G, G, E]);
+                BodyInertia = pi*R_q_ref^4*[1/4, 1/4, 1/2];
                 D_a         = diag([E*BodyInertia(1), E*BodyInertia(2), G*BodyInertia(3)]);
                 %Body damping
                 D_b         = blkdiag(D_a, D_l)*obj.MaterialDamping;
@@ -533,16 +530,12 @@ classdef VGVSBody < Body
                 JxiGauss    = obj.Jxi(q, obj.GaussPointsLength(i));
                 D_          = D_ + (JxiGauss'*D_b*dxiGauss)*obj.GaussWeightsLength(i);
                 %Add damping force for the radius
-                %D_R         = pi*obj.Radius(obj.GaussPointsLength(i), q)^2*E*obj.MaterialDamping;
-                %JR          = obj.JRadius(obj.GaussPointsLength(i), q);
-                %D_          = D_ + JR'*D_R*obj.dRadius(obj.GaussPointsLength(i), q, dq);
-                JR              = obj.JRadius(obj.GaussPointsLength(i), q);
-                D_R_l           = pi*R_q*diag([G, G, E])*(JR*dq);
-                dBodyInertia    = 1/2*pi*R_q^3*[1/4, 1/4, 1/2]*(JR*dq);
-                D_R_a           = diag([E*dBodyInertia(1), E*dBodyInertia(2), G*dBodyInertia(3)]);
-                D_R             = blkdiag(D_R_a, D_R_l)*obj.MaterialDamping;
-                xiGauss         = obj.xi(q, obj.GaussPointsLength(i));
-                D_              = D_ + JR'*(xiGauss - obj.ReferenceStrain)'*D_R*(xiGauss - obj.ReferenceStrain);
+                for k = 1:obj.NGaussPointsInt
+                    D_R         = E*obj.MaterialDamping;
+                    JR_ik       = obj.JRadius(obj.GaussPointsLength(i), obj.GaussPointsAngle(k), q);
+                    w_ik        = obj.GaussWeightsLength(i)*obj.GaussWeightsAngle(k);
+                    D_          = D_ + JR_ik'*D_R*obj.dRadius(obj.GaussPointsLength(i), obj.GaussPointsAngle(k), q, dq)*w_ik;
+                end
             end
         end
     end
@@ -576,8 +569,8 @@ classdef VGVSBody < Body
                     for k = 1:obj.NGaussPointsInt
                         %Compute the section radius and time derivatives
                         Radius_ij   = obj.GaussPointsRadius(i, j);
-                        dRadius_ij  = obj.dRadius(obj.GaussPointsLength(i), q, dq);
-                        ddRadius_ij = obj.ddRadius(obj.GaussPointsLength(i), q, dq, ddq);
+                        dRadius_ij  = obj.dRadius(obj.GaussPointsLength(i), obj.GaussPointsAngle(k), q, dq);
+                        ddRadius_ij = obj.ddRadius(obj.GaussPointsLength(i), obj.GaussPointsAngle(k), q, dq, ddq);
                         %Compute the section angle
                         Angle_k     = obj.GaussPointsAngle(k);
                         %Compute the rotation matrix of the current section
@@ -592,18 +585,18 @@ classdef VGVSBody < Body
                         %Velocity
                         dp_ijk      = dRi*[cos(Angle_k); sin(Angle_k); 0]*Radius_ij + ...
                                       Ri*[cos(Angle_k); sin(Angle_k); 0]*dRadius_ij;
-                        dpGauss(:, i, j, k)   = (dRT*pGauss(:, i, j, k) + ...
+                        dpGauss(:, i, j, k)   = (dRT*(obj.gGaussLength(1:3, 4, i) + p_ijk - obj.gGaussLength(1:3, 4, end)) + ...
                                                  RT*(obj.EtaGaussLength(4:6, i) + dp_ijk - obj.EtaGaussLength(4:6, end)));
                         %Jacobian
-                        J_p_ijk     = Ri*[cos(Angle_k); sin(Angle_k); 0]*obj.JRadius(obj.GaussPointsLength(i));
+                        J_p_ijk     = Ri*[cos(Angle_k); sin(Angle_k); 0]*obj.JRadius(obj.GaussPointsLength(i), obj.GaussPointsAngle(k), q);
                         JdpGauss(:, 1:obj.n, i, j, k) = RT*(obj.JEtaGaussLength(4:6, 1:obj.n, i) + J_p_ijk + skew(obj.gGaussLength(1:3, 4, i))*obj.JEtaGaussLength(1:3, 1:obj.n, end));
                         %Acceleration
                         ddp_ijk     = ddRi*[cos(Angle_k); sin(Angle_k); 0]*Radius_ij + ...
                                       2*dRi*[cos(Angle_k); sin(Angle_k); 0]*dRadius_ij + ...
                                       Ri*[cos(Angle_k); sin(Angle_k); 0]*ddRadius_ij;
-                        ddpGauss(:, i, j, k)  = (ddRT*pGauss(:, i, j, k) + ...
-                                                 2*dRT*(obj.EtaGaussLength(4:6, i) + dp_ijk - obj.EtaGaussLength(4:6, end)) + ...
-                                                  RT*(obj.dEtaGaussLength(4:6, i) + ddp_ijk - obj.dEtaGaussLength(4:6, end)));
+                        ddpGauss(:, i, j, k)  = (ddRT*(obj.gGaussLength(1:3, 4, i) + p_ijk - obj.gGaussLength(1:3, 4, end)) + ...
+                                         2*dRT*(obj.EtaGaussLength(4:6, i) + dp_ijk - obj.EtaGaussLength(4:6, end)) + ...
+                                          RT*(obj.dEtaGaussLength(4:6, i) + ddp_ijk - obj.dEtaGaussLength(4:6, end)));
                     end
                 end
             end
@@ -649,7 +642,7 @@ classdef VGVSBody < Body
                     for k = 1:obj.NGaussPointsInt
                         w_ijk          = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k);
                         Angle_k        = obj.GaussPointsAngle(k);
-                        J_p_ijk        = obj.gGaussLength(1:3, 1:3, i)*[cos(Angle_k); sin(Angle_k); 0]*obj.RadiusBasis(obj.GaussPointsLength(i));
+                        J_p_ijk        = obj.gGaussLength(1:3, 1:3, i)*[cos(Angle_k); sin(Angle_k); 0]*obj.RadiusBasis(obj.GaussPointsLength(i), obj.GaussPointsAngle(k));
                         grad_v_com_i_1 = grad_v_com_i_1 + (obj.JEtaGaussLength(4:6, 1:obj.n, i) + J_p_ijk)*w_ijk*obj.MassDensity;
                     end
                 end
