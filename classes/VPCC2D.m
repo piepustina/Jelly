@@ -4,7 +4,7 @@ classdef VPCC2D < VGVSBody
     
     %Number of DoFs
     properties(Constant)
-        n    = 2;
+        n    = 4;
     end
     
     methods
@@ -15,25 +15,19 @@ classdef VPCC2D < VGVSBody
 
         %Strain basis
         function Phi = StrainBasis(obj, s)
-            % Phi = 1/obj.RestLength*[ 1, 0, 0, 0;
-            %                          0, 0, 0, 0;
-            %                          0, 0, 0, 0;
-            %                          0, 0, 0, 0;
-            %                          0, 0, 0, 0;
-            %                          0, 1, 0, 0];
-            Phi = 1/obj.RestLength*[ 1, 0;
-                                     0, 0;
-                                     0, 0;
-                                     0, 0;
-                                     0, 0;
-                                     0, 1];
+            Phi = 1/obj.RestLength*[ 1, 0, 0, 0;
+                                     0, 0, 0, 0;
+                                     0, 0, 0, 0;
+                                     0, 0, 0, 0;
+                                     0, 0, 0, 0;
+                                     0, 1, 0, 0];
         end
 
-        % %Radius basis
-        % function B = RadiusBasis(obj, s, phi)
-        %     B = obj.GaussianRadiusBasis(s, phi);
-        %     %B = obj.BumpRadiusBasis(s, phi);
-        % end
+        %Radius basis
+        function B = RadiusBasis(obj, s, phi)
+            B = obj.GaussianRadiusBasis(s, phi);
+            %B = obj.BumpRadiusBasis(s, phi);
+        end
 
         %Gaussian radius basis
         function B = GaussianRadiusBasis(obj, s, phi)
