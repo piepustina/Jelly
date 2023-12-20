@@ -6,6 +6,7 @@ classdef Plotter
         MarkerSize = 10;
         HandleVisibility = 'on';
         FontSize = 14;
+        AxesFontSize = 10;
         Interpreter = 'latex';
         XLabel = 'Time [s]';
         YLabel = '';
@@ -57,6 +58,7 @@ classdef Plotter
            addParameter(p, 'XScale', obj.XScale);
            addParameter(p, 'Drawnow', obj.DrawNow);
            addParameter(p, 'LegendItemTokenSize', obj.LegendItemTokenSize);
+           addParameter(p, 'AxesFontSize', obj.AxesFontSize);
 
            parse(p, X_data, Y_data, varargin{:});
            
@@ -71,6 +73,10 @@ classdef Plotter
            if ~isempty(char(p.Results.Color))
                 pl.Color = p.Results.Color;
            end
+
+           %Set the font of the axes
+           ax = gca();
+           ax.FontSize = p.Results.AxesFontSize;
 
            %Make the plot
            xlabel(p.Results.XLabel, 'Interpreter', p.Results.Interpreter, 'FontSize', p.Results.FontSize);
