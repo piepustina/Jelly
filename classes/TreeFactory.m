@@ -1,14 +1,14 @@
 classdef TreeFactory < handle
-    %JOINTFACTORY Factory class that creates joints and bodies.
+    %"Factory" class to programmatically create joints and bodies during code generation.
     %TODO: Remove n
     
     methods (Static)
         
-        %Joint creation
+        % Joint creation
         function J = CreateJoint(Type, n, Parameters)
-            %Get the class constructor from the type
+            % Get the class constructor from the type
             Constructor = str2func(Type);
-            %Call the class constructor to build the joint
+            % Call the class constructor to build the joint
             if isempty(Parameters)
                 J = Constructor();
             else
@@ -16,11 +16,11 @@ classdef TreeFactory < handle
             end
         end
         
-        %Body creation
+        % Body creation
         function B = CreateBody(Type, n, Parameters)
-            %Get the class contructor from the type
+            % Get the class contructor from the type
             Constructor = str2func(Type);
-            %Call the class constructor to build the body
+            % Call the class constructor to build the body
             if isempty(Parameters)
                 B = Constructor();
             else

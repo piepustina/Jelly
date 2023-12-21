@@ -1,19 +1,19 @@
 classdef PAC2D < GVSBody
-    %Class representing a planar slender body modeled under the piecewise affine
-    %curvature (PAC) hypothesis without elongation. 
-    
-    %Number of DoFs
+    %Class modeling a 2D piecewise affine curvature (PAC) body without elongation. 
+
     properties(Constant)
         n    = 2;
     end
     
     methods
-        %Class constructor
         function obj = PAC2D(Parameters)
+            %Construct a 2D PAC body without elongation.
+            %
+            %Args:
+            %   Parameters ([double], [sym]): Parameters of the body, specified as for :class:`GVSBody`
             obj      = obj@GVSBody(PAC2D.n, Parameters);
         end
 
-        %Strain basis
         function Phi = StrainBasis(obj, s)
             Phi = [                0,                 0;
                    -1/obj.RestLength, -s/obj.RestLength;

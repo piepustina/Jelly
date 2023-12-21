@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="GVSBody" href="gvsbody.html" /><link rel="prev" title="BodyTree" href="bodytree.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
-        <title>Body - KaneToolbox 1 documentation</title>
+        <title>Body - Jelly 1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">KaneToolbox 1 documentation</div></a>
+      <a href="index.html"><div class="brand">Jelly 1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -146,7 +146,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">KaneToolbox 1 documentation</span>
+  <span class="sidebar-brand-text">Jelly 1 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -155,21 +155,29 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="api.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="bodytree.html">BodyTree</a></li>
 <li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">Body</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Body</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="gvsbody.html">GVSBody</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of GVSBody</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="PCC/pcc3d.html">PCC3D</a></li>
-<li class="toctree-l4"><a class="reference internal" href="PCC/pcc2d.html">PCC2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GVS/pcc2d.html">PCC2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GVS/pcc2dElongation.html">PCC2DElongation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GVS/pcc3d.html">PCC3D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GVS/pac2d.html">PAC2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GVS/pac3d.html">PAC3D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GVS/pgc3d.html">PGC3D</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="vgvsbody.html">VGVSBody</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of VGVSBody</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="VGVS/vpcc2d.html">VPCC2D</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="rigidbody.html">RigidBody</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="joint.html">Joint</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Joint</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="joint.html">Joint</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Joint</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="fixedjoint.html">FixedJoint</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rotationaljoint.html">RotationalJoint</a></li>
 </ul>
@@ -212,41 +220,84 @@
         <article role="main">
           <section id="body">
 <h1>Body<a class="headerlink" href="#body" title="Link to this heading">#</a></h1>
-<p id="module-classes">This abstract class represents a generic body. The class defines all the methods that any body must implement to be used by the methods <a class="reference internal" href="bodytree.html#BodyTree" title="BodyTree"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">BodyTree</span></code></a>.</p>
+<p id="module-classes">This abstract class represents an abstract body.</p>
 <dl class="mat class">
 <dt class="sig sig-object mat" id="Body">
 <em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Body</span></span><a class="headerlink" href="#Body" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref mat mat-class docutils literal notranslate"><span class="pre">handle</span></code></p>
-<p>Abstract class representsing a generic body of the kinematic tree.</p>
+<p>Abstract class modeling a generic body of a <a class="reference internal" href="bodytree.html#BodyTree" title="BodyTree"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">BodyTree</span></code></a>.</p>
 <div class="members docutils container">
 <dl>
 <dt>Property Summary</dt><dd><dl class="mat attribute">
 <dt class="sig sig-object mat" id="Body.Parameters">
 <span class="sig-name descname"><span class="pre">Parameters</span></span><a class="headerlink" href="#Body.Parameters" title="Link to this definition">#</a></dt>
-<dd><p>Vector of parameters of the body</p>
+<dd><p>Vector of parameters for the body.</p>
 </dd></dl>
 
 <dl class="mat attribute">
 <dt class="sig sig-object mat" id="Body.n">
 <span class="sig-name descname"><span class="pre">n</span></span><a class="headerlink" href="#Body.n" title="Link to this definition">#</a></dt>
-<dd><p>Number of degrees of freedom of the body</p>
+<dd><p>Number of DoF of the body.</p>
 </dd></dl>
 
 </dd>
 <dt>Method Summary</dt><dd><dl class="mat method">
-<dt class="sig sig-object mat" id="Body.T">
-<span class="sig-name descname"><span class="pre">T</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.T" title="Link to this definition">#</a></dt>
-<dd><p>Transformation matrix from the distal end of the body to
-the base.</p>
+<dt class="sig sig-object mat" id="Body.D">
+<span class="sig-name descname"><span class="pre">D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.D" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the generalized damping force.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">double,</span> <span class="pre">symbolic</span></code></span>) – Configuration at which the transformation is evaluated</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+</ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>4x4 homogeneous transformation matrix</p>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.I">
+<span class="sig-name descname"><span class="pre">I</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.I" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the body inertia matrix in the body distal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(double, symbolic)</p>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.J">
+<span class="sig-name descname"><span class="pre">J</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.J" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the firs-order time derivative of the body inertia matrix in the body distal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.K">
+<span class="sig-name descname"><span class="pre">K</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.K" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the generalized elastic force.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.T">
+<span class="sig-name descname"><span class="pre">T</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.T" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the relative transformation matrix from the body distal end frame to the body proximal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
 </dd>
 </dl>
 </dd></dl>
@@ -258,42 +309,235 @@ the base.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">double,</span> <span class="pre">symbolic</span></code></span>) – Current configuration</p></li>
-<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">double,</span> <span class="pre">symbolic</span></code></span>) – First time derivative of q</p></li>
-<li><p><strong>ddq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">double,</span> <span class="pre">symbolic</span></code></span>) – Second time derivative of q</p></li>
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+<li><p><strong>ddq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Second-order time derivative of the configuration variables</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="mat method">
-<dt class="sig sig-object mat" id="Body.grad_int_dr">
-<span class="sig-name descname"><span class="pre">grad_int_dr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.grad_int_dr" title="Link to this definition">#</a></dt>
-<dd><p>Todo: This is always zero, remove.</p>
+<dt class="sig sig-object mat" id="Body.a_com_rel">
+<span class="sig-name descname"><span class="pre">a_com_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em>, <em class="sig-param"><span class="pre">ddq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.a_com_rel" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the second-order time derivative of the center of mass position in the body distal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+<li><p><strong>ddq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Second-order time derivative of the configuration variables</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="mat method">
-<dt class="sig sig-object mat" id="Body.int_ddr">
-<span class="sig-name descname"><span class="pre">int_ddr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">~</span></em>, <em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">~</span></em>, <em class="sig-param"><span class="pre">~</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.int_ddr" title="Link to this definition">#</a></dt>
-<dd><p>Todo: This is always zero, remove.</p>
+<dt class="sig sig-object mat" id="Body.a_rel">
+<span class="sig-name descname"><span class="pre">a_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em>, <em class="sig-param"><span class="pre">ddq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.a_rel" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the relative linear acceleration of the body distal end frame in the body proximal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+<li><p><strong>ddq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Second-order time derivative of the configuration variables</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="mat method">
-<dt class="sig sig-object mat" id="Body.int_dr">
-<span class="sig-name descname"><span class="pre">int_dr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">~</span></em>, <em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">~</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.int_dr" title="Link to this definition">#</a></dt>
-<dd><p>Todo: This is always zero, remove.</p>
+<dt class="sig sig-object mat" id="Body.domega_rel">
+<span class="sig-name descname"><span class="pre">domega_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em>, <em class="sig-param"><span class="pre">ddq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.domega_rel" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the relative angular acceleration of the body distal end frame in the body proximal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+<li><p><strong>ddq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Second-order time derivative of the configuration variables</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="mat method">
-<dt class="sig sig-object mat" id="Body.int_dr_O_dr">
-<span class="sig-name descname"><span class="pre">int_dr_O_dr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">~</span></em>, <em class="sig-param"><span class="pre">~</span></em>, <em class="sig-param"><span class="pre">~</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.int_dr_O_dr" title="Link to this definition">#</a></dt>
-<dd><p>Todo: This is always zero, remove.</p>
+<dt class="sig sig-object mat" id="Body.grad_J">
+<span class="sig-name descname"><span class="pre">grad_J</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.grad_J" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate <img class="math" src="_images/math/e191537afc4d59a689d0164728a3f092142b8341.png" alt="\frac{\partial \dot{J}}{\partial \dot{q}}"/>, where <img class="math" src="_images/math/32c06f8c59d4bd3d13eedea7765a8a74a11f2383.png" alt="J"/> is the first-order time derivative of the body inertia.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.grad_int_r_X_dr">
+<span class="sig-name descname"><span class="pre">grad_int_r_X_dr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.grad_int_r_X_dr" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate <img class="math" src="_images/math/90178c05e0754323f98957e644b67d390a1e67c4.png" alt="\frac{\partial}{\partial q}\left(\int_{V} r \times \ddot{r} \,\, \mathrm{d}V\right)^{T}"/>, where <img class="math" src="_images/math/79a3d439d28652c547386f39b555d90d3aaf102d.png" alt="r"/> is the relative position vector of the body particle in the body distal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.grad_v_com">
+<span class="sig-name descname"><span class="pre">grad_v_com</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.grad_v_com" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate <img class="math" src="_images/math/b90e2769b7eacfb4ca5a090f401463253883dfa1.png" alt="\frac{\partial p_{\mathrm{CoM}}}{\partial q}"/>, where <img class="math" src="_images/math/80f15749922b906e84f033e3086752fb0df5002b.png" alt="p_{\mathrm{CoM}}"/> is the position of the center of mass in the body distal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.int_dr_X_pv_r">
+<span class="sig-name descname"><span class="pre">int_dr_X_pv_r</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.int_dr_X_pv_r" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate <img class="math" src="_images/math/05c95f8f47b16a081a0dacab145f08dcd7a65104.png" alt="\int_{V} \left(\tilde{\dot{r}} \frac{\partial r}{\partial q}\right)^{T} \,\, \mathrm{d}V"/>, where <img class="math" src="_images/math/79a3d439d28652c547386f39b555d90d3aaf102d.png" alt="r"/> is the relative position vector of the body particle in the body distal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.int_pv_r_O_dd_r">
+<span class="sig-name descname"><span class="pre">int_pv_r_O_dd_r</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em>, <em class="sig-param"><span class="pre">ddq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.int_pv_r_O_dd_r" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate <img class="math" src="_images/math/e0cd9bd413d42dea1152861ce3129c6d92e37aa3.png" alt="\int_{V} \left(\frac{\partial r}{\partial q}\right)^{T} \ddot{r} \,\, \mathrm{d}V"/>, where <img class="math" src="_images/math/79a3d439d28652c547386f39b555d90d3aaf102d.png" alt="r"/> is the relative position vector of the body particle in the body distal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+<li><p><strong>ddq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Second-order time derivative of the configuration variables</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.int_r_X_ddr">
+<span class="sig-name descname"><span class="pre">int_r_X_ddr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em>, <em class="sig-param"><span class="pre">ddq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.int_r_X_ddr" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate <img class="math" src="_images/math/7af3429feb231e72519ce822cc26b46688338e46.png" alt="\int_{V} r \times \ddot{r} \,\, \mathrm{d}V"/>, where <img class="math" src="_images/math/79a3d439d28652c547386f39b555d90d3aaf102d.png" alt="r"/> is the relative position vector of the body particle in the body distal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+<li><p><strong>ddq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Second-order time derivative of the configuration variables</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.int_r_X_dr">
+<span class="sig-name descname"><span class="pre">int_r_X_dr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.int_r_X_dr" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate <img class="math" src="_images/math/8e547cb81ab980ad67cce278c15e264714f32505.png" alt="\int_{V} r \times \dot{r} \,\, \mathrm{d}V"/>, where <img class="math" src="_images/math/79a3d439d28652c547386f39b555d90d3aaf102d.png" alt="r"/> is the relative position vector of the body particle in the body distal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.m">
+<span class="sig-name descname"><span class="pre">m</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Body.m" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the body mass.</p>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.omega_par">
+<span class="sig-name descname"><span class="pre">omega_par</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.omega_par" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the Jacobian of the relative angular velocity of the body distal end frame in its frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.omega_rel">
+<span class="sig-name descname"><span class="pre">omega_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.omega_rel" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the relative angular velocity of the body distal end frame in the body proximal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.p_com">
+<span class="sig-name descname"><span class="pre">p_com</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.p_com" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the center of mass position in the body distal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="mat method">
 <dt class="sig sig-object mat" id="Body.toStruct">
 <span class="sig-name descname"><span class="pre">toStruct</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Body.toStruct" title="Link to this definition">#</a></dt>
-<dd><p>Convert object to a struct representation.</p>
+<dd><p>Convert the body object to a struct representation.</p>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.v_com_rel">
+<span class="sig-name descname"><span class="pre">v_com_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.v_com_rel" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the first-order time derivative of the center of mass position in the body distal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.v_par">
+<span class="sig-name descname"><span class="pre">v_par</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.v_par" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the Jacobian of the relative linear velocity of the body distal end frame in its frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="Body.v_rel">
+<span class="sig-name descname"><span class="pre">v_rel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.v_rel" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the relative linear velocity of the body distal end frame in the body proximal end frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of the configuration variables</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </dd>
@@ -304,8 +548,16 @@ the base.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="gvsbody.html">GVSBody</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="PCC/pcc3d.html">PCC3D</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PCC/pcc2d.html">PCC2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GVS/pcc2d.html">PCC2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GVS/pcc2dElongation.html">PCC2DElongation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GVS/pcc3d.html">PCC3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GVS/pac2d.html">PAC2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GVS/pac3d.html">PAC3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GVS/pgc3d.html">PGC3D</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="vgvsbody.html">VGVSBody</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="VGVS/vpcc2d.html">VPCC2D</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rigidbody.html">RigidBody</a></li>

@@ -3,7 +3,7 @@ FixedJoint
 
 .. automodule:: classes
 
-Class representing a fixed joint (hinge) between two bodies.  
+This class represents a fixed joint, i.e., a hinghe.
 
 .. autoclass:: FixedJoint
     :show-inheritance:

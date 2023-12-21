@@ -10,7 +10,7 @@ sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'KaneToolbox'
+project = 'Jelly'
 copyright = '2023, Pietro Pustina'
 author = 'Pietro Pustina'
 release = '1'
@@ -25,6 +25,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.imgmath',
     'sphinxcontrib.matlab',
+    'sphinxcontrib.bibtex',
 ]
 
 templates_path = ['_templates']
@@ -34,6 +35,14 @@ exclude_patterns = []
 primary_domain = "mat"
 matlab_src_dir = "/media/Dati/Desktop/Sapienza/Dottorato/KaneToolboxV2/"
 matlab_short_links = True
+
+# Configure the bibtex extension
+bibtex_bibfiles = ["references.bib"]
+bibtex_default_style = 'unsrt'
+
+# Configure latex extension
+# imgmath_embed = True
+# imgmath_latex_preamble = '\\usepackage{siunitx}'
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

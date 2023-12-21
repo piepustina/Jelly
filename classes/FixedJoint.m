@@ -1,9 +1,8 @@
 classdef FixedJoint < Joint
-    %FIXEDJOINT Implements a fixed joint between two bodies. 
+    %Class modeling a fixed joint, i.e., a hinge. 
     
-    %Abstract properties implementation
+    % Abstract properties implementation
     properties(Constant)
-        %Number of degrees of freedom of the joint
         n = 0
     end
     properties
@@ -11,7 +10,7 @@ classdef FixedJoint < Joint
     end
     
     methods
-        %Class constructor
+        % Class constructor
         function obj = FixedJoint()
             obj  = obj@Joint(FixedJoint.n);
         end

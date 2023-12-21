@@ -3,7 +3,7 @@ Body
 
 .. automodule:: classes
 
-This abstract class represents a generic body. The class defines all the methods that any body must implement to be used by the methods :class:`BodyTree <BodyTree>`. 
+This abstract class represents an abstract body.
 
 .. autoclass:: Body
     :show-inheritance:
@@ -12,4 +12,5 @@ This abstract class represents a generic body. The class defines all the methods
 .. toctree::
 
    gvsbody
+   vgvsbody
    rigidbody

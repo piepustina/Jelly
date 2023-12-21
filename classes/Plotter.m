@@ -1,5 +1,5 @@
 classdef Plotter
-    %PLOTTER Class to make plots
+    %Utility class for the plots.
     
     properties
         LineWidth = 2;

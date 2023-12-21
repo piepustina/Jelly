@@ -1,11 +1,13 @@
-Welcome to Kane Toolbox documentation!
+Welcome to Jelly documentation!
 ======================================
 
-**Kane Toolbox** is a MATLAB library to simulate mechanical systems of rigid and deformable bodies. 
+**Jelly** is an expandable MATLAB and Simulink library to control and simulate modular mechanical systems. 
+The library is based on the inverse dynamics algorithms discussed in :cite:p:`pustina2023univeral`. 
+All the methods are designed for C/C++ code generation, both in MATLAB and Simulink. 
 
 .. note::
 
-   This project is under active development.
+   This project is under active development. 
 
 Contents
 --------
@@ -14,8 +16,8 @@ Contents
 
    usage
 
-Check out the :doc:`usage` section for further information, including how to
-:ref:`install <installation>` the project.
+Check out the :doc:`usage` section for a short introduction on how to use the library, including how to
+:ref:`install <installation>` it.
 
 API
 ---
@@ -23,3 +25,6 @@ API
 .. toctree::
 
    api
+
+
+.. bibliography::
