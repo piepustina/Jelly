@@ -6,5 +6,5 @@ Jelly
 
 ## References
 <a id="1">[1]</a> 
-Pustina P., Della Santina C., De Luca A. 
+P. Pustina, C. Della Santina, A. De Luca.  
 Unified Inverse Dynamics of Modular Serial Mechanical Systems with Application to Soft Robotics, in IEEE Trans. on Robotics, under review.
