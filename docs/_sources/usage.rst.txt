@@ -6,13 +6,7 @@ Basic usage
 Installation
 ------------
 
-Download the source code from its GitHub page
-
-.. code-block:: console
-
-   (.venv) $ pip install lumache
-
-and place it in your working directory. 
+Download the source code from `GitHub <https://github.com/piepustina/Jelly.git>`_ and place it in your working directory. 
 
 .. _initialization:
 
@@ -105,5 +99,6 @@ Now, use the ``Robot`` object to compute some dynamic terms.
    %Evaluate the mass matrix
    Robot.MassMatrix(q)
 
-The ``Robot`` can also be used in Simulink for real-time control or simulate the dynamics. 
-Create a blank Simulink model and open it. In the library browser, 
+..
+   The ``Robot`` can also be used in Simulink for real-time control or simulate the dynamics. 
+   Create a blank Simulink model and open it. In the library browser, 
