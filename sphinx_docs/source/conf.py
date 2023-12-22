@@ -26,6 +26,7 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinxcontrib.matlab',
     'sphinxcontrib.bibtex',
+    'sphinx.ext.githubpages',
 ]
 
 templates_path = ['_templates']
