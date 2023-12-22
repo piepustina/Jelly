@@ -29,3 +29,6 @@ codegen/
 
 # Octave session info
 octave-workspace
+
+#Do not upload the built files for the documentation
+docs/build/
