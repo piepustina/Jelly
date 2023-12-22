@@ -12,7 +12,7 @@ jobs:
     - uses: actions/setup-python@v3
     - name: Install dependencies
       run: |
-           pip install sphinx sphinx_rtd_theme myst_parser sphinxcontrib-matlabdomain sphinxcontrib-bibtex
+           pip install sphinx sphinx_rtd_theme myst_parser furo sphinxcontrib-matlabdomain sphinxcontrib-bibtex
     - name: Build HTML
       uses: ammaraskar/sphinx-action@master
     - name: Upload artifacts
