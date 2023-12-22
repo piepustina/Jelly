@@ -13,8 +13,9 @@ jobs:
     - name: Install dependencies
       run: |
            pip install sphinx sphinx_rtd_theme myst_parser furo sphinxcontrib-matlabdomain sphinxcontrib-bibtex
-    - name: Build HTML
-      uses: ammaraskar/sphinx-action@master
+    - name: Sphinx build
+      run: |
+           sphinx-build docs/source docs/build
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
