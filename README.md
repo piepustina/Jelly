@@ -1,5 +1,5 @@
-Jelly
-=======
+![alt text](docs/source/logo.svg?raw=true)
+
 
 **Jelly** is a MATLAB/Simulink library to control and simulate modular mechanical systems through the generalized inverse dynamics algorithm of [^1]. 
 
