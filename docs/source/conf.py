@@ -46,6 +46,9 @@ matlab_short_links = True
 bibtex_bibfiles = ["references.bib"]
 bibtex_default_style = 'unsrt'
 
+#Configure latex
+imgmath_latex_preamble="\\usepackage{xcolor} \\definecolor{myRed}{rgb}{0.7,0.125,0.309} \\definecolor{myBlue}{rgb}{0.396,0.560,0.917} \\color{myRed}"
+
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
@@ -53,3 +56,6 @@ html_theme = 'furo'
 html_static_path = ['_static']
 html_logo = 'logo.svg'
 html_favicon = 'favicon.svg'
+html_context = {
+   "default_mode": "auto"
+}
