@@ -11,16 +11,17 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.10' 
+        python-version: '3.10.12' 
     - name: Upgrade pip
       run: |
            pip install --upgrade pip
     - name: Install dependencies
       run: |
            pip install sphinx sphinx_rtd_theme myst_parser furo sphinxcontrib-matlabdomain sphinxcontrib-bibtex
-    - name: Sphinx build
+    - name: Build the sphinx project
+      working-directory: ./docs
       run: |
-           sphinx-build docs/source docs/build
+           make html
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
