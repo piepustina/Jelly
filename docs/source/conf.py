@@ -15,7 +15,7 @@ sys.path.insert(0, "../src")
 project = 'Jelly'
 copyright = '2023, Pietro Pustina'
 author = 'Pietro Pustina'
-release = '1'
+release = ''
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -52,5 +52,3 @@ bibtex_default_style = 'unsrt'
 html_theme = 'furo'
 html_static_path = ['_static']
 html_logo = 'logo.svg'
-
-
