@@ -51,3 +51,6 @@ bibtex_default_style = 'unsrt'
 
 html_theme = 'furo'
 html_static_path = ['_static']
+html_logo = 'logo.svg'
+
+
