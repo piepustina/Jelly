@@ -13,12 +13,12 @@ Download the source code from `GitHub <https://github.com/piepustina/Jelly.git>`
 Initialization
 --------------
 
-Add the library to the MATLAB path by running the ``initToolbox.m`` script. 
+Add the library to the MATLAB path by running the ``./src/initToolbox.m`` script. 
 
 .. code-block:: matlab
    :linenos:
 
-   initToolbox.m
+   run('./src/initToolbox.m')
 
 .. note::
    The script has to be executed every time a new instance of MATLAB is started. 
