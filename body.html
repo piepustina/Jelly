@@ -365,7 +365,7 @@
 <dl class="mat method">
 <dt class="sig sig-object mat" id="Body.grad_J">
 <span class="sig-name descname"><span class="pre">grad_J</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.grad_J" title="Link to this definition">#</a></dt>
-<dd><p>Evaluate <span class="math">\frac{\partial \dot{J}}{\partial \dot{q}}</span>, where <span class="math">J</span> is the first-order time derivative of the body inertia.</p>
+<dd><p>Evaluate <img class="math" src="_images/math/e191537afc4d59a689d0164728a3f092142b8341.png" alt="\frac{\partial \dot{J}}{\partial \dot{q}}"/>, where <img class="math" src="_images/math/32c06f8c59d4bd3d13eedea7765a8a74a11f2383.png" alt="J"/> is the first-order time derivative of the body inertia.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
@@ -376,7 +376,7 @@
 <dl class="mat method">
 <dt class="sig sig-object mat" id="Body.grad_int_r_X_dr">
 <span class="sig-name descname"><span class="pre">grad_int_r_X_dr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.grad_int_r_X_dr" title="Link to this definition">#</a></dt>
-<dd><p>Evaluate <span class="math">\frac{\partial}{\partial q}\left(\int_{V} r \times \ddot{r} \,\, \mathrm{d}V\right)^{T}</span>, where <span class="math">r</span> is the relative position vector of the body particle in the body distal end frame.</p>
+<dd><p>Evaluate <img class="math" src="_images/math/90178c05e0754323f98957e644b67d390a1e67c4.png" alt="\frac{\partial}{\partial q}\left(\int_{V} r \times \ddot{r} \,\, \mathrm{d}V\right)^{T}"/>, where <img class="math" src="_images/math/79a3d439d28652c547386f39b555d90d3aaf102d.png" alt="r"/> is the relative position vector of the body particle in the body distal end frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
@@ -387,7 +387,7 @@
 <dl class="mat method">
 <dt class="sig sig-object mat" id="Body.grad_v_com">
 <span class="sig-name descname"><span class="pre">grad_v_com</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.grad_v_com" title="Link to this definition">#</a></dt>
-<dd><p>Evaluate <span class="math">\frac{\partial p_{\mathrm{CoM}}}{\partial q}</span>, where <span class="math">p_{\mathrm{CoM}}</span> is the position of the center of mass in the body distal end frame.</p>
+<dd><p>Evaluate <img class="math" src="_images/math/b90e2769b7eacfb4ca5a090f401463253883dfa1.png" alt="\frac{\partial p_{\mathrm{CoM}}}{\partial q}"/>, where <img class="math" src="_images/math/80f15749922b906e84f033e3086752fb0df5002b.png" alt="p_{\mathrm{CoM}}"/> is the position of the center of mass in the body distal end frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
@@ -398,7 +398,7 @@
 <dl class="mat method">
 <dt class="sig sig-object mat" id="Body.int_dr_X_pv_r">
 <span class="sig-name descname"><span class="pre">int_dr_X_pv_r</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.int_dr_X_pv_r" title="Link to this definition">#</a></dt>
-<dd><p>Evaluate <span class="math">\int_{V} \left(\tilde{\dot{r}} \frac{\partial r}{\partial q}\right)^{T} \,\, \mathrm{d}V</span>, where <span class="math">r</span> is the relative position vector of the body particle in the body distal end frame.</p>
+<dd><p>Evaluate <img class="math" src="_images/math/05c95f8f47b16a081a0dacab145f08dcd7a65104.png" alt="\int_{V} \left(\tilde{\dot{r}} \frac{\partial r}{\partial q}\right)^{T} \,\, \mathrm{d}V"/>, where <img class="math" src="_images/math/79a3d439d28652c547386f39b555d90d3aaf102d.png" alt="r"/> is the relative position vector of the body particle in the body distal end frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -412,7 +412,7 @@
 <dl class="mat method">
 <dt class="sig sig-object mat" id="Body.int_pv_r_O_dd_r">
 <span class="sig-name descname"><span class="pre">int_pv_r_O_dd_r</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em>, <em class="sig-param"><span class="pre">ddq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.int_pv_r_O_dd_r" title="Link to this definition">#</a></dt>
-<dd><p>Evaluate <span class="math">\int_{V} \left(\frac{\partial r}{\partial q}\right)^{T} \ddot{r} \,\, \mathrm{d}V</span>, where <span class="math">r</span> is the relative position vector of the body particle in the body distal end frame.</p>
+<dd><p>Evaluate <img class="math" src="_images/math/e0cd9bd413d42dea1152861ce3129c6d92e37aa3.png" alt="\int_{V} \left(\frac{\partial r}{\partial q}\right)^{T} \ddot{r} \,\, \mathrm{d}V"/>, where <img class="math" src="_images/math/79a3d439d28652c547386f39b555d90d3aaf102d.png" alt="r"/> is the relative position vector of the body particle in the body distal end frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -427,7 +427,7 @@
 <dl class="mat method">
 <dt class="sig sig-object mat" id="Body.int_r_X_ddr">
 <span class="sig-name descname"><span class="pre">int_r_X_ddr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em>, <em class="sig-param"><span class="pre">ddq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.int_r_X_ddr" title="Link to this definition">#</a></dt>
-<dd><p>Evaluate <span class="math">\int_{V} r \times \ddot{r} \,\, \mathrm{d}V</span>, where <span class="math">r</span> is the relative position vector of the body particle in the body distal end frame.</p>
+<dd><p>Evaluate <img class="math" src="_images/math/7af3429feb231e72519ce822cc26b46688338e46.png" alt="\int_{V} r \times \ddot{r} \,\, \mathrm{d}V"/>, where <img class="math" src="_images/math/79a3d439d28652c547386f39b555d90d3aaf102d.png" alt="r"/> is the relative position vector of the body particle in the body distal end frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -442,7 +442,7 @@
 <dl class="mat method">
 <dt class="sig sig-object mat" id="Body.int_r_X_dr">
 <span class="sig-name descname"><span class="pre">int_r_X_dr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Body.int_r_X_dr" title="Link to this definition">#</a></dt>
-<dd><p>Evaluate <span class="math">\int_{V} r \times \dot{r} \,\, \mathrm{d}V</span>, where <span class="math">r</span> is the relative position vector of the body particle in the body distal end frame.</p>
+<dd><p>Evaluate <img class="math" src="_images/math/8e547cb81ab980ad67cce278c15e264714f32505.png" alt="\int_{V} r \times \dot{r} \,\, \mathrm{d}V"/>, where <img class="math" src="_images/math/79a3d439d28652c547386f39b555d90d3aaf102d.png" alt="r"/> is the relative position vector of the body particle in the body distal end frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
