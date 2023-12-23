@@ -5,7 +5,9 @@
 
 import pathlib
 import sys
-sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
+import os
+#sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
+sys.path.insert(0, "../src")
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -19,12 +21,12 @@ release = '1'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    'sphinxcontrib.matlab',
     'sphinx.ext.duration',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.imgmath',
-    'sphinxcontrib.matlab',
     'sphinxcontrib.bibtex',
     'sphinx.ext.githubpages',
 ]
@@ -35,16 +37,14 @@ exclude_patterns = []
 
 # Configure the matlab extension
 primary_domain = "mat"
-matlab_src_dir = "/media/Dati/Desktop/Sapienza/Dottorato/KaneToolboxV2/"
+this_dir = os.path.dirname(__file__)
+matlab_src_dir = os.path.abspath(os.path.join(this_dir, "..", "..", "src"))
+# matlab_src_dir = "../src"
 matlab_short_links = True
 
 # Configure the bibtex extension
 bibtex_bibfiles = ["references.bib"]
 bibtex_default_style = 'unsrt'
-
-# Configure latex extension
-# imgmath_embed = True
-# imgmath_latex_preamble = '\\usepackage{siunitx}'
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
