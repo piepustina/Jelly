@@ -123,7 +123,7 @@ classdef BodyTree < handle
                         obj.Joints{i}.Update(q_j, dq_j, ddq_j);
                         % Update the joint index for the next iteration
                         k_i = k_i_1 + 1;
-                    else
+                    elseobj.N_B;
                         obj.Joints{i}.Update([], [], []);
                     end
                     
@@ -423,6 +423,93 @@ classdef BodyTree < handle
                 T_i  = T_i*obj.Joints{i}.T_*obj.Bodies{i}.T_;
                 T{i} = T_i;
             end
+        end
+
+        function J = BodyJacobian(obj, q, idx)
+            %Evaluate the body Jacobian of the i-th body. If i is not specified, then the last body is considered.
+            %
+            %Args:
+            %   q   ([double], [sym]): Configuration variables
+            %   idx           ([int]): Body index
+            %Return:
+            %   {[double], [sym]}: 6 x n body Jacobian with angular and linear components
+
+            switch nargin
+                case 1
+                    q = zeros(obj.n, 1, 'like', q);
+                    idx = obj.N_B;
+                case 2
+                    idx = obj.N_B;
+            end
+
+            % Modify the index to account for the fact that internally the joints are modeled as bodies
+            idx = 2*idx;
+
+            % Check that the input vectors are in column format.
+            if ~iscolumn(q)
+                q = q';
+            end
+
+            % Update the BodyTree
+            Zeron   = zeros(obj.n, 1, 'like', q);
+            obj     = obj.TreeUpdate(q, Zeron, Zeron);
+
+            % Define auxiliary variables
+            % The joints are treated as massless bodies thus we augment the
+            % body dimensions
+            N_B_ = obj.N_B_Internal;
+            
+            % Define the output
+            J      = zeros(6, obj.n, 'like', q);
+            
+            % Uncomment below for testing purposes
+            % v      = zeros(3, 1, "like", q);
+            % omega  = zeros(3, 1, "like", q);
+            
+            % Auxiliary variables for the iteration
+            q_idx      = 1;
+            
+            % Compute the body Jacobian recursively
+            for i = 1:2*BodyTree.MaxBodiesNumber % Iterative over all the augmented bodies
+                if i <= N_B_
+                    if isnumeric(obj.BodiesInternal{i})
+                        nBodycontinue;
+                    end
+                    % Step 1
+                    R_i_T           = real(obj.BodiesInternal{i}.T_(1:3, 1:3)');
+                    t_i             = real(obj.BodiesInternal{i}.T_(1:3, 4));
+                    v_par_i         = real(obj.BodiesInternal{i}.v_par_);
+                    omega_par_i     = real(obj.BodiesInternal{i}.omega_par_);
+
+                    %Update the variables
+                    nBody                       = obj.BodiesInternal{i}.n;
+                    if q_idx ~= 1
+                        J(4:6, 1:q_idx-1)       = real(R_i_T*(J(4:6, 1:q_idx-1) - skew(t_i)*J(1:3, 1:q_idx-1)));
+                        J(1:3, 1:q_idx-1)       = real(R_i_T*J(1:3, 1:q_idx-1));
+                    end
+                    J(1:6, q_idx:q_idx+nBody-1) = [omega_par_i; v_par_i];
+                    
+                    % Uncomment below for testing purposes
+                    %v_rel_i         = real(obj.BodiesInternal{i}.v_rel_);
+                    %omega_rel_i     = real(obj.BodiesInternal{i}.omega_rel_);
+                    %v               = real(R_i_T*(v + cross(omega, t_i) + v_rel_i));
+                    %omega           = real(R_i_T*(omega + omega_rel_i));
+
+                    % Stop the iteration if the correct body has been reached
+                    if i == idx
+                        break;
+                    end
+
+                    % Prepare for the next iteration
+                    q_idx           = q_idx + nBody;
+                    
+                end
+            end
+            
+            % Uncomment below for testing purposes
+            % disp("v");v
+            % disp("omega");omega
+            
         end
     end
 
