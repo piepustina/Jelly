@@ -24,6 +24,8 @@ classdef BodyTree < handle
         g    = [0; 0; -9.81];
         %Orientation of the base frame with respect to the world frame.
         T0   = eye(4);
+        
+        MassConditionNumber = 0;%TODO: Remove
     end
     
     properties (Access = private)
@@ -31,7 +33,6 @@ classdef BodyTree < handle
         % the augments the state by considering also the joints as bodies.
         BodiesInternal;
         N_B_Internal = 0;
-        MassConditionNumber = 0;%TODO: Remove
     end
     
     methods
