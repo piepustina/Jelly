@@ -426,20 +426,20 @@ classdef BodyTree < handle
         end
 
         function J = BodyJacobian(obj, q, idx)
-            %Evaluate the body Jacobian of the i-th body. If i is not specified, then the last body is considered.
+            %Evaluate the body Jacobian of the i-th body. If i is not specified, the method returns the body Jacobian of each body of the chain.
             %
             %Args:
             %   q   ([double], [sym]): Configuration variables
-            %   idx           ([int]): Body index
+            %   idx           ([int]): Array of body indexes indicating the bodies for which the jacobian has to be evaluated
             %Return:
-            %   {[double], [sym]}: 6 x n body Jacobian with angular and linear components
+            %   {[double], [sym]}: length(idx)*6 x n body Jacobian with angular and linear components for each body specified by idx
 
             switch nargin
                 case 1
-                    q = zeros(obj.n, 1, 'like', q);
-                    idx = obj.N_B;
+                    q   = zeros(obj.n, 1, 'like', q);
+                    idx = linspace(1, obj.N_B, obj.N_B);
                 case 2
-                    idx = obj.N_B;
+                    idx = linspace(1, obj.N_B, obj.N_B);
             end
 
             % Modify the index to account for the fact that internally the joints are modeled as bodies
@@ -460,14 +460,17 @@ classdef BodyTree < handle
             N_B_ = obj.N_B_Internal;
             
             % Define the output
-            J      = zeros(6, obj.n, 'like', q);
+            J      = zeros(length(idx)*6, obj.n, 'like', q);
             
             % Uncomment below for testing purposes
             % v      = zeros(3, 1, "like", q);
             % omega  = zeros(3, 1, "like", q);
             
             % Auxiliary variables for the iteration
+            J_i        = zeros(6, obj.n, 'like', q);
             q_idx      = 1;
+            j          = 1;
+            lastIdx    = idx(end);
             
             % Compute the body Jacobian recursively
             for i = 1:2*BodyTree.MaxBodiesNumber % Iterative over all the augmented bodies
@@ -475,19 +478,19 @@ classdef BodyTree < handle
                     if isnumeric(obj.BodiesInternal{i})
                         nBodycontinue;
                     end
-                    % Step 1
+                    % Retreive the required information from the body
                     R_i_T           = real(obj.BodiesInternal{i}.T_(1:3, 1:3)');
                     t_i             = real(obj.BodiesInternal{i}.T_(1:3, 4));
                     v_par_i         = real(obj.BodiesInternal{i}.v_par_);
                     omega_par_i     = real(obj.BodiesInternal{i}.omega_par_);
 
-                    %Update the variables
+                    % Update the variables
                     nBody                       = obj.BodiesInternal{i}.n;
                     if q_idx ~= 1
-                        J(4:6, 1:q_idx-1)       = real(R_i_T*(J(4:6, 1:q_idx-1) - skew(t_i)*J(1:3, 1:q_idx-1)));
-                        J(1:3, 1:q_idx-1)       = real(R_i_T*J(1:3, 1:q_idx-1));
+                        J_i(4:6, 1:q_idx-1)       = real(R_i_T*(J_i(4:6, 1:q_idx-1) - skew(t_i)*J_i(1:3, 1:q_idx-1)));
+                        J_i(1:3, 1:q_idx-1)       = real(R_i_T*J_i(1:3, 1:q_idx-1));
                     end
-                    J(1:6, q_idx:q_idx+nBody-1) = [omega_par_i; v_par_i];
+                    J_i(1:6, q_idx:q_idx+nBody-1) = [omega_par_i; v_par_i];
                     
                     % Uncomment below for testing purposes
                     %v_rel_i         = real(obj.BodiesInternal{i}.v_rel_);
@@ -495,8 +498,15 @@ classdef BodyTree < handle
                     %v               = real(R_i_T*(v + cross(omega, t_i) + v_rel_i));
                     %omega           = real(R_i_T*(omega + omega_rel_i));
 
-                    % Stop the iteration if the correct body has been reached
-                    if i == idx
+                    % Save the value if i hits the current body value
+                    if i == idx(j)
+                        J(1 + 6*(j-1):6*j, 1:obj.n) = J_i;
+                        % Update the index for the body
+                        j               = j + 1;
+                    end
+
+                    % Stop the iteration if the last body has been reached
+                    if i == lastIdx
                         break;
                     end
 

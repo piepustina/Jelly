@@ -24,6 +24,6 @@ end
 r1 = BodyTree(J1, B1);
 
 q_test  = ones(r1.n, 1);
+dq_test = ones(r1.n, 1);
 
-J = r1.BodyJacobian(q_test);
-
+J = r1.BodyJacobian(q_test)
