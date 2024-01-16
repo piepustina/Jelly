@@ -327,6 +327,26 @@ bodies.</p>
 </dd></dl>
 
 <dl class="mat method">
+<dt class="sig sig-object mat" id="BodyTree.BodyJacobian">
+<span class="sig-name descname"><span class="pre">BodyJacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">idx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#BodyTree.BodyJacobian" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the body Jacobian of the i-th body. If i is not specified, then the last body is considered.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>idx</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[int]</span></code></span>) – Body index</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>6 x n body Jacobian with angular and linear components</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{[double], [sym]}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
 <dt class="sig sig-object mat" id="BodyTree.D">
 <span class="sig-name descname"><span class="pre">D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">dq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#BodyTree.D" title="Link to this definition">#</a></dt>
 <dd><p>Evaluate the generalized damping force.</p>
