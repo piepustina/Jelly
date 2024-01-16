@@ -329,16 +329,16 @@ bodies.</p>
 <dl class="mat method">
 <dt class="sig sig-object mat" id="BodyTree.BodyJacobian">
 <span class="sig-name descname"><span class="pre">BodyJacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">idx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#BodyTree.BodyJacobian" title="Link to this definition">#</a></dt>
-<dd><p>Evaluate the body Jacobian of the i-th body. If i is not specified, then the last body is considered.</p>
+<dd><p>Evaluate the body Jacobian of the i-th body. If i is not specified, the method returns the body Jacobian of each body of the chain.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
-<li><p><strong>idx</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[int]</span></code></span>) – Body index</p></li>
+<li><p><strong>idx</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[int]</span></code></span>) – Array of body indexes indicating the bodies for which the jacobian has to be evaluated</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>6 x n body Jacobian with angular and linear components</p>
+<dd class="field-even"><p>length(idx)*6 x n body Jacobian with angular and linear components for each body specified by idx</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>{[double], [sym]}</p>
