@@ -407,22 +407,126 @@ classdef BodyTree < handle
             E = E_kinetic + E_elastic + E_gravity;
         end
 
-        function T = DirectKinematics(obj, q)
-            %Evaluate the direct kinematics for each body.
+        function T = DirectKinematics(obj, q, idx)
+            %Evaluate the direct kinematics.
             %
             %Args:
             %   q   ([double], [sym]): Configuration variables
+            %   idx           ([int]): Ordered array of body indexes indicating the bodies for which the jacobian has to be evaluated
+            %Return:
+            %   {[double], [sym]}: Homogeneous transformation matrices for the body specified by idx.   
+
+            switch nargin
+                case 2
+                    idx = linspace(1, obj.N_B, obj.N_B);
+            end
+
+            % Check that the input vectors are in column format.
+            if ~iscolumn(q)
+                q = q';
+            end
+
+            % T is matrix of vertically stacked 4x4 transformation matrices
+            T   = repmat(eye(4, 'like', q), length(idx), 1);
+            
+            % Update the state of the kinematic tree
+            Zeron   = zeros(obj.n, 1, "like", q);
+            obj     = obj.TreeUpdate(q, Zeron, Zeron);
+            
+            % Variables initialization
+            T_i         = obj.T0;
+            j           = 1;
+            lastIdx     = idx(end);
+            % Compute the direct kinematics
+            for i = 1:obj.N_B
+
+                T_i  = T_i*obj.Joints{i}.T_*obj.Bodies{i}.T_;
+                
+                if i == idx(j)
+                    T(1+4*(j-1):4*j, 1:4)   = T_i;
+                    j                       = j + 1;
+                end
+
+                % If we have reached the last body, break the loop
+                if i == lastIdx
+                    break;
+                end
+            end
+        end
+
+        function q = InverseKinematics(obj, T, idx, q0, N)
+            %Evaluate the inverse kinematics numerically using a Newton-Rapson iteration scheme.
+            %
+            %Args:
+            %   T   ([double, double]): Target transformation matrices vertically stacked
+            %   q0  ([double, double]): Initial guess, the default value is q0 = zeros(n, 1)
+            %   idx ([double])        : Vector of indexes identifing the bodies in the chain for which T has to be found
+            %   N   (double)          : Maximum number of iterations
             %Return:
             %   {[double], [sym]}: Homogeneous transformation matrices for each body.   
             
-            % T is a cell array of transformation matrices from the base to the tip.
-            T   = cell(obj.N_B, 1);
-            T_i = obj.T0;
-            obj = obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q));
-            for i = 1:obj.N_B
-                T_i  = T_i*obj.Joints{i}.T_*obj.Bodies{i}.T_;
-                T{i} = T_i;
+            % Default values
+            DefaultN            = 4;   %Number of Newton iterations
+            AngularErrorThsd    = 1e-3;%Threshold in the Newton scheme for the angular velocity
+            LinearErrorThsd     = 1e-3;%Threshold in the Newton scheme for the linear velocity
+            
+            switch nargin
+                case 2
+                    idx = linspace(1, obj.N_B, obj.N_B);
+                    q0  = zeros(obj.n, 1);
+                    N   = DefaultN;
+                case 3
+                    q0  = zeros(obj.n, 1);
+                    N   = DefaultN;
+                case 4
+                    N   = DefaultN;
             end
+
+            % Store useful variables
+            idxLength = length(idx);
+            
+            % Check that the dimensions of T and idx are consistent. In particular, 
+            if floor(size(T, 1)/4) ~= idxLength
+                error("The size of T and idx is not consistent.");
+            end
+
+            % Preallocate the output
+            q         = q0;
+            e         = Inf*ones(6*idxLength, 1);
+            e_thsd    = ones(idxLength, 1);%If contains all zeros, the configuration satisfies all the constraints
+
+            T_qd      = repmat(eye(4), idxLength, 1);
+
+            % Run the Newton algorithm as given in Linch and Park, Modern Robotics
+            for i = 1:N
+                % Evaluate the direct kinematics in the current configuration
+                T_q = obj.DirectKinematics(q, idx);
+                % Evaluate the body Jacobian in the current configuration
+                J_q = obj.BodyJacobian(q, idx);
+
+                % Iterate over all the requried bodies
+                for j = 1:idxLength
+                    % Evaluate the desired configuration in the current frame
+                    T_qd_j = invTransformation(T_q(1+4*(j-1):4*j, 1:4))*T(1+4*(j-1):4*j, 1:4);
+                    
+                    % Compute the error
+                    e_j    = skew4_inv(logmat(T_qd_j));
+                    e(1+6*(j-1):6*j) = e_j;
+                    % Check if the error is below the threshold
+                    if (e_j(1:3) <= AngularErrorThsd) && (e_j(4:6) <= LinearErrorThsd)
+                        e_thsd(j) = 0;
+                    end
+                end
+
+                % Check if the error is small enough on all the channels and in case exit, iteration converged
+                if ~any(e_thsd)
+                    break;
+                else
+                    % Update the configuration
+                    q = q + J_q\e;
+                end
+            end
+
         end
 
         function J = BodyJacobian(obj, q, idx)

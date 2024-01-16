@@ -20,10 +20,17 @@ for i = 1:N_B
     J1{i} = FixedJoint();
 end
 
-%% Test the body jacobian
+%% Test the kinematics quantities
 r1 = BodyTree(J1, B1);
 
 q_test  = ones(r1.n, 1);
 dq_test = ones(r1.n, 1);
 
+% Transformation matries
+J = r1.DirectKinematics(q_test)
+
+% Body Jacobian
 J = r1.BodyJacobian(q_test)
+
+% Inverse kinematics
+
