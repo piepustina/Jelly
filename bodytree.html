@@ -362,14 +362,17 @@ bodies.</p>
 
 <dl class="mat method">
 <dt class="sig sig-object mat" id="BodyTree.DirectKinematics">
-<span class="sig-name descname"><span class="pre">DirectKinematics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em><span class="sig-paren">)</span><a class="headerlink" href="#BodyTree.DirectKinematics" title="Link to this definition">#</a></dt>
-<dd><p>Evaluate the direct kinematics for each body.</p>
+<span class="sig-name descname"><span class="pre">DirectKinematics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">q</span></em>, <em class="sig-param"><span class="pre">idx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#BodyTree.DirectKinematics" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the direct kinematics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Configuration variables</p></li>
+<li><p><strong>idx</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[int]</span></code></span>) – Ordered array of body indexes indicating the bodies for which the jacobian has to be evaluated</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Homogeneous transformation matrices for each body.</p>
+<dd class="field-even"><p>Homogeneous transformation matrices for the body specified by idx.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>{[double], [sym]}</p>
@@ -444,6 +447,28 @@ force, if any is linear.</p>
 <li><p><strong>dq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – First-order time derivative of configuration variables</p></li>
 <li><p><strong>ddq</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double],</span> <span class="pre">[sym]</span></code></span>) – Second-order time derivative of configuration variables</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="BodyTree.InverseKinematics">
+<span class="sig-name descname"><span class="pre">InverseKinematics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">T</span></em>, <em class="sig-param"><span class="pre">idx</span></em>, <em class="sig-param"><span class="pre">q0</span></em>, <em class="sig-param"><span class="pre">N</span></em><span class="sig-paren">)</span><a class="headerlink" href="#BodyTree.InverseKinematics" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the inverse kinematics numerically using a Newton-Rapson iteration scheme.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double,</span> <span class="pre">double]</span></code></span>) – Target transformation matrices vertically stacked</p></li>
+<li><p><strong>q0</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double,</span> <span class="pre">double]</span></code></span>) – Initial guess, the default value is q0 = zeros(n, 1)</p></li>
+<li><p><strong>idx</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double]</span></code></span>) – Vector of indexes identifing the bodies in the chain for which T has to be found</p></li>
+<li><p><strong>N</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">double</span></code></span>) – Maximum number of iterations</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Homogeneous transformation matrices for each body.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{[double], [sym]}</p>
 </dd>
 </dl>
 </dd></dl>
