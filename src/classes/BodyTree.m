@@ -463,14 +463,15 @@ classdef BodyTree < handle
             end
         end
 
-        function [q, converged] = InverseKinematics(obj, T, idx, q0, N)
+        function [q, converged] = InverseKinematics(obj, T, idx, q0, N, task_flags)
             %Evaluate the inverse kinematics numerically using a Newton-Rapson iteration scheme.
             %
             %Args:
-            %   T   ([double, double]): Target transformation matrices vertically stacked
-            %   q0  ([double, double]): Initial guess, the default value is q0 = zeros(n, 1)
-            %   idx ([double])        : Vector of indexes identifing the bodies in the chain for which T has to be found
-            %   N   (double)          : Maximum number of iterations
+            %   T   ([double, double])      : Target transformation matrices vertically stacked
+            %   q0  ([double, double])      : Initial guess, the default value is q0 = zeros(n, 1)
+            %   idx ([double])              : Vector of indexes identifing the bodies in the chain for which T has to be found
+            %   N   (double)                : Maximum number of iterations
+            %   task_flags ([double, bool]) : Vector of flags specifying for each indexed body what components of the task vector should be considered
             %Return:
             %   {[double], [sym]}: Homogeneous transformation matrices for each body.   
             
@@ -481,25 +482,37 @@ classdef BodyTree < handle
             
             switch nargin
                 case 2
-                    idx = linspace(1, obj.N_B, obj.N_B);
-                    q0  = zeros(obj.n, 1);
-                    N   = DefaultN;
+                    idx         = linspace(1, obj.N_B, obj.N_B);
+                    q0          = zeros(obj.n, 1);
+                    N           = DefaultN;
+                    task_flags  = ones(obj.N_B, 6);
                 case 3
                     q0  = zeros(obj.n, 1);
                     N   = DefaultN;
+                    task_flags  = ones(obj.N_B, 6);
                 case 4
                     N   = DefaultN;
+                    task_flags  = ones(obj.N_B, 6);
+                case 5
+                    task_flags  = ones(obj.N_B, 6);
             end
 
             % Store useful variables
             idxLength = length(idx);
+
+            % Convert the task flags to an index vector
+            task_flags_l = logical(task_flags ~= 0);
             
-            % Check that the dimensions of T and idx are consistent. In particular, 
+            % Check that the dimensions of T and idx are consistent. 
             if floor(size(T, 1)/4) ~= idxLength
                 error("The size of T and idx is not consistent.");
             end
+            % Check that the dimensions of idx and task_flags are consistent
+            if 6*idxLength ~= length(task_flags)
+                error("The length of the body indexes is not consitent with the length of the task flags.");
+            end
 
-            % Preallocate the output
+            % Preallocate the output for code generation
             q         = zeros(obj.n, 1);
             q         = q0;
             converged = 0;
@@ -511,18 +524,21 @@ classdef BodyTree < handle
             % Run the Newton algorithm as given in Linch and Park, Modern Robotics
             for i = 1:N
                 % Evaluate the direct kinematics in the current configuration
-                T_q = obj.DirectKinematics(q, idx);
+                T_q         = obj.DirectKinematics(q, idx);
                 % Evaluate the body Jacobian in the current configuration
-                J_q = obj.BodyJacobian(q, idx);
-
+                J_q         = obj.BodyJacobian(q, idx);
+                
                 % Iterate over all the requried bodies
                 for j = 1:idxLength
                     % Evaluate the desired configuration in the current frame
                     T_qd_j = invTransformation(T_q(1+4*(j-1):4*j, 1:4))*T(1+4*(j-1):4*j, 1:4);
                     
                     % Compute the error
-                    e_j    = skew4_inv(logmat(T_qd_j));
-                    e(1+6*(j-1):6*j) = e_j;
+                    e_j                                 = skew4_inv(logmat(T_qd_j));
+                    % Set to zero the components for which the error does not matter
+                    e_j(task_flags_l(1+6*(j-1):6*j))    = 0;
+                    % Store the error to use in the update phase
+                    e(1+6*(j-1):6*j)                    = e_j;
                     % Check if the error is below the threshold
                     if (norm(e_j(1:3)) <= AngularErrorThsd) && (norm(e_j(4:6)) <= LinearErrorThsd)
                         e_thsd(j) = 0;
