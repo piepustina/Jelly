@@ -20,7 +20,7 @@ for i = 1:N_B
     J1{i} = FixedJoint();
 end
 
-%% Test the kinematics quantities
+%% Test the direct and differential kinematics
 r1 = BodyTree(J1, B1);
 
 q_test  = ones(r1.n, 1);
@@ -32,7 +32,7 @@ T = r1.DirectKinematics(q_test)
 % Body Jacobian
 J = r1.BodyJacobian(q_test)
 
-%%
+%% Test the inverse kinematics with a random configuration
 q_min  = -2;
 q_max  = 2;
 disp("The configuration is ")
@@ -42,6 +42,8 @@ T = r1.DirectKinematics(q_test);
 % Inverse kinematics
 disp("The inverse kinematics result is ")
 tic
-r1.InverseKinematics(T, 1:N_B, zeros(r1.n, 1), 10)
+q_ik = r1.InverseKinematics(T, 1:N_B, zeros(r1.n, 1), 100)
 toc
+
+disp("The error norm is " + norm(q_test - q_ik))
 
