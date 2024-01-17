@@ -421,6 +421,9 @@ classdef BodyTree < handle
                     idx = linspace(1, obj.N_B, obj.N_B);
             end
 
+            % Modify the index to account for the fact that internally the joints are modeled as bodies
+            idx = 2*idx;
+
             % Check that the input vectors are in column format.
             if ~iscolumn(q)
                 q = q';
@@ -437,19 +440,25 @@ classdef BodyTree < handle
             T_i         = obj.T0;
             j           = 1;
             lastIdx     = idx(end);
+            N_B_        = obj.N_B_Internal;
             % Compute the direct kinematics
-            for i = 1:obj.N_B
+            for i = 1:2*BodyTree.MaxBodiesNumber % Iterative over all the augmented bodies
+                if i <= N_B_
+                    if isnumeric(obj.BodiesInternal{i})
+                        continue;
+                    end
 
-                T_i  = T_i*obj.Joints{i}.T_*obj.Bodies{i}.T_;
-                
-                if i == idx(j)
-                    T(1+4*(j-1):4*j, 1:4)   = T_i;
-                    j                       = j + 1;
-                end
-
-                % If we have reached the last body, break the loop
-                if i == lastIdx
-                    break;
+                    T_i  = T_i*obj.BodiesInternal{i}.T_;
+                    
+                    if i == idx(j)
+                        T(1+4*(j-1):4*j, 1:4)   = T_i;
+                        j                       = j + 1;
+                    end
+    
+                    % If we have reached the last body, break the loop
+                    if i == lastIdx
+                        break;
+                    end
                 end
             end
         end
@@ -582,7 +591,7 @@ classdef BodyTree < handle
             for i = 1:2*BodyTree.MaxBodiesNumber % Iterative over all the augmented bodies
                 if i <= N_B_
                     if isnumeric(obj.BodiesInternal{i})
-                        nBodycontinue;
+                        continue;
                     end
                     % Retreive the required information from the body
                     R_i_T           = real(obj.BodiesInternal{i}.T_(1:3, 1:3)');

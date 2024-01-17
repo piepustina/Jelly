@@ -101,7 +101,7 @@ classdef InverseKinematicsSystem < matlab.System
         function [out1, out2] = getOutputDataTypeImpl(obj)
             %getOutputDataTypeImpl Return data type for each output port
             out1 = propagatedInputDataType(obj, 2);
-            out2 = "int8";
+            out2 = "double";
         end
 
         function [out1, out2] = isOutputComplexImpl(obj)

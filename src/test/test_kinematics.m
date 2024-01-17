@@ -47,3 +47,5 @@ toc
 
 disp("The error norm is " + norm(q_test - q_ik))
 
+%% Test also the simulink model
+open("simulink_ik.slx")
