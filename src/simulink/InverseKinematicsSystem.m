@@ -13,6 +13,8 @@ classdef InverseKinematicsSystem < matlab.System
         BodyIndexes             = 1;
         %Maximum number of Newton iterations
         MaximumNewtonIterations = 4;
+        %Task space flags
+        TaskSpaceFlags          = ones(6, 1);
     end
 
 
@@ -43,7 +45,7 @@ classdef InverseKinematicsSystem < matlab.System
             % Preallocate the output
             q    = cast(zeros(size(q0)), 'like', q0);
             % Run the inverse kinematics
-            [q_ik, converged] = obj.Tree.InverseKinematics(double(T), obj.BodyIndexes, double(q0), obj.MaximumNewtonIterations);
+            [q_ik, converged] = obj.Tree.InverseKinematics(double(T), obj.BodyIndexes, double(q0), obj.MaximumNewtonIterations, obj.TaskSpaceFlags);
             % Assign the output configuration
             q(:) = cast(q_ik, 'like', q0);
         end
