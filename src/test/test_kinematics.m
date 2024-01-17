@@ -27,10 +27,21 @@ q_test  = ones(r1.n, 1);
 dq_test = ones(r1.n, 1);
 
 % Transformation matries
-J = r1.DirectKinematics(q_test)
+T = r1.DirectKinematics(q_test)
 
 % Body Jacobian
 J = r1.BodyJacobian(q_test)
 
+%%
+q_min  = -2;
+q_max  = 2;
+disp("The configuration is ")
+q_test = (q_max-q_min).*rand(r1.n,1) + q_min
+% Direct kinematics
+T = r1.DirectKinematics(q_test);
 % Inverse kinematics
+disp("The inverse kinematics result is ")
+tic
+r1.InverseKinematics(T, 1:N_B, zeros(r1.n, 1), 10)
+toc
 

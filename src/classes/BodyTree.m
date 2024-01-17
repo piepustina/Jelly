@@ -513,7 +513,7 @@ classdef BodyTree < handle
                     e_j    = skew4_inv(logmat(T_qd_j));
                     e(1+6*(j-1):6*j) = e_j;
                     % Check if the error is below the threshold
-                    if (e_j(1:3) <= AngularErrorThsd) && (e_j(4:6) <= LinearErrorThsd)
+                    if (norm(e_j(1:3)) <= AngularErrorThsd) && (norm(e_j(4:6)) <= LinearErrorThsd)
                         e_thsd(j) = 0;
                     end
                 end
