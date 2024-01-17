@@ -42,7 +42,7 @@ T = r1.DirectKinematics(q_test);
 % Inverse kinematics
 disp("The inverse kinematics result is ")
 tic
-q_ik = r1.InverseKinematics(T, 1:N_B, zeros(r1.n, 1), 100)
+[q_ik, converged] = r1.InverseKinematics(T, 1:N_B, zeros(r1.n, 1), 100)
 toc
 
 disp("The error norm is " + norm(q_test - q_ik))

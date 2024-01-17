@@ -454,7 +454,7 @@ classdef BodyTree < handle
             end
         end
 
-        function q = InverseKinematics(obj, T, idx, q0, N)
+        function [q, converged] = InverseKinematics(obj, T, idx, q0, N)
             %Evaluate the inverse kinematics numerically using a Newton-Rapson iteration scheme.
             %
             %Args:
@@ -492,10 +492,11 @@ classdef BodyTree < handle
 
             % Preallocate the output
             q         = q0;
+            converged = 0;
+
+            % Allocate iteration variables
             e         = Inf*ones(6*idxLength, 1);
             e_thsd    = ones(idxLength, 1);%If contains all zeros, the configuration satisfies all the constraints
-
-            T_qd      = repmat(eye(4), idxLength, 1);
 
             % Run the Newton algorithm as given in Linch and Park, Modern Robotics
             for i = 1:N
@@ -520,6 +521,7 @@ classdef BodyTree < handle
 
                 % Check if the error is small enough on all the channels and in case exit, iteration converged
                 if ~any(e_thsd)
+                    converged = 1;
                     break;
                 else
                     % Update the configuration
