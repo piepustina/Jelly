@@ -500,6 +500,7 @@ classdef BodyTree < handle
             end
 
             % Preallocate the output
+            q         = zeros(obj.n, 1);
             q         = q0;
             converged = 0;
 
@@ -536,6 +537,11 @@ classdef BodyTree < handle
                     % Update the configuration
                     q = q + J_q\e;
                 end
+            end
+
+            % Display a warning if the convergence was not achieved
+            if ~converged
+                warning("Convergence not achived. The error norm is: " + sprintf("%.4f", norm(e)));
             end
 
         end
