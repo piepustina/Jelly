@@ -485,23 +485,23 @@ classdef BodyTree < handle
                     idx         = linspace(1, obj.N_B, obj.N_B);
                     q0          = zeros(obj.n, 1);
                     N           = DefaultN;
-                    task_flags  = ones(obj.N_B, 6);
+                    task_flags  = ones(obj.N_B*6, 1);
                 case 3
                     q0  = zeros(obj.n, 1);
                     N   = DefaultN;
-                    task_flags  = ones(obj.N_B, 6);
+                    task_flags  = ones(obj.N_B*6, 1);
                 case 4
                     N   = DefaultN;
-                    task_flags  = ones(obj.N_B, 6);
+                    task_flags  = ones(obj.N_B*6, 1);
                 case 5
-                    task_flags  = ones(obj.N_B, 6);
+                    task_flags  = ones(obj.N_B*6, 1);
             end
 
             % Store useful variables
             idxLength = length(idx);
 
             % Convert the task flags to an index vector
-            task_flags_l = logical(task_flags ~= 0);
+            task_flags_l = logical(task_flags == 0);
             
             % Check that the dimensions of T and idx are consistent. 
             if floor(size(T, 1)/4) ~= idxLength
