@@ -17,13 +17,14 @@ classdef SoftRobot < BodyTree
 
     properties (Constant)
         % Maximum number of bodies and joints, required for code generation.
-        MaxActuatorsNumber = 40;
+        MaxActuatorsNumber = 50;
     end
 
     properties (Constant, Access = private)
         DefaultColor = [0 160 219]./256;
     end
-
+    
+    %Private properties
     properties(Access = public)
         % Gaussian points for the actuators
         ActuatorGaussianPoints;
@@ -31,6 +32,8 @@ classdef SoftRobot < BodyTree
         ActuatorGaussianWeights;
         % Vector that stores the interval defining each body
         BodiesInterval = 0;
+        % Vector containing the number of Gaussian points for each actuator
+        ActuatorGaussianPointLength = 0;
     end
     
     methods
@@ -67,11 +70,53 @@ classdef SoftRobot < BodyTree
             obj.Actuators = cell(SoftRobot.MaxActuatorsNumber, 1);
             obj.Actuators = Actuators;
 
-            % Allocate the Gaussian points and weights for each actuator
+            % Allocate the Gaussian points and weights for each actuator. Because of the discontinuity of the strain, the integrals are expanded for actuators that span more than one body.
             obj.ActuatorGaussianPoints  = cell(obj.N_A, 1);
             obj.ActuatorGaussianWeights = cell(obj.N_A, 1);
+            obj.ActuatorGaussianPointLength = zeros(obj.N_A, 1);
+            % Get the rest length of the robot
+            RobotLength = obj.BodiesInterval(end);
             for i = 1:obj.N_A
-                [obj.ActuatorGaussianPoints{i}, obj.ActuatorGaussianWeights{i}] = lgwt(obj.Actuators{i}.NGaussPoints, obj.Actuators{i}.sStart, obj.Actuators{i}.sEnd);
+                if isnumeric(Actuators{i})%Needed for code generation
+                    continue;
+                end
+                % Get the index of the body where the actuator starts
+                sStart   = Actuators{i}.sStart;
+                if sStart == RobotLength
+                    idxBodyStart = obj.N_B;
+                elseif sStart == 0
+                    idxBodyStart = 1;
+                else
+                    idxBodyStart = find(sStart >= obj.BodiesInterval, 1, 'last');
+                end
+                % Get the index of the body where the actuator ends
+                sEnd     = Actuators{i}.sEnd;
+                if sEnd == RobotLength
+                    idxBodyEnd = obj.N_B;
+                elseif sEnd == 0
+                    idxBodyEnd = 1;
+                else
+                    idxBodyEnd = find(sEnd >= obj.BodiesInterval, 1, 'last');
+                end
+                % Compute the number of bodies trough which the actuator extends
+                idxBodyInterval = idxBodyEnd - idxBodyStart + 1;
+                
+                % Preallocate the Gauss points and weights
+                NGauss = obj.Actuators{i}.NGaussPoints;
+                obj.ActuatorGaussianPointLength(i) = idxBodyInterval*NGauss;
+                obj.ActuatorGaussianPoints{i}  = zeros(idxBodyInterval*NGauss, 1);
+                obj.ActuatorGaussianWeights{i} = zeros(idxBodyInterval*NGauss, 1);
+                % Assign the Gauss points and weights
+                k = 1;
+                for j = idxBodyStart:idxBodyEnd
+                    if j == idxBodyEnd
+                        [obj.ActuatorGaussianPoints{i}((k-1)*NGauss+1:k*NGauss), obj.ActuatorGaussianWeights{i}((k-1)*NGauss+1:k*NGauss)] = lgwt(NGauss, obj.BodiesInterval(j), obj.Actuators{i}.sEnd);
+                    else
+                        [obj.ActuatorGaussianPoints{i}((k-1)*NGauss+1:k*NGauss), obj.ActuatorGaussianWeights{i}((k-1)*NGauss+1:k*NGauss)] = lgwt(NGauss, obj.BodiesInterval(j), obj.BodiesInterval(j+1));
+                    end
+                    % Update iterationv variables
+                    k = k + 1;
+                end
             end
             
             % Store the radius of each body for plotting purposes
@@ -144,7 +189,7 @@ classdef SoftRobot < BodyTree
                     continue;
                 end
                 % Integrate numerically 
-                for j = 1:obj.Actuators{i}.NGaussPoints
+                for j = 1:obj.ActuatorGaussianPointLength(i)
                     % Retrieve the Gaussian point
                     sGauss = obj.ActuatorGaussianPoints{i}(j);
                     % Compute the distance of the actuator from the backbone and its spatial derivative

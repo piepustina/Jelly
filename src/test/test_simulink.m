@@ -37,7 +37,7 @@ for i = 1:2
    else
        signA = 1;
    end
-   Parameters  = [0; N_B*L0; 3*NGaussPoints; signA*BaseRadius/2; 0; 0];
+   Parameters  = [0; N_B*L0; NGaussPoints; signA*BaseRadius/2; 0; 0];
    A1{i}       = ConstantDistanceActuator(Parameters);
 end
 
