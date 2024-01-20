@@ -132,10 +132,11 @@ classdef SoftRobot < BodyTree
             J_xi_(1:6, idxQ:idxQ+obj.Bodies{idxBody}.n-1) = obj.Bodies{idxBody}.Jxi(qBody, s);
         end
 
-        % Computation of the actuation matrix
-        function A = ActuationMatrix(obj, q)
-            % Preallocate the actuation matrix
+        % Computation of the actuation matrix and the actuator elongation
+        function [A, y] = ActuationMatrix(obj, q)
+            % Preallocate the output
             A = zeros(obj.n, obj.N_A);
+            y = zeros(obj.N_A, 1);
             % Iterate over the actuators
             for i = 1:obj.N_A
                 % Check that we have an actuator, used for code generation
@@ -158,10 +159,22 @@ classdef SoftRobot < BodyTree
                     Phi_a = [skew(d)*t; t];
                     % Update the actuation matrix
                     A(1:obj.n, i) = A(1:obj.n, i) + obj.ActuatorGaussianWeights{i}(j)*(Jxi'*Phi_a); 
+                    % Compute the reference strain
+                    [xi_ref, ~] = obj.xi(zeros(obj.n, 1), sGauss);
+                    % Compute the reference value for the actuation basis
+                    ut_ref    = skew(xi_ref(1:3))*d + xi_ref(4:6) + dds;
+                    t_ref     = ut_ref/norm(ut_ref);
+                    Phi_a_ref = [skew(d)*t_ref; t_ref];
+                    % Update the actuator elongation
+                    y(i) = y(i) + obj.ActuatorGaussianWeights{i}(j)*((Phi_a-Phi_a_ref)'*(xi_ref + [zeros(3, 1); dds]));
                 end
             end
+
+            % Add to y the contribution of the current configuration
+            y = y + A'*q;
         end
 
+        
         %Plot the robot in the given configuration.
         function [ptch] = plot(obj, q, varargin)
             %Parse the optional paramters
