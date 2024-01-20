@@ -11,7 +11,8 @@ function [x,w]=lgwt(N,a,b)
 % the values contained in the x vector to obtain a vector f. Then compute
 % the definite integral using sum(f.*w);
 %
-% Written by Greg von Winckel - 02/25/2004
+% Written by  Greg von Winckel - 25/02/2004
+% Modified by Pietro Pustina   - 20/01/2024
 N  = N-1;
 N1 = N+1; 
 N2 = N+2;
