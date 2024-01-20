@@ -12,7 +12,7 @@ classdef TreeStructConverter < handle
     
     methods (Static)
         function TreeStruct = ObjectToStruct(R)
-            % R is an instance of the class BodyTree
+            % R is an instance of the class BodyTree or its a class inheriting from it
             if ~isa(R, 'BodyTree')
                 error("R is not an instance of BodyTree.m");
             end
@@ -32,7 +32,7 @@ classdef TreeStructConverter < handle
                                 'T0', R.T0, ...
                                 'MassConditionNumber', R.MassConditionNumber, ...
                                 'Bodies', repmat(BodyStruct, R.N_B, 1));
-
+            % Iterate over the bodies of the tree
             for i = 1:R.N_B
                 % Get the body and joint representation as structs
                 S_body  = R.Bodies{i}.toStruct();

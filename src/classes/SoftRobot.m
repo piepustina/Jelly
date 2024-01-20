@@ -1,16 +1,27 @@
 classdef SoftRobot < BodyTree
     %SoftRobot extends BodyTree class and offers additional methods
     %for plotting. 
-    %SOFTROBOT Class that represents a soft robot (for the moment only to make plots)
+    %TODO: In the future, this class and its methods should be put into a separate MATALB package.
     
     properties (Constant, Access = private)
         DefaultColor = [0 160 219]./256;
     end
 
     properties
+        %Actuators of the soft robot organized in a cell array.
+        Actuators;
+        %Total number of actuators in the kinematic tree.
+        N_A = 0;
+        
+        % Graphical properties
         SegmentRadius
         Color
         SegmentBaseColor
+    end
+
+    properties (Constant)
+        % Maximum number of bodies and joints, required for code generation.
+        MaxActuatorsNumber = 40;
     end
     
     methods
@@ -19,25 +30,41 @@ classdef SoftRobot < BodyTree
         %several errors.
         %Note that we can use the input parser because this method is never
         %called during code generation in simulink.
-        function obj = SoftRobot(Joints, Bodies, T0)
+        function obj = SoftRobot(Joints, Bodies, Actuators)
             if nargin <= 2
-                T0 = eye(4);
+                Actuators = {};
             end
-            %Store the radius of each body
-            N_B = length(Bodies);
+
+            %Build the body tree
+            obj = obj@BodyTree(Joints, Bodies);
+
+            % Compute the number of actuators
+            obj.N_A = 0;
+            l_B     = length(Actuators);
+            for i = 1:SoftRobot.MaxActuatorsNumber
+                if i <= l_B
+                    if ~isnumeric(Actuators{i})
+                        obj.N_A = obj.N_A + 1;
+                    end
+                end
+            end
+            % Assign the actuators
+            obj.Actuators = cell(SoftRobot.MaxActuatorsNumber, 1);
+            obj.Actuators = Actuators;
+            
+            %Store the radius of each body for plotting purposes
+            N_B = obj.N_B;
             SegmentRadius = cell(N_B, 1);
             for i = 1:N_B
+                if isnumeric(Bodies{i})
+                    continue;
+                end
                 SegmentRadius{i, 1} = [Bodies{i}.Parameters(2), Bodies{i}.Parameters(3)];
             end
-            %Build the body tree
-            obj = obj@BodyTree(Joints, Bodies)
-            
-            %Process the input
             obj.SegmentRadius = SegmentRadius;
-            obj.T0 = T0;
-
-            %These could be optional arguments
-            obj.Color = SoftRobot.DefaultColor;
+            
+            %TODO: These could be optional arguments
+            obj.Color            = SoftRobot.DefaultColor;
             obj.SegmentBaseColor = repmat(obj.Color, obj.N_B, 1);
         end
         

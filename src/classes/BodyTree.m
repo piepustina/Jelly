@@ -414,7 +414,7 @@ classdef BodyTree < handle
             %   q   ([double], [sym]): Configuration variables
             %   idx           ([int]): Ordered array of body indexes indicating the bodies for which the jacobian has to be evaluated
             %Return:
-            %   {[double], [sym]}: Homogeneous transformation matrices for the body specified by idx.   
+            %   ([double], [sym]): Homogeneous transformation matrices for the body specified by idx.   
 
             switch nargin
                 case 2
