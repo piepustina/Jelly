@@ -6,14 +6,19 @@ classdef ConstantDistanceActuator < GVSActuator
             %Construct a actuator with a constant distance from the robot backbone.
             %
             %Args:
-            %   Parameters ([double]): Parameters of the actuator, specified as :math:`L_0, N_{\mathrm{Gauss}}` and :math:`d`.
+            %   Parameters ([double]): Parameters of the actuator, specified as :math:`s_{\mathrm{start}}, s_{\mathrm{end}}, N_{\mathrm{Gauss}}` and :math:`d`.
             
             obj = obj@GVSActuator(Parameters);
         end
         
         % Implement abstract methods
         function d = ActuatorDistance(obj, s)
-            d = obj.Parameters(3:5);
+            sStart = obj.Parameters(1); sEnd = obj.Parameters(2);
+            if s >= sStart && s <= sEnd
+                d = obj.Parameters(4:6);
+            else
+                d = zeros(3, 1);
+            end
         end
 
         function dd = dActuatorDistance(obj, s)

@@ -1,6 +1,6 @@
 %% Create an instance of the class
 clear; clc;
-L0              = 1;
+L0              = 0.2;
 BaseRadius      = 0.01;
 TipRadius       = 0.01;
 MassDensity     = 1062;
@@ -9,7 +9,7 @@ PoissonRatio    = 0.5;
 MaterialDamping = 0.1;
 NGaussPoints    = 10;
 n               = 1;
-N_B             = 2;
+N_B             = 3;
 Parameters      = [L0, BaseRadius, TipRadius, MassDensity, YoungModulus, PoissonRatio, MaterialDamping]';
 b1              = PCC2D([Parameters; NGaussPoints]);
 j1              = FixedJoint();

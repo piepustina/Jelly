@@ -4,8 +4,10 @@ classdef GVSActuator < handle
     properties
         % Vector of parameters for the actuator.
         Parameters;
-        % Rest length of the actuator
-        RestLength      = 0;
+        % Value of the curvilinear abscissa where the actuator starts
+        sStart      = 0;
+        % Value of the curvilinear abscissa where the actuator ends
+        sEnd        = 0;
         % Number of Gaussian points used to approximate the actuator generalized force
         NGaussPoints    = 0;
     end
@@ -25,7 +27,7 @@ classdef GVSActuator < handle
         %   s          (double)         : Curvilinear abscissa 
         %Return:
         %   ([3x1 - double]): Spatial derivative of the actuator distance
-        dd = dActuatorDistance(obj, s);
+        Jds = dActuatorDistance(obj, s);
         
     end
     
@@ -34,7 +36,7 @@ classdef GVSActuator < handle
             % Construct a Geometric Variable Strain (GVS) actuator.
             %
             %Args:
-            %   Parameters ([double]): Parameters of the actuator where the first two elements are :math:`L_{0}` and :math:`N_{\mathrm{Gauss}}`.
+            %   Parameters ([double]): Parameters of the actuator where the first two elements are :math:`s_{\mathrm{start}}, s_{\mathrm{end}}` and :math:`N_{\mathrm{Gauss}}`.
                    
             % Convert the parameters to a column vector, if needed
             if isrow(Parameters)
@@ -43,9 +45,9 @@ classdef GVSActuator < handle
 
             % Store the actuator parameters
             obj.Parameters   = Parameters;
-            obj.RestLength   = Parameters(1);
-            obj.NGaussPoints = Parameters(2);
-
+            obj.sStart       = Parameters(1);
+            obj.sEnd         = Parameters(2);
+            obj.NGaussPoints = Parameters(3);
          end
         
         function s = toStruct(obj)

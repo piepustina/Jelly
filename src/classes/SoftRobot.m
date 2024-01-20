@@ -3,10 +3,6 @@ classdef SoftRobot < BodyTree
     %for plotting. 
     %TODO: In the future, this class and its methods should be put into a separate MATALB package.
     
-    properties (Constant, Access = private)
-        DefaultColor = [0 160 219]./256;
-    end
-
     properties
         %Actuators of the soft robot organized in a cell array.
         Actuators;
@@ -23,6 +19,19 @@ classdef SoftRobot < BodyTree
         % Maximum number of bodies and joints, required for code generation.
         MaxActuatorsNumber = 40;
     end
+
+    properties (Constant, Access = private)
+        DefaultColor = [0 160 219]./256;
+    end
+
+    properties(Access = public)
+        % Gaussian points for the actuators
+        ActuatorGaussianPoints;
+        % Gaussian weights for the actuators
+        ActuatorGaussianWeights;
+        % Vector that stores the interval defining each body
+        BodiesInterval = 0;
+    end
     
     methods
         %Class constructor.
@@ -35,8 +44,14 @@ classdef SoftRobot < BodyTree
                 Actuators = {};
             end
 
-            %Build the body tree
+            % Build the body tree
             obj = obj@BodyTree(Joints, Bodies);
+
+            % Store the rest length of each body
+            obj.BodiesInterval = zeros(obj.N_B + 1, 1);
+            for i = 1:obj.N_B
+                obj.BodiesInterval(i+1) = obj.BodiesInterval(i) + obj.Bodies{i}.RestLength;
+            end
 
             % Compute the number of actuators
             obj.N_A = 0;
@@ -51,8 +66,15 @@ classdef SoftRobot < BodyTree
             % Assign the actuators
             obj.Actuators = cell(SoftRobot.MaxActuatorsNumber, 1);
             obj.Actuators = Actuators;
+
+            % Allocate the Gaussian points and weights for each actuator
+            obj.ActuatorGaussianPoints  = cell(obj.N_A, 1);
+            obj.ActuatorGaussianWeights = cell(obj.N_A, 1);
+            for i = 1:obj.N_A
+                [obj.ActuatorGaussianPoints{i}, obj.ActuatorGaussianWeights{i}] = lgwt(obj.Actuators{i}.NGaussianPoints, obj.Actuators{i}.sStart, obj.Actuators{i}.sEnd);
+            end
             
-            %Store the radius of each body for plotting purposes
+            % Store the radius of each body for plotting purposes
             N_B = obj.N_B;
             SegmentRadius = cell(N_B, 1);
             for i = 1:N_B
@@ -68,6 +90,78 @@ classdef SoftRobot < BodyTree
             obj.SegmentBaseColor = repmat(obj.Color, obj.N_B, 1);
         end
         
+        % Evaluate the strain at a given point along the robot structure and in the given configuration
+        function [xi_, J_xi_] = xi(obj, q, s)
+            %
+            
+            % Get the rest length of the robot
+            RobotLength = obj.BodiesInterval(end);
+            
+            % Preallocate the output
+            xi_   = zeros(6, 1); 
+            xi_(6)= 1;
+            J_xi_ = zeros(6, obj.n);
+
+            % Return 0 if s is outside the allowed range
+            if s > RobotLength || s < 0
+                return;
+            end
+
+            % Find the index of the body to which the point belongs
+            if s == RobotLength
+                idxBody = obj.N_B;
+            elseif s == 0
+                idxBody = 1;
+            else
+                idxBody = find(s >= obj.BodiesInterval, 1, 'last');
+            end
+
+            % Remap s into the body interval
+            s = s-obj.BodiesInterval(idxBody);
+
+            % Get the configuration of the body
+            idxQ = 1;
+            for i = 1:idxBody-1
+                idxQ = idxQ + obj.Joints{i}.n + obj.Bodies{i}.n;
+            end
+            idxQ  = idxQ + obj.Joints{idxBody}.n;
+            qBody = q(idxQ:idxQ+obj.Bodies{idxBody}.n-1);
+
+            % Compute the strain and its Jacobian
+            xi_     = obj.Bodies{idxBody}.xi(qBody, s);
+            J_xi_(1:6, idxQ:idxQ+obj.Bodies{idxBody}.n-1) = obj.Bodies{idxBody}.Jxi(qBody, s);
+        end
+
+        % Computation of the actuation matrix
+        function A = ActuationMatrix(obj, q)
+            % Preallocate the actuation matrix
+            A = zeros(obj.n, obj.N_A);
+            % Iterate over the actuators
+            for i = 1:obj.N_A
+                % Check that we have an actuator, used for code generation
+                if isnumeric(obj.Actuators{i})
+                    continue;
+                end
+                % Integrate numerically 
+                for j = 1:obj.Actuators{i}.NGaussPoints
+                    % Retrieve the Gaussian point
+                    sGauss = obj.ActuatorGaussianPoints{i}(j);
+                    % Compute the distance of the actuator from the backbone and its spatial derivative
+                    d   = obj.Actuators{i}.ActuatorDistance(sGauss);
+                    dds = obj.Actuators{i}.dActuatorDistance(sGauss);
+                    % Compute the strain and its Jacobian w.r.t. q
+                    [xi, Jxi]  = obj.xi(q, sGauss);
+                    % Compute the unit tangent vector to the actuator
+                    ut  = skew(xi(1:3))*d + xi(4:6) + dds;
+                    t   = ut/norm(ut);
+                    % Compute the actuation basis
+                    Phi_a = [skew(d)*t; t];
+                    % Update the actuation matrix
+                    A(1:obj.n, i) = A(1:obj.n, i) + obj.ActuatorGaussianWeights{i}(j)*(Jxi'*Phi_a); 
+                end
+            end
+        end
+
         %Plot the robot in the given configuration.
         function [ptch] = plot(obj, q, varargin)
             %Parse the optional paramters
