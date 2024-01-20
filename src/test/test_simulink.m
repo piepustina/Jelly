@@ -20,11 +20,18 @@ for i = 1:N_B
     J1{i} = FixedJoint();
 end
 
+% Create the actuators
+A1 = cell(N_B, 1);
+for i = 1:N_B
+    Parameters  = [(i-1)*L0; i*L0; NGaussPoints; BaseRadius/2; 0; 0];
+    A1{i}       = ConstantDistanceActuator(Parameters);
+end
+
 
 %% Build the robot
 %r1 = BodyTree(J1, B1);
 
-r1 = SoftRobot(J1, B1);
+r1 = SoftRobot(J1, B1, A1);
 
 %% Open the simulink system
 open("simulink_test.slx")

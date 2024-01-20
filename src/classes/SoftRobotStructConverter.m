@@ -6,7 +6,7 @@ classdef SoftRobotStructConverter < handle
     
     % Define the maximum size of the parameters of the struct (required for code generation). 
     properties (Constant)
-        StringSize      = 40;% Used for the BodyType and JointType fields
+        StringSize      = 40;% Used for the ActuatorType and JointType fields
         ParametersSize  = 20;% Used for the size of the parameters
     end
     
@@ -51,7 +51,7 @@ classdef SoftRobotStructConverter < handle
             N_A = length(S.Actuators);
             for i = 1:N_A
                 % Create the actuator
-                ActuatorType = S.Actuators(i).BodyType(1:S.Actuators(i).LengthActuatorType);
+                ActuatorType = S.Actuators(i).ActuatorType(1:S.Actuators(i).LengthActuatorType);
                 ActuatorParameters = S.Actuators(i).ActuatorParameters(1:S.Actuators(i).NumberActuatorParameters);
                 Actuators{i} = SoftRobotFactory.CreateActuator(ActuatorType, ActuatorParameters);
             end

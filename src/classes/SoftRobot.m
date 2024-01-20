@@ -71,7 +71,7 @@ classdef SoftRobot < BodyTree
             obj.ActuatorGaussianPoints  = cell(obj.N_A, 1);
             obj.ActuatorGaussianWeights = cell(obj.N_A, 1);
             for i = 1:obj.N_A
-                [obj.ActuatorGaussianPoints{i}, obj.ActuatorGaussianWeights{i}] = lgwt(obj.Actuators{i}.NGaussianPoints, obj.Actuators{i}.sStart, obj.Actuators{i}.sEnd);
+                [obj.ActuatorGaussianPoints{i}, obj.ActuatorGaussianWeights{i}] = lgwt(obj.Actuators{i}.NGaussPoints, obj.Actuators{i}.sStart, obj.Actuators{i}.sEnd);
             end
             
             % Store the radius of each body for plotting purposes
