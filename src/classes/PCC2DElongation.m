@@ -16,8 +16,8 @@ classdef PCC2DElongation < GVSBody
         end
 
         function Phi = StrainBasis(obj, s)
-            Phi = 1/obj.RestLength*[ 1, 0;
-                                     0, 0;
+            Phi = 1/obj.RestLength*[ 0, 0;
+                                    -1, 0;
                                      0, 0;
                                      0, 0;
                                      0, 0;
