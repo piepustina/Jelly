@@ -26,7 +26,8 @@ classdef SoftRobotStructConverter < handle
                                     'NumberActuatorParameters', 0);
             % Structure representation of the soft robot
             SoftRobotStruct = struct('TreeStruct', BodyTreeStruct, ...
-                                     'Actuators', repmat(ActuatorStruct, R.N_A, 1));
+                                     'Actuators', repmat(ActuatorStruct, R.N_A, 1), ...
+                                     'N_A', R.N_A);
             % Iterate over the bodies of the tree
             for i = 1:R.N_A
                 % Get the actuator representation as a struct
@@ -48,7 +49,7 @@ classdef SoftRobotStructConverter < handle
             % Allocate the actuators
             Actuators = cell(SoftRobot.MaxActuatorsNumber, 1);
             
-            N_A = length(S.Actuators);
+            N_A = S.N_A;
             for i = 1:N_A
                 % Create the actuator
                 ActuatorType = S.Actuators(i).ActuatorType(1:S.Actuators(i).LengthActuatorType);

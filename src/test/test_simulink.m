@@ -35,8 +35,6 @@ end
 
 
 %% Build the robot
-%r1 = BodyTree(J1, B1);
-
 r1 = SoftRobot(J1, B1, A1);
 
 %% Open the simulink system
