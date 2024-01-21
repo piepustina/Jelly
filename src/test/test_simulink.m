@@ -22,14 +22,6 @@ for i = 1:N_B
 end
 
 %Create the actuators
-A2 = cell(N_B, 1);
-idx = 1;
-for i = 1:N_B
-   A2{idx}       = ConstantDistanceActuator([(i-1)*L0; i*L0; NGaussPoints; BaseRadius/2; 0; 0]);
-   %A2{idx+1}     = ConstantDistanceActuator([(i-1)*L0; i*L0; NGaussPoints; -BaseRadius/2; 0; 0]);
-   idx = idx + 1;
-end
-
 A1 = cell(2, 1);
 for i = 1:2
    if ~mod(i, 2)
@@ -46,8 +38,6 @@ end
 %r1 = BodyTree(J1, B1);
 
 r1 = SoftRobot(J1, B1, A1);
-
-r2 = SoftRobot(J1, B1, A2);
 
 %% Open the simulink system
 open("simulink_test.slx")
