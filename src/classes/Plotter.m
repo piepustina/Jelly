@@ -17,7 +17,7 @@ classdef Plotter
         LegendColumns = 1;
         LegendLocation = 'best';
         %Change this to change the length of the lines in the legend
-        LegendItemTokenSize = [30, 18];
+        LegendItemTokenSize = [20, 12];
         LogScale = false;
         YScale   = 'linear'; % or 'log'
         XScale   = 'linear'; % or 'log'
@@ -29,20 +29,24 @@ classdef Plotter
         end
         
         %Custom plot function
-        function plot(obj, X_data, Y_data, varargin)
+        function plot(obj, varargin)
            % Parse the input
            p = inputParser;
-           addRequired(p, 'X_data');
-           addRequired(p, 'Y_data');
-           addParameter(p,'LineSpec', '-');
-           addParameter(p,'LineWidth', obj.LineWidth);
-           addParameter(p,'Color', '');
-           addParameter(p,'MarkerSize', obj.MarkerSize);
-           addParameter(p,'HandleVisibility', obj.HandleVisibility);
-           addParameter(p,'FontSize', obj.FontSize);
-           addParameter(p,'Interpreter', obj.Interpreter);
+           addOptional(p,  'XData', []);
+           addOptional(p,  'YData', []);
+           addParameter(p, 'LineSpec', '-');
+           addParameter(p, 'LineWidth', obj.LineWidth);
+           addParameter(p, 'Color', '');
+           addParameter(p, 'MarkerSize', obj.MarkerSize);
+           addParameter(p, 'HandleVisibility', obj.HandleVisibility);
+           addParameter(p, 'FontSize', obj.FontSize);
+           addParameter(p, 'Interpreter', obj.Interpreter);
            addParameter(p, 'XLabel', obj.XLabel);
            addParameter(p, 'YLabel', obj.YLabel);
+           addParameter(p, 'XTicks', []);
+           addParameter(p, 'YTicks', []);
+           addParameter(p, 'XLim', []);
+           addParameter(p, 'YLim', []);
            addParameter(p, 'Hold', obj.Hold);
            addParameter(p, 'Box', obj.Box);
            addParameter(p, 'Grid', obj.Grid);
@@ -60,14 +64,19 @@ classdef Plotter
            addParameter(p, 'LegendItemTokenSize', obj.LegendItemTokenSize);
            addParameter(p, 'AxesFontSize', obj.AxesFontSize);
 
-           parse(p, X_data, Y_data, varargin{:});
+           parse(p, varargin{:});
            
-           if p.Results.LogScale
-               pl = loglog(X_data, Y_data, p.Results.LineSpec, 'LineWidth', p.Results.LineWidth, 'MarkerSize', p.Results.MarkerSize, 'HandleVisibility', p.Results.HandleVisibility, 'DisplayName', p.Results.DisplayName);
-           else
-               pl = plot(X_data, Y_data, p.Results.LineSpec, 'LineWidth', p.Results.LineWidth, 'MarkerSize', p.Results.MarkerSize, 'HandleVisibility', p.Results.HandleVisibility, 'DisplayName', p.Results.DisplayName);
-               set(gca, 'XScale', p.Results.XScale);
-               set(gca, 'YScale', p.Results.YScale);
+           X_data = p.Results.XData;
+           Y_data = p.Results.YData;
+
+           if ~isempty(X_data) && ~isempty(Y_data)
+               if p.Results.LogScale
+                   pl = loglog(X_data, Y_data, p.Results.LineSpec, 'LineWidth', p.Results.LineWidth, 'MarkerSize', p.Results.MarkerSize, 'HandleVisibility', p.Results.HandleVisibility, 'DisplayName', p.Results.DisplayName);
+               else
+                   pl = plot(X_data, Y_data, p.Results.LineSpec, 'LineWidth', p.Results.LineWidth, 'MarkerSize', p.Results.MarkerSize, 'HandleVisibility', p.Results.HandleVisibility, 'DisplayName', p.Results.DisplayName);
+                   set(gca, 'XScale', p.Results.XScale);
+                   set(gca, 'YScale', p.Results.YScale);
+               end
            end
            %
            if ~isempty(char(p.Results.Color))
@@ -77,6 +86,22 @@ classdef Plotter
            %Set the font of the axes
            ax = gca();
            ax.FontSize = p.Results.AxesFontSize;
+
+           %Set the x- and y-ticks
+           if ~isempty(p.Results.XTicks)
+               xticks(p.Results.XTicks);
+           end
+           if ~isempty(p.Results.YTicks)
+               yticks(p.Results.YTicks);
+           end
+
+           %Set the x- and y-lim
+           if ~isempty(p.Results.XLim)
+               xlim(p.Results.XLim);
+           end
+           if ~isempty(p.Results.YLim)
+               ylim(p.Results.YLim);
+           end
 
            %Make the plot
            xlabel(p.Results.XLabel, 'Interpreter', p.Results.Interpreter, 'FontSize', p.Results.FontSize);
