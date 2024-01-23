@@ -1,31 +1,30 @@
-classdef ForwardDynamicsSystem < matlab.System
-    % Forward Dynamics Implements the forward dynamics algorithm for a soft
-    % robot.
+classdef DirectKinematicsSystem < matlab.System
+    % DirectKinematicsSystem Implements the computation of the direct kinematics.
     %
-    % This template includes the minimum set of functions required
-    % to define a System object with discrete state.
     
     %#codegen
 
     % Public, nontunable
     properties (Nontunable)
         %
-        %robot_struct struct = struct('Mass', 1, 'Type', 'Rigid');
+        % Structure representing the robot
         RobotStruct = 0;
+        % Indexed of the bodies for which the direct kinematics has to be
+        % evaluated
+        BodyIndexes = 0;
     end
 
 
     % Pre-computed constants
     properties(Access = private)
-        %Internal copy of the robot as object
+        % Internal copy of the robot as object
         Tree
+        % Length of body indexes
+        LengthBodyIndexes = 0;
     end
 
     methods
-        function obj = ForwardDynamicsSystem(varargin)
-            %ForwardDynamics Constructor for Forward Dynamics block system object
-            
-            % Support name-value pair arguments when constructing object
+        function obj = DirectKinematicsSystem(varargin)
             setProperties(obj, nargin, varargin{:})
         end
     end
@@ -39,12 +38,14 @@ classdef ForwardDynamicsSystem < matlab.System
             %
             %Convert the robot into a Tree
             obj.Tree = TreeStructConverter.StructToObject(obj.RobotStruct);
+            % Compute the length of the body indexes
+            obj.LengthBodyIndexes = length(obj.BodyIndexes);
         end
 
-        function ddq = stepImpl(obj, q, dq, u)
-            % Run a step of the forward dynamics
-            ddq = cast(zeros(size(q)), 'like', q);
-            ddq(:) = cast(obj.Tree.ForwardDynamics(double(q), double(dq), double(u)), 'like', q);
+        function T = stepImpl(obj, q)
+            % Compute the direct kinematics 
+            T    = cast(zeros(4*obj.LengthBodyIndexes, 4), 'like', q);
+            T(:) = cast(obj.Tree.DirectKinematics(double(q), obj.BodyIndexes), 'like', q);
         end
 
         function resetImpl(~)
@@ -52,11 +53,9 @@ classdef ForwardDynamicsSystem < matlab.System
         end
 
         %% Advanced functions
-        function validateInputsImpl(~, q, dq, u)
+        function validateInputsImpl(~, q)
             % Validate inputs to the step method at initialization
-            validateattributes(q, {'single','double'},{'vector'},'ForwardDynamicsSystem','Configuration');
-            validateattributes(dq,{'single','double'},{'vector'},'ForwardDynamicsSystem','Configuration Velocity');
-            validateattributes(u, {'single','double'},{'vector'},'ForwardDynamicsSystem','Input Force');
+            validateattributes(q, {'single','double'},{'vector'}, 'DirectKinematicsSystem','Configuration');
         end
 
         function validatePropertiesImpl(~)
@@ -94,12 +93,12 @@ classdef ForwardDynamicsSystem < matlab.System
         
         function out = getOutputSizeImpl(obj)
             %getOutputSizeImpl Return size for each output port
-            out = [obj.RobotStruct.n 1];
+            out = [length(obj.BodyIndexes)*4, 4];
         end
 
         function out = getOutputDataTypeImpl(obj)
             %getOutputDataTypeImpl Return data type for each output port
-            out = propagatedInputDataType(obj,1);
+            out = propagatedInputDataType(obj, 1);
         end
 
         function out = isOutputComplexImpl(obj)
