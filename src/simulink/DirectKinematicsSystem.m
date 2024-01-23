@@ -12,6 +12,8 @@ classdef DirectKinematicsSystem < matlab.System
         % Indexed of the bodies for which the direct kinematics has to be
         % evaluated
         BodyIndexes = 0;
+        % Length of the body indexes
+        BodyIndexesLength = 0;
     end
 
 
@@ -19,8 +21,6 @@ classdef DirectKinematicsSystem < matlab.System
     properties(Access = private)
         % Internal copy of the robot as object
         Tree
-        % Length of body indexes
-        LengthBodyIndexes = 0;
     end
 
     methods
@@ -38,13 +38,11 @@ classdef DirectKinematicsSystem < matlab.System
             %
             %Convert the robot into a Tree
             obj.Tree = TreeStructConverter.StructToObject(obj.RobotStruct);
-            % Compute the length of the body indexes
-            obj.LengthBodyIndexes = length(obj.BodyIndexes);
         end
 
         function T = stepImpl(obj, q)
             % Compute the direct kinematics 
-            T    = cast(zeros(4*obj.LengthBodyIndexes, 4), 'like', q);
+            T    = cast(zeros(4*obj.BodyIndexesLength, 4), 'like', q);
             T(:) = cast(obj.Tree.DirectKinematics(double(q), obj.BodyIndexes), 'like', q);
         end
 
