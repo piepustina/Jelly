@@ -71,13 +71,33 @@ classdef Plotter
 
            if ~isempty(X_data) && ~isempty(Y_data)
                if p.Results.LogScale
-                   pl = loglog(X_data, Y_data, p.Results.LineSpec, 'LineWidth', p.Results.LineWidth, 'MarkerSize', p.Results.MarkerSize, 'HandleVisibility', p.Results.HandleVisibility, 'DisplayName', p.Results.DisplayName);
+                   pl = loglog(X_data, Y_data, p.Results.LineSpec, 'LineWidth', p.Results.LineWidth, 'MarkerSize', p.Results.MarkerSize);
                else
-                   pl = plot(X_data, Y_data, p.Results.LineSpec, 'LineWidth', p.Results.LineWidth, 'MarkerSize', p.Results.MarkerSize, 'HandleVisibility', p.Results.HandleVisibility, 'DisplayName', p.Results.DisplayName);
+                   pl = plot(X_data, Y_data, p.Results.LineSpec, 'LineWidth', p.Results.LineWidth, 'MarkerSize', p.Results.MarkerSize);
                    set(gca, 'XScale', p.Results.XScale);
                    set(gca, 'YScale', p.Results.YScale);
                end
            end
+           % Set the diplayname
+           DisplayNames = p.Results.DisplayName;
+           if ~iscell(DisplayNames)
+               DisplayNames = {DisplayNames};
+           end
+           [s1, ~] = size(DisplayNames);
+           if s1 == 1%Enforce a column cell array
+                DisplayNames = DisplayNames';
+           end
+           set(pl, {'DisplayName'}, DisplayNames);
+           % Set the handle visibility
+           HandleVisibilities = p.Results.HandleVisibility;
+           if ~iscell(HandleVisibilities)
+               HandleVisibilities = {HandleVisibilities};
+           end
+           [s1, ~] = size(HandleVisibilities);
+           if s1 == 1%Enforce a column cell array
+                HandleVisibilities = HandleVisibilities';
+           end
+           set(pl, {'HandleVisibility'}, HandleVisibilities);
            %
            if ~isempty(char(p.Results.Color))
                 pl.Color = p.Results.Color;
