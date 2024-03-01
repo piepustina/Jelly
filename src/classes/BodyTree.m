@@ -463,7 +463,7 @@ classdef BodyTree < handle
             end
         end
 
-        function [q, converged] = InverseKinematics(obj, T, idx, q0, N, task_flags)
+        function [q, converged, e] = InverseKinematics(obj, T, idx, q0, N, task_flags)
             %Evaluate the inverse kinematics numerically using a Newton-Rapson iteration scheme.
             %
             %Args:
@@ -513,7 +513,6 @@ classdef BodyTree < handle
             end
 
             % Preallocate the output for code generation
-            q         = zeros(obj.n, 1);
             q         = q0;
             converged = 0;
 

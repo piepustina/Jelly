@@ -87,7 +87,9 @@ classdef Plotter
            if s1 == 1%Enforce a column cell array
                 DisplayNames = DisplayNames';
            end
-           set(pl, {'DisplayName'}, DisplayNames);
+           if exist("pl", "var")
+                set(pl, {'DisplayName'}, DisplayNames);
+           end
            % Set the handle visibility
            HandleVisibilities = p.Results.HandleVisibility;
            if ~iscell(HandleVisibilities)
@@ -97,7 +99,9 @@ classdef Plotter
            if s1 == 1%Enforce a column cell array
                 HandleVisibilities = HandleVisibilities';
            end
-           set(pl, {'HandleVisibility'}, HandleVisibilities);
+           if exist("pl", "var")
+                set(pl, {'HandleVisibility'}, HandleVisibilities);
+           end
            %
            if ~isempty(char(p.Results.Color))
                 pl.Color = p.Results.Color;
@@ -157,6 +161,7 @@ classdef Plotter
             addRequired(p, 'figs', @(x) iscell(x));
             addRequired(p, 'path', pathcheck);
             addParameter(p, 'AppendName', "");
+            addParameter(p, 'SaveAsMatlabFig', false);%Save also the image as a Matlab figure
             parse(p, figs, path, varargin{:});
            
             
@@ -180,6 +185,14 @@ classdef Plotter
                     'ContentType', 'vector');
                 else
                     exportgraphics(FigAxes, FileName, 'Resolution', 400);
+                end
+
+                % Check if the user asked to save as MATLAB fig
+                if p.Results.SaveAsMatlabFig == true
+                    % Remove extension from FileName
+                    [pa, fi, ~]    = fileparts(FileName);
+                    FullFilename = fullfile(pa, fi);
+                    savefig(p.Results.figs{i}, FullFilename + ".fig");
                 end
                 
             end

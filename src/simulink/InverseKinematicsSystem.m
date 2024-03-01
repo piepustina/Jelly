@@ -41,13 +41,15 @@ classdef InverseKinematicsSystem < matlab.System
             obj.Tree = TreeStructConverter.StructToObject(obj.RobotStruct);
         end
 
-        function [q, converged] = stepImpl(obj, T, q0)
+        function [q, converged, e] = stepImpl(obj, T, q0)
             % Preallocate the output
             q    = cast(zeros(size(q0)), 'like', q0);
+            e    = zeros(6*length(obj.BodyIndexes), 1);
             % Run the inverse kinematics
-            [q_ik, converged] = obj.Tree.InverseKinematics(double(T), obj.BodyIndexes, double(q0), obj.MaximumNewtonIterations, obj.TaskSpaceFlags);
+            [q_ik, converged, e_ik] = obj.Tree.InverseKinematics(double(T), obj.BodyIndexes, double(q0), obj.MaximumNewtonIterations, obj.TaskSpaceFlags);
             % Assign the output configuration
             q(:) = cast(q_ik, 'like', q0);
+            e(:) = double(e_ik);
         end
 
         function resetImpl(~)
@@ -91,31 +93,35 @@ classdef InverseKinematicsSystem < matlab.System
 
         function num = getNumOutputsImpl(obj)
             %getNumOutputsImpl Define total number of outputs
-            num = 2;
+            num = 3;
         end
         
-        function [out1, out2] = getOutputSizeImpl(obj)
+        function [out1, out2, out3] = getOutputSizeImpl(obj)
             %getOutputSizeImpl Return size for each output port
             out1 = [obj.RobotStruct.n];
             out2 = 1;
+            out3 = [6*length(obj.BodyIndexes), 1];
         end
 
-        function [out1, out2] = getOutputDataTypeImpl(obj)
+        function [out1, out2, out3] = getOutputDataTypeImpl(obj)
             %getOutputDataTypeImpl Return data type for each output port
             out1 = propagatedInputDataType(obj, 2);
             out2 = "double";
+            out3 = "double";
         end
 
-        function [out1, out2] = isOutputComplexImpl(obj)
+        function [out1, out2, out3] = isOutputComplexImpl(obj)
             %isOutputComplexImpl Return true for each output port with complex data
             out1 = false;
             out2 = false;
+            out3 = false;
         end
 
-        function [out1, out2] = isOutputFixedSizeImpl(obj)
+        function [out1, out2, out3] = isOutputFixedSizeImpl(obj)
             %isOutputFixedSizeImpl Return true for each output port with fixed size
             out1 = true;
             out2 = true;
+            out3 = true;
         end
 
         function flag = isInactivePropertyImpl(~, ~)
