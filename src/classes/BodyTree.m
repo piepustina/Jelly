@@ -463,7 +463,7 @@ classdef BodyTree < handle
             end
         end
 
-        function [q, converged, e] = InverseKinematics(obj, T, idx, q0, N, task_flags)
+        function [q, converged, e] = InverseKinematics(obj, T, idx, q0, N, task_flags, AngularErrorThsd, LinearErrorThsd)
             %Evaluate the inverse kinematics numerically using a Newton-Rapson iteration scheme.
             %
             %Args:
@@ -476,9 +476,9 @@ classdef BodyTree < handle
             %   {[double], [sym]}: Homogeneous transformation matrices for each body.   
             
             % Default values
-            DefaultN            = 4;   %Number of Newton iterations
-            AngularErrorThsd    = 1e-3;%Threshold in the Newton scheme for the angular velocity
-            LinearErrorThsd     = 1e-3;%Threshold in the Newton scheme for the linear velocity
+            DefaultN                    = 4;   %Number of Newton iterations
+            DefaultAngularErrorThsd     = 1e-3;%Default threshold in the Newton scheme for the angular position
+            DefaultLinearErrorThsd      = 1e-2;%Default threshold in the Newton scheme for the linear position
             
             switch nargin
                 case 2
@@ -486,15 +486,28 @@ classdef BodyTree < handle
                     q0          = zeros(obj.n, 1);
                     N           = DefaultN;
                     task_flags  = ones(obj.N_B*6, 1);
+                    AngularErrorThsd = DefaultAngularErrorThsd;
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
                 case 3
                     q0  = zeros(obj.n, 1);
                     N   = DefaultN;
                     task_flags  = ones(obj.N_B*6, 1);
+                    AngularErrorThsd = DefaultAngularErrorThsd;
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
                 case 4
                     N   = DefaultN;
                     task_flags  = ones(obj.N_B*6, 1);
+                    AngularErrorThsd = DefaultAngularErrorThsd;
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
                 case 5
                     task_flags  = ones(obj.N_B*6, 1);
+                    AngularErrorThsd = DefaultAngularErrorThsd;
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
+                case 6
+                    AngularErrorThsd = DefaultAngularErrorThsd;
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
+                case 7
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
             end
 
             % Store useful variables

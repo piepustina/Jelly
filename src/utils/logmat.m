@@ -3,7 +3,17 @@ function logT = logmat(g)
 
 THETA_THSD = 1e-6;
 
-theta = acos(trace(g)/2-1);
+ctheta = trace(g)/2-1;
+% Make sure that the cos(theta) is in the interval [-1, 1]. In case map in
+% into this interval.
+if ctheta > 1
+    ctheta = 1.0;
+end
+if ctheta < -1
+    ctheta = -1.0;
+end
+
+theta = acos(ctheta);
 
 if abs(theta) <= THETA_THSD
     theta = sign(theta)*THETA_THSD;
