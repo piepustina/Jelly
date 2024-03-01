@@ -555,9 +555,9 @@ classdef BodyTree < handle
             end
 
             % Display a warning if the convergence was not achieved
-            if ~converged
-                warning("Convergence not achived. The error norm is: " + sprintf("%.4f", norm(e)));
-            end
+            %if ~converged
+            %    warning("Convergence not achived. The error norm is: " + sprintf("%.4f", norm(e)));
+            %end
 
         end
 
