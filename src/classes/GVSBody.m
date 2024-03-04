@@ -149,16 +149,22 @@ classdef GVSBody < Body
         function domega_rel_ = domega_rel(obj, q, dq, ddq)
             [~, ~, ~, domega_rel_, ~, ~, ~] = obj.Kinematics(q, dq, ddq);
         end
-        % Jacobian of the linear velocity of the tip with respect to q in the tip frame
+        % Jacobian of the linear velocity of the tip with respect to dq in the tip frame
         function v_par_ = v_par(obj, q)
             [g, ~, ~, ~, ~, ~, v_par_] = obj.Kinematics(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q));
             v_par_ = g(1:3, 1:3)'*v_par_;
         end
-        % Jacobian of the angular velocity with respect to q in the tip frame
+        % Jacobian of the angular velocity with respect to dq in the tip frame
         function omega_par_ = omega_par(obj, q)
             [g, ~, ~, ~, ~, omega_par_, ~] = obj.Kinematics(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q));
             omega_par_ = g(1:3, 1:3)'*omega_par_;
         end
+        % Jacobian at s of the angular and linear velocity with respect to dq in the tip frame 
+        function J_ = Jacobian(obj, q, s)
+            [g, ~, ~, ~, ~, omega_par_, v_par_] = obj.Kinematics_s(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q), s);
+            J_ = [g(1:3, 1:3)'*omega_par_; g(1:3, 1:3)'*v_par_];
+        end
+
         % Center of mass position
         function p_com_  = p_com(obj, q)
             if nargin == 2 % Update the DK

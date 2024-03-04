@@ -151,6 +151,64 @@ classdef SoftRobot < BodyTree
             obj.Color            = SoftRobot.DefaultColor;
             obj.SegmentBaseColor = repmat(obj.Color, N_B, 1);
         end
+
+        function T = DirectKinematics(obj, q, points)
+            %Evaluate the direct kinematics at specific points along the robot
+            %backbone
+            %Args:
+            %   q   ([double], [sym]): Configuration variables
+            %   points        ([int]): Ordered array of lengths indicating the backbone points for which the direct kinematics has to be evaluated
+            %Return:
+            %   ([double], [sym]): Homogeneous transformation matrices for the backbone points specified by idx.   
+
+            switch nargin
+                case 2
+                    % If the points are not specified, evaluate the DK for
+                    % each soft body in the chain.
+                    points = Robot.BodiesInterval(2:obj.N_B+1);
+            end
+
+            % Modify the index to account for the fact that internally the joints are modeled as bodies
+            points = 2*points;
+
+            % Check that the input vectors are in column format.
+            if ~iscolumn(q)
+                q = q';
+            end
+
+            % T is matrix of vertically stacked 4x4 transformation matrices
+            T   = repmat(eye(4, 'like', q), length(points), 1);
+            
+            % Update the state of the kinematic tree
+            Zeron   = zeros(obj.n, 1, "like", q);
+            obj     = obj.TreeUpdate(q, Zeron, Zeron);
+            
+            % Variables initialization
+            T_i         = obj.T0;
+            j           = 1;
+            lastIdx     = points(end);
+            N_B_        = obj.N_B_Internal;
+            % Compute the direct kinematics
+            for i = 1:2*BodyTree.MaxBodiesNumber % Iterative over all the augmented bodies
+                if i <= N_B_
+                    if isnumeric(obj.BodiesInternal{i})
+                        continue;
+                    end
+
+                    T_i  = T_i*obj.BodiesInternal{i}.T_;
+                    
+                    if i == points(j)
+                        T(1+4*(j-1):4*j, 1:4)   = T_i;
+                        j                       = j + 1;
+                    end
+    
+                    % If we have reached the last body, break the loop
+                    if i == lastIdx
+                        break;
+                    end
+                end
+            end
+        end
         
         % Evaluate the strain at a given point along the robot structure and in the given configuration
         function [xi_, J_xi_] = xi(obj, q, s)

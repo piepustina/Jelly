@@ -412,7 +412,7 @@ classdef BodyTree < handle
             %
             %Args:
             %   q   ([double], [sym]): Configuration variables
-            %   idx           ([int]): Ordered array of body indexes indicating the bodies for which the jacobian has to be evaluated
+            %   idx           ([int]): Ordered array of body indexes indicating the bodies for which the direct kinematics has to be evaluated
             %Return:
             %   ([double], [sym]): Homogeneous transformation matrices for the body specified by idx.   
 
