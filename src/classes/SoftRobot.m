@@ -290,6 +290,60 @@ classdef SoftRobot < BodyTree
 
         end
         
+        
+        function [q, converged, e] = InverseKinematics(obj, T, points, q0, N, task_flags, AngularErrorThsd, LinearErrorThsd)
+            %Evaluate the inverse kinematics numerically using a Newton-Rapson iteration scheme.
+            %
+            %Args:
+            %   T   ([double, double])      : Target transformation matrices vertically stacked
+            %   q0  ([double, double])      : Initial guess, the default value is q0 = zeros(n, 1)
+            %   points ([double])           : Vector of points along the robot backbone for which T has to be found
+            %   N   (double)                : Maximum number of iterations
+            %   task_flags ([double, bool]) : Vector of flags specifying for each indexed body what components of the task vector should be considered
+            %Return:
+            %   {[double], [sym]}: Homogeneous transformation matrices for each body.
+
+            % Default values
+            DefaultN                    = 4;   %Number of Newton iterations
+            DefaultAngularErrorThsd     = 1e-3;%Default threshold in the Newton scheme for the angular position
+            DefaultLinearErrorThsd      = 1e-2;%Default threshold in the Newton scheme for the linear position
+            
+            switch nargin
+                case 2
+                    points      = linspace(1, obj.N_B, obj.N_B);
+                    q0          = zeros(obj.n, 1);
+                    N           = DefaultN;
+                    task_flags  = ones(obj.N_B*6, 1);
+                    AngularErrorThsd = DefaultAngularErrorThsd;
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
+                case 3
+                    q0  = zeros(obj.n, 1);
+                    N   = DefaultN;
+                    task_flags  = ones(obj.N_B*6, 1);
+                    AngularErrorThsd = DefaultAngularErrorThsd;
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
+                case 4
+                    N   = DefaultN;
+                    task_flags  = ones(obj.N_B*6, 1);
+                    AngularErrorThsd = DefaultAngularErrorThsd;
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
+                case 5
+                    task_flags  = ones(obj.N_B*6, 1);
+                    AngularErrorThsd = DefaultAngularErrorThsd;
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
+                case 6
+                    AngularErrorThsd = DefaultAngularErrorThsd;
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
+                case 7
+                    LinearErrorThsd  = DefaultLinearErrorThsd;
+            end
+
+            % Call the superclass method that still works because of the
+            % overloading of the methods DirectKinematics and BodyJacobian
+            % of this class
+            [q, converged, e] = InverseKinematics@BodyTree(obj, T, points, q0, N, task_flags, AngularErrorThsd, LinearErrorThsd);
+        end
+        
         % Evaluate the strain at a given point along the robot structure and in the given configuration
         function [xi_, J_xi_] = xi(obj, q, s)
             %

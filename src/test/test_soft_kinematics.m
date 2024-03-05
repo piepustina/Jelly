@@ -31,12 +31,12 @@ dq_test = ones(r1.n, 1);
 % Transformation matries
 T1 = r1.DirectKinematics(q_test, L0*(1:N_B))
 
-T2 = r2.DirectKinematics(q_test)
+%T2 = r2.DirectKinematics(q_test)
 
 % Body Jacobian
 J1 = r1.BodyJacobian(q_test, L0*(1:N_B))
 
-J2 = r2.BodyJacobian(q_test)
+%J2 = r2.BodyJacobian(q_test)
 
 %% Test the inverse kinematics with a random configuration
 q_min  = -2;
@@ -44,11 +44,13 @@ q_max  = 2;
 disp("The configuration is ")
 q_test = (q_max-q_min).*rand(r1.n,1) + q_min
 % Direct kinematics
-T = r1.DirectKinematics(q_test);
+T = r1.DirectKinematics(q_test, L0*(1:N_B));
+
+%%
 % Inverse kinematics
 disp("The inverse kinematics result is ")
 tic
-[q_ik, converged] = r1.InverseKinematics(T, 1:N_B, zeros(r1.n, 1), 5)
+[q_ik, converged] = r1.InverseKinematics(T, L0*(1:N_B), zeros(r1.n, 1), 5)
 toc
 
 disp("The error norm is " + norm(q_test - q_ik))
