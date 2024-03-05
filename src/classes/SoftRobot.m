@@ -201,11 +201,31 @@ classdef SoftRobot < BodyTree
             
             % Compute the output
             T_i = zeros(4, 4, "like", q);% Output preallocation for code generation
-            for i = 1:pointsLength
-                    % Evaluate the direct kinematics at the query point
-                    T_i(1:4, 1:4)         = obj.Bodies{idx(i)}.T_s(q(idxBody(i, 1):idxBody(i, 2)), pointsBody(i));
-                    % Update the output
-                    T(4*(i-1)+1:4*i, 1:4) = TPrevBodies(4*(idxUniqueOcc(i)-1)+1:4*idxUniqueOcc(i), 1:4)*T_i;% Use the same transform of the preceideing body for the same occurrences
+            % Iterate over all the bodies because of code generation
+            j = 1;
+            for i = 1:obj.MaxBodiesNumber
+                if i <= obj.N_B
+                    if isnumeric(obj.Bodies{i})
+                        continue;
+                    end
+                    % Check if the current body is the starting index
+                    if i == idx(j)
+                        for k = j:pointsLength
+                            % Check if the current index corresponds to a
+                            % different body and in case stop the loop
+                            if i ~= idx(k)
+                                % Update the j index and continue the iteration over
+                                % the remaining bodies
+                                j = k;
+                                break;
+                            end
+                            % Evaluate the direct kinematics at the query point
+                            T_i(1:4, 1:4)         = obj.Bodies{i}.T_s(q(idxBody(k, 1):idxBody(k, 2)), pointsBody(k));
+                            % Update the output
+                            T(4*(k-1)+1:4*k, 1:4) = TPrevBodies(4*(idxUniqueOcc(k)-1)+1:4*idxUniqueOcc(k), 1:4)*T_i;% Use the same transform of the preceideing body for the same occurrences
+                        end
+                    end
+                end
             end
         end
         
@@ -260,32 +280,55 @@ classdef SoftRobot < BodyTree
             % support
             J_i          = zeros(6, obj.n, "like", q);
             q_idx_start  = 0;
+            j            = 1;
             % Update the Jacobian considering the current body
-            for i = 1:pointsLength
-                % Prepare the variables for the iteration
-                q_idx_start = idxQBody(i, 1);
-                q_idx_end   = idxQBody(i, 2);
+            % Iteration over all the bodies is required to allow for code
+            % generation
+            for i = 1:obj.MaxBodiesNumber
+                if i <= obj.N_B
+                    if isnumeric(obj.Bodies{i})
+                        continue;
+                    end
 
-                % Compute the terms associated to the body
-                [J_omega, J_v, T]   = obj.Bodies{idx(i)}.BodyJacobian(q(q_idx_start:q_idx_end), sBody(i));
-                R_i_T               = T(1:3, 1:3)';
-                t_i                 = T(1:3, 4);
+                    % Check if the current body is the starting index
+                    if i == idx(j)
+                        for k = j:pointsLength
+                            % Check if the current index corresponds to a
+                            % different body and in case stop the loop
+                            if i ~= idx(k)
+                                % Update the j index and continue the iteration over
+                                % the remaining bodies
+                                j = k;
+                                break;
+                            end
 
-                % Initialize the Jacobian value using the Jacobian of the
-                % previous bodies
-                J_i = J_prev(1+6*(idxUniqueOcc(i)-1):6*idxUniqueOcc(i), 1:obj.n);
-                
-                % Update the value of the Jacobian for the bodies previous
-                % to the current one by rotating them in the body frame of
-                % the current body
-                if q_idx_start ~= 1
-                    J_i(4:6, 1:q_idx_start-1) = real(R_i_T*(J_i(4:6, 1:q_idx_start-1) - skew(t_i)*J_i(1:3, 1:q_idx_start-1)));
-                    J_i(1:3, 1:q_idx_start-1) = real(R_i_T*J_i(1:3, 1:q_idx_start-1));
+                            % Prepare the variables for the iteration
+                            q_idx_start = idxQBody(k, 1);
+                            q_idx_end   = idxQBody(k, 2);
+            
+                            % Compute the terms associated to the body
+                            [J_omega, J_v, T]   = obj.Bodies{i}.BodyJacobian(q(q_idx_start:q_idx_end), sBody(k));
+                            R_i_T               = T(1:3, 1:3)';
+                            t_i                 = T(1:3, 4);
+            
+                            % Initialize the Jacobian value using the Jacobian of the
+                            % previous bodies
+                            J_i = J_prev(1+6*(idxUniqueOcc(k)-1):6*idxUniqueOcc(k), 1:obj.n);
+                            
+                            % Update the value of the Jacobian for the bodies previous
+                            % to the current one by rotating them in the body frame of
+                            % the current body
+                            if q_idx_start ~= 1
+                                J_i(4:6, 1:q_idx_start-1) = real(R_i_T*(J_i(4:6, 1:q_idx_start-1) - skew(t_i)*J_i(1:3, 1:q_idx_start-1)));
+                                J_i(1:3, 1:q_idx_start-1) = real(R_i_T*J_i(1:3, 1:q_idx_start-1));
+                            end
+                            J_i(1:6, q_idx_start:q_idx_end) = [J_omega; J_v];
+            
+                            % Assign J_i to the output
+                            J(1 + 6*(k-1):6*k, 1:obj.n) = J_i(1:6, 1:obj.n);
+                        end
+                    end
                 end
-                J_i(1:6, q_idx_start:q_idx_end) = [J_omega; J_v];
-
-                % Assign J_i to the output
-                J(1 + 6*(i-1):6*i, 1:obj.n) = J_i(1:6, 1:obj.n);
             end
 
         end

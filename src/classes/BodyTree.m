@@ -443,6 +443,9 @@ classdef BodyTree < handle
                     idx = linspace(1, obj.N_B, obj.N_B);
             end
 
+            % Length of the index vector
+            idxLength = length(idx);
+
             % Modify the index to account for the fact that internally the joints are modeled as bodies
             idx = 2*idx;
 
@@ -460,29 +463,31 @@ classdef BodyTree < handle
             
             % Variables initialization
             T_i         = obj.T0;
-            % Check if the first index is zero, i.e., the base. If yes, assign it to the function output.
-            if idx(1) == 0
-                T(1:4, 1:4) = T_i;
-                j           = 2;
-            else
-                j           = 1;
-            end
             lastIdx     = idx(end);
-            % Check if j exceeds the length of idx, i.e., idx = [0]
-            if j > length(idx)
-                return;
-            end
             N_B_        = obj.N_B_Internal;
             % Compute the direct kinematics
-            i_start     = j;
-            for i = i_start:2*BodyTree.MaxBodiesNumber % Iterative over all the augmented bodies
+            j           = 1;
+            for i = 1:2*BodyTree.MaxBodiesNumber % Iterative over all the augmented bodies
                 if i <= N_B_
                     if isnumeric(obj.BodiesInternal{i})
                         continue;
                     end
 
+                    % Check if the index is zero, i.e., the base.
+                    if idx(j) == 0
+                        T(1+4*(j-1):4*j, 1:4) = T_i;
+                        j           = j + 1;
+                        if j > idxLength % Verify if idx = [0]; in case exit to avoid access out of range
+                            break;
+                        end
+                    end
+                    
+                    % Compute the transformation matrix from the base to
+                    % the current body
                     T_i  = T_i*obj.BodiesInternal{i}.T_;
                     
+                    % Check if the current body is in the index list and in
+                    % case assign T_i as output
                     if i == idx(j)
                         T(1+4*(j-1):4*j, 1:4)   = T_i;
                         j                       = j + 1;

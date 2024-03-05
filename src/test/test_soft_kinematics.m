@@ -46,7 +46,6 @@ q_test = (q_max-q_min).*rand(r1.n,1) + q_min
 % Direct kinematics
 T = r1.DirectKinematics(q_test, L0*(1:N_B));
 
-%%
 % Inverse kinematics
 disp("The inverse kinematics result is ")
 tic
@@ -56,4 +55,4 @@ toc
 disp("The error norm is " + norm(q_test - q_ik))
 
 %% Test also the simulink model
-open("simulink_ik.slx")
+open("simulink_soft_ik.slx")
