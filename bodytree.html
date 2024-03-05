@@ -526,6 +526,60 @@ force, if any is linear.</p>
 </dl>
 </dd></dl>
 
+<dl class="mat method">
+<dt class="sig sig-object mat" id="BodyTree.getBodyConfigurationIndex">
+<span class="sig-name descname"><span class="pre">getBodyConfigurationIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">idx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#BodyTree.getBodyConfigurationIndex" title="Link to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Get the indexes of the configuration vector for the bodies</dt><dd><p>specified by idx.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>idx</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double,</span> <span class="pre">int]</span></code></span>) – Bodies for which the configuration</p></li>
+<li><p><strong>computed.</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">indexes</span> <span class="pre">have</span> <span class="pre">to</span> <span class="pre">be</span></code></span>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>length(idx) x 2 matrix where each row
+specifies the start and end index of the corresponding body
+in the idx vector. If idx is not specified, then the
+function returns the indexes for all the bodies in the
+tree.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{[double], [sym]}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="mat method">
+<dt class="sig sig-object mat" id="BodyTree.getJointConfigurationIndex">
+<span class="sig-name descname"><span class="pre">getJointConfigurationIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">idx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#BodyTree.getJointConfigurationIndex" title="Link to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Get the indexes of the configuration vector for the joints</dt><dd><p>specified by idx.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>idx</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">[double,</span> <span class="pre">int]</span></code></span>) – Joints for which the configuration</p></li>
+<li><p><strong>computed.</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">indexes</span> <span class="pre">have</span> <span class="pre">to</span> <span class="pre">be</span></code></span>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>length(idx) x 2 matrix where each row
+specifies the start and end index of the corresponding
+joint in the idx vector. If idx is not specified, then the
+function returns the indexes for all the joints in the
+tree.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{[double], [sym]}</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd>
 </dl>
 </div>
