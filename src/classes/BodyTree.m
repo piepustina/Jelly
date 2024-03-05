@@ -33,6 +33,12 @@ classdef BodyTree < handle
         % the augments the state by considering also the joints as bodies.
         BodiesInternal;
         N_B_Internal = 0;
+        % Matrix that stores the start and end indexes of the configuration
+        % vector for each body
+        BodyConfigurationIndexes;
+        % Matrix that stores the start and end indexes of the configuration
+        % vector for each joint
+        JointConfigurationIndexes;
     end
     
     methods
@@ -44,15 +50,31 @@ classdef BodyTree < handle
                 %    Joints ({:class:`Joint`}): Cell array of joints of the tree
                 %    Bodies ({:class:`Body`}) : Cell array of bodies of the tree
             
-            % Compute the number of bodies
+            % Compute the number of bodies and assign the joint and body
+            % configuration indexes
             obj.N_B = 0;
             obj.n   = 0;
+            obj.BodyConfigurationIndexes  = zeros(BodyTree.MaxBodiesNumber, 2);
+            obj.JointConfigurationIndexes = zeros(BodyTree.MaxBodiesNumber, 2);
+            prevIdx = 0;
             l_B     = length(Bodies);
             for i = 1:BodyTree.MaxBodiesNumber
                 if i <= l_B
                     if ~isnumeric(Bodies{i})
                         obj.n = obj.n + Bodies{i}.n + Joints{i}.n;
                         obj.N_B = obj.N_B + 1;
+                        % Assign the joint configuration indexes
+                        if Joints{i}.n ~= 0
+                            obj.JointConfigurationIndexes(i, 1:2) = [prevIdx + 1, prevIdx + Joints{i}.n];
+                            % Store the index of the previous joint to use in the next iteration
+                            prevIdx = obj.JointConfigurationIndexes(i, 2);
+                        end
+                        % Assign the body configuration indexes
+                        if Bodies{i}.n ~= 0
+                            obj.BodyConfigurationIndexes(i, 1:2)  = [prevIdx + 1, prevIdx + Bodies{i}.n];
+                            % Store the index of the body to use in the next iteration
+                            prevIdx = obj.BodyConfigurationIndexes(i, 2);
+                        end
                     end
                 end
             end
@@ -80,7 +102,7 @@ classdef BodyTree < handle
                 end
             end
         end
-        
+       
         function obj = TreeUpdate(obj, q, dq, ddq)
             %Update the state of the BodyTree. 
             %
@@ -438,11 +460,22 @@ classdef BodyTree < handle
             
             % Variables initialization
             T_i         = obj.T0;
-            j           = 1;
+            % Check if the first index is zero, i.e., the base. If yes, assign it to the function output.
+            if idx(1) == 0
+                T(1:4, 1:4) = T_i;
+                j           = 2;
+            else
+                j           = 1;
+            end
             lastIdx     = idx(end);
+            % Check if j exceeds the length of idx, i.e., idx = [0]
+            if j > length(idx)
+                return;
+            end
             N_B_        = obj.N_B_Internal;
             % Compute the direct kinematics
-            for i = 1:2*BodyTree.MaxBodiesNumber % Iterative over all the augmented bodies
+            i_start     = j;
+            for i = i_start:2*BodyTree.MaxBodiesNumber % Iterative over all the augmented bodies
                 if i <= N_B_
                     if isnumeric(obj.BodiesInternal{i})
                         continue;
@@ -618,8 +651,19 @@ classdef BodyTree < handle
             % Auxiliary variables for the iteration
             J_i        = zeros(6, obj.n, 'like', q);
             q_idx      = 1;
-            j          = 1;
             lastIdx    = idx(end);
+            
+            % Check if the first index is the one for the base, i.e., is 0
+            if idx(1) == 0
+                j          = 2;
+            else
+                j          = 1;
+            end
+            % Check if j exceeds the length of idx, i.e., idx = [0], in
+            % case return.
+            if j > length(idx)
+                return;
+            end
             
             % Compute the body Jacobian recursively
             for i = 1:2*BodyTree.MaxBodiesNumber % Iterative over all the augmented bodies
@@ -633,7 +677,8 @@ classdef BodyTree < handle
                     v_par_i         = real(obj.BodiesInternal{i}.v_par_);
                     omega_par_i     = real(obj.BodiesInternal{i}.omega_par_);
 
-                    % Update the variables
+                    % Update the Jacobian for the previous variables by rotating it in the
+                    % frame of the current body
                     nBody                       = obj.BodiesInternal{i}.n;
                     if q_idx ~= 1
                         J_i(4:6, 1:q_idx-1)       = real(R_i_T*(J_i(4:6, 1:q_idx-1) - skew(t_i)*J_i(1:3, 1:q_idx-1)));
@@ -669,6 +714,50 @@ classdef BodyTree < handle
             % disp("v");v
             % disp("omega");omega
             
+        end
+
+        % Getter methods.
+        function Bidx = getBodyConfigurationIndex(obj, idx)
+            % Get the indexes of the configuration vector for the bodies
+            % specified by idx.
+            %
+            %Args:
+            %   idx   ([double, int]): Bodies for which the configuration
+            %   indexes have to be computed.
+            %Return:
+            %   {[double], [sym]}: length(idx) x 2 matrix where each row
+            %   specifies the start and end index of the corresponding body
+            %   in the idx vector. If idx is not specified, then the
+            %   function returns the indexes for all the bodies in the
+            %   tree.
+            
+            % If the method is called without indexes, return the entire
+            % vector of indexes
+            if nargin == 1
+                Bidx = obj.BodyConfigurationIndexes;
+                return;
+            end
+            Bidx = obj.BodyConfigurationIndexes(idx, 1:2);
+        end
+
+        function Jidx = getJointConfigurationIndex(obj, idx)
+            % Get the indexes of the configuration vector for the joints
+            % specified by idx.
+            %
+            %Args:
+            %   idx   ([double, int]): Joints for which the configuration
+            %   indexes have to be computed.
+            %Return:
+            %   {[double], [sym]}: length(idx) x 2 matrix where each row
+            %   specifies the start and end index of the corresponding
+            %   joint in the idx vector. If idx is not specified, then the
+            %   function returns the indexes for all the joints in the
+            %   tree.
+            if nargin == 1
+                Jidx = obj.JointConfigurationIndexes;
+                return;
+            end
+            Jidx = obj.JointConfigurationIndexes(idx, 1:2);
         end
     end
 

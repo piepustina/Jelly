@@ -133,6 +133,21 @@ classdef GVSBody < Body
         function Ts_ = T_s(obj, q, s)
             [Ts_, ~, ~, ~, ~, ~, ~] = obj.Kinematics_s(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q), s);
         end
+        
+        % Get the body jacobian at position s together with the
+        % transformation matrix
+        function [J_omega, J_v, g] = BodyJacobian(obj, q, s)
+            switch nargin
+                case 2
+                    s = obj.RestLength;
+            end
+            [g, ~, ~, ~, ~, J_omega, J_v] = obj.Kinematics_s(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q), s);
+            % Rotate the Jacobians in the body frame
+            R_T = g(1:3, 1:3)';
+            J_omega = R_T*J_omega;
+            J_v     = R_T*J_v;
+        end
+
         % Relative velocity of the body tip
         function v_rel_ = v_rel(obj, q, dq)
             [~, ~, v_rel_, ~, ~, ~, ~] = obj.Kinematics(q, dq, zeros(obj.n, 1, 'like', q));
@@ -158,11 +173,6 @@ classdef GVSBody < Body
         function omega_par_ = omega_par(obj, q)
             [g, ~, ~, ~, ~, omega_par_, ~] = obj.Kinematics(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q));
             omega_par_ = g(1:3, 1:3)'*omega_par_;
-        end
-        % Jacobian at s of the angular and linear velocity with respect to dq in the tip frame 
-        function J_ = Jacobian(obj, q, s)
-            [g, ~, ~, ~, ~, omega_par_, v_par_] = obj.Kinematics_s(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q), s);
-            J_ = [g(1:3, 1:3)'*omega_par_; g(1:3, 1:3)'*v_par_];
         end
 
         % Center of mass position
