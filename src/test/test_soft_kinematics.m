@@ -17,6 +17,7 @@ B1 = cell(N_B, 1);
 J1 = cell(N_B, 1);
 for i = 1:N_B
     B1{i} = PCC3D([Parameters; NGaussPoints]);
+    %B1{i} = PCC2D([Parameters; NGaussPoints]);
     J1{i} = FixedJoint();
 end
 

@@ -564,6 +564,7 @@ classdef BodyTree < handle
             end
 
             % Preallocate the output for code generation
+            q         = zeros(obj.n, 1, "like", q0);% DO NOT REMOVE THIS!
             q         = q0;
             converged = 0;
 

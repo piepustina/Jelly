@@ -15,7 +15,7 @@ classdef GVSBody < Body
     end
 
     % Private properties extracted from the parameters for ease of use
-    properties (Access = private)
+    properties (Access = protected)
         BaseRadius      = 0;
         TipRadius       = 0;
         MassDensity     = 0;
@@ -551,9 +551,14 @@ classdef GVSBody < Body
                 return;
             end
             % Iteration variables initialization
-            exitFlag= false;
-            hTotal  = 0;
-            S       = 0;
+            exitFlag = false;
+            hTotal   = 0;
+            S        = 0;
+            Omega    = zeros(6, 1, "like", q);
+            OmegaHat = zeros(4, 4, "like", q);
+            TOmega   = zeros(6, 6, "like", q);
+            dOmega   = zeros(6, 1, "like", q);
+            ddOmega  = zeros(6, 1, "like", q);
             % Loop over all the Gaussian points
             for i = 1:obj.NGaussPointsInt
                 % Compute the distance h between two Gaussian points
@@ -582,7 +587,9 @@ classdef GVSBody < Body
                 ddxi_2  = obj.ddxi(q, dq, ddq, S + h/2 + sqrt(3)*h/6);
                 % Compute the Magnus expansion of the strain
                 Omega   = (h/2)*(xi_1 + xi_2) + (sqrt(3)*h^2)/12*ad(xi_1)*xi_2;
-                OmegaHat= [skew(Omega(1:3)), Omega(4:6); zeros(1, 4)];
+                %OmegaHat= [skew(Omega(1:3)), Omega(4:6); zeros(1, 4)];
+                OmegaHat(1:3, 1:3) = skew(Omega(1:3));
+                OmegaHat(1:3, 4)   = Omega(4:6);
                 % Compute first order time derivative of Omega and its Jacobian with respect to q
                 PhiOmega= (h/2)*(Jxi_1 + Jxi_2) +...
                           (sqrt(3)*h^2)/12*(ad(xi_1)*Jxi_2 - ad(xi_2)*Jxi_1);

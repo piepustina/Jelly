@@ -98,7 +98,7 @@ classdef InverseKinematicsSoftRobotSystem < matlab.System
         
         function [out1, out2, out3] = getOutputSizeImpl(obj)
             %getOutputSizeImpl Return size for each output port
-            out1 = [obj.SoftRobotStruct.TreeStruct.n, 1];
+            out1 = [obj.SoftRobotStruct.TreeStruct.n];
             out2 = 1;
             out3 = [6*length(obj.BodyPoints), 1];
         end

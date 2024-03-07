@@ -220,7 +220,7 @@ classdef SoftRobot < BodyTree
                                 break;
                             end
                             % Evaluate the direct kinematics at the query point
-                            T_i(1:4, 1:4)         = obj.Bodies{i}.T_s(q(idxBody(k, 1):idxBody(k, 2)), pointsBody(k));
+                            T_i(1:4, 1:4)         = obj.Bodies{i}.T_s(q(idxBody(k, 1):idxBody(k, 2), 1), pointsBody(k));
                             % Update the output
                             T(4*(k-1)+1:4*k, 1:4) = TPrevBodies(4*(idxUniqueOcc(k)-1)+1:4*idxUniqueOcc(k), 1:4)*T_i;% Use the same transform of the preceideing body for the same occurrences
                         end
@@ -307,7 +307,7 @@ classdef SoftRobot < BodyTree
                             q_idx_end   = idxQBody(k, 2);
             
                             % Compute the terms associated to the body
-                            [J_omega, J_v, T]   = obj.Bodies{i}.BodyJacobian(q(q_idx_start:q_idx_end), sBody(k));
+                            [J_omega, J_v, T]   = obj.Bodies{i}.BodyJacobian(q(q_idx_start:q_idx_end, 1), sBody(k));
                             R_i_T               = T(1:3, 1:3)';
                             t_i                 = T(1:3, 4);
             
