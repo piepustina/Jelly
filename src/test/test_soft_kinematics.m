@@ -35,7 +35,7 @@ T1 = r1.DirectKinematics(q_test, L0*(1:N_B))
 %T2 = r2.DirectKinematics(q_test)
 
 % Body Jacobian
-J1 = r1.BodyJacobian(q_test, L0*(1:N_B))
+JAC1 = r1.BodyJacobian(q_test, L0*(1:N_B))
 
 %J2 = r2.BodyJacobian(q_test)
 
@@ -50,7 +50,7 @@ T = r1.DirectKinematics(q_test, L0*(1:N_B));
 % Inverse kinematics
 disp("The inverse kinematics result is ")
 tic
-[q_ik, converged] = r1.InverseKinematics(T, L0*(1:N_B), zeros(r1.n, 1), 5)
+[q_ik, converged] = r1.InverseKinematics(T, L0*(1:N_B), zeros(r1.n, 1), 5, ones( 6*N_B, 1 ))
 toc
 
 disp("The error norm is " + norm(q_test - q_ik))

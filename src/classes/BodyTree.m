@@ -49,6 +49,13 @@ classdef BodyTree < handle
             %Args:
                 %    Joints ({:class:`Joint`}): Cell array of joints of the tree
                 %    Bodies ({:class:`Body`}) : Cell array of bodies of the tree
+
+            if ~iscolumn(Joints)
+                Joints = Joints';
+            end
+            if ~iscolumn(Bodies)
+                Bodies = Bodies';
+            end
             
             % Compute the number of bodies and assign the joint and body
             % configuration indexes
@@ -81,9 +88,15 @@ classdef BodyTree < handle
             % Assign the joints and bodies
             obj.Joints = cell(BodyTree.MaxBodiesNumber, 1);
             obj.Bodies = cell(BodyTree.MaxBodiesNumber, 1);
+            if coder.target("MATLAB")% Augment the joints and bodies
+                Joints = [Joints; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
+                Bodies = [Bodies; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
+            end
             obj.Joints = Joints;
             obj.Bodies = Bodies;
+            
         
+
             % Allocate the augmeneted bodies for code generation
             obj.N_B_Internal    = 2*obj.N_B;
             obj.BodiesInternal  = cell(2*BodyTree.MaxBodiesNumber, 1);
@@ -103,6 +116,75 @@ classdef BodyTree < handle
             end
         end
        
+        % function obj = TreeUpdate(obj, q, dq, ddq)
+        %     %Update the state of the BodyTree. 
+        %     %
+        %     %Args:
+        %         %    q   ([double], [sym]): Configuration variables
+        %         %    dq  ([double], [sym]): First-order time derivative of configuration variables
+        %         %    ddq ([double], [sym]): Second-order time derivative of configuration variables
+        % 
+        %     % Check that the vectors q, dq and ddq are columns.
+        %     if ~iscolumn(q)
+        %         q = q';
+        %     end
+        %     if ~iscolumn(dq)
+        %         dq = dq';
+        %     end
+        %     if ~iscolumn(ddq)
+        %         ddq = ddq';
+        %     end
+        % 
+        %     % Initialize variables
+        %     k_i = 1;
+        %     l_B = length(obj.Bodies);
+        %     for i = 1:BodyTree.MaxBodiesNumber
+        %         if i <= l_B
+        %             if isnumeric(obj.Bodies{i})
+        %                 continue;
+        %             end
+        %             % JOINT UPDATE
+        %             % Get the DOFs associated with the joint
+        %             n_j   = obj.Joints{i}.n;
+        %             if n_j ~= 0
+        %                 % Compute the last index of q associated with the current
+        %                 % joint
+        %                 k_i_1 = k_i + n_j - 1;
+        %                 % Compute (q, dq, ddq) associated with the joint
+        %                 q_j   = q(k_i:k_i_1);
+        %                 dq_j  = dq(k_i:k_i_1);
+        %                 ddq_j = ddq(k_i:k_i_1);
+        %                 % Update the joint data
+        %                 obj.Joints{i}.Update(q_j, dq_j, ddq_j);
+        %                 % Update the joint index for the next iteration
+        %                 k_i = k_i_1 + 1;
+        %             else
+        %                 obj.Joints{i}.Update([], [], []);
+        %             end
+        % 
+        %             % BODY UPDATE
+        %             % Get the DOFs associated with the body
+        %             n_b   = obj.Bodies{i}.n;
+        %             if n_b ~= 0
+        %                 % Compute the last index of q associated with the current
+        %                 % body
+        %                 k_i_1 = k_i + n_b - 1;
+        %                 % Compute (q, dq, ddq) associated with the body
+        %                 q_b   = q(k_i:k_i_1);
+        %                 dq_b  = dq(k_i:k_i_1);
+        %                 ddq_b = ddq(k_i:k_i_1);
+        %                 % Update the body data
+        %                 obj.Bodies{i}.Update(q_b, dq_b, ddq_b);
+        %                 % Update the body index for the next iteration
+        %                 k_i = k_i_1 + 1;
+        %             else
+        %                 obj.Bodies{i}.Update([], [], []);
+        %             end
+        %         end
+        %     end
+        % end
+        
+        % New update function with parallel support
         function obj = TreeUpdate(obj, q, dq, ddq)
             %Update the state of the BodyTree. 
             %
@@ -123,29 +205,22 @@ classdef BodyTree < handle
             end
             
             % Initialize variables
-            k_i = 1;
             l_B = length(obj.Bodies);
             for i = 1:BodyTree.MaxBodiesNumber
                 if i <= l_B
-                    if isnumeric(obj.Bodies{i})
+                    if isnumeric(obj.Bodies{i}) || isnumeric(obj.Joints{i})
                         continue;
                     end
                     % JOINT UPDATE
                     % Get the DOFs associated with the joint
                     n_j   = obj.Joints{i}.n;
                     if n_j ~= 0
-                        % Compute the last index of q associated with the current
-                        % joint
-                        k_i_1 = k_i + n_j - 1;
-                        % Compute (q, dq, ddq) associated with the joint
-                        q_j   = q(k_i:k_i_1);
-                        dq_j  = dq(k_i:k_i_1);
-                        ddq_j = ddq(k_i:k_i_1);
+                        % Get the indexes associated with the joint
+                        q_start = obj.JointConfigurationIndexes(i, 1);
+                        q_end   = obj.JointConfigurationIndexes(i, 2);
                         % Update the joint data
-                        obj.Joints{i}.Update(q_j, dq_j, ddq_j);
-                        % Update the joint index for the next iteration
-                        k_i = k_i_1 + 1;
-                    elseobj.N_B;
+                        obj.Joints{i}.Update(q(q_start:q_end), dq(q_start:q_end), ddq(q_start:q_end));
+                    else
                         obj.Joints{i}.Update([], [], []);
                     end
                     
@@ -153,17 +228,11 @@ classdef BodyTree < handle
                     % Get the DOFs associated with the body
                     n_b   = obj.Bodies{i}.n;
                     if n_b ~= 0
-                        % Compute the last index of q associated with the current
-                        % body
-                        k_i_1 = k_i + n_b - 1;
-                        % Compute (q, dq, ddq) associated with the body
-                        q_b   = q(k_i:k_i_1);
-                        dq_b  = dq(k_i:k_i_1);
-                        ddq_b = ddq(k_i:k_i_1);
+                        % Get the indexes associated with the body
+                        q_start = obj.BodyConfigurationIndexes(i, 1);
+                        q_end   = obj.BodyConfigurationIndexes(i, 2);
                         % Update the body data
-                        obj.Bodies{i}.Update(q_b, dq_b, ddq_b);
-                        % Update the body index for the next iteration
-                        k_i = k_i_1 + 1;
+                        obj.Bodies{i}.Update(q(q_start:q_end), dq(q_start:q_end), ddq(q_start:q_end));
                     else
                         obj.Bodies{i}.Update([], [], []);
                     end
