@@ -711,6 +711,8 @@ classdef BodyTree < handle
             e         = Inf*ones(6*idxLength, 1);
             e_thsd    = ones(idxLength, 1);%If contains all zeros, the configuration satisfies all the constraints
 
+            ErrorWeight12 = mpower(ErrorWeight, 0.5);
+            
             % Run the Newton algorithm as given in Linch and Park, Modern Robotics
             for i = 1:N
                 % Evaluate the direct kinematics in the current configuration
@@ -743,8 +745,10 @@ classdef BodyTree < handle
                     % Update the configuration using Gradient Descent
                     if UseGradientDescent == true
                         q = q + GradientDescentStepSize*(J_q')*ErrorWeight*e;
-                    else% Update the configuration using Newton-Rapson
-                        q = q + J_q\e;
+                    else% Update the configuration using weighted Newton-Rapson
+                        %q = q + J_q\e;
+                        % Use weighted pseudoinverse
+                        q = q + (ErrorWeight12*J_q)\(ErrorWeight12*e);
                     end
                 end
             end
