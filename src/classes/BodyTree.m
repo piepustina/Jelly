@@ -570,7 +570,8 @@ classdef BodyTree < handle
             end
         end
 
-        function [q, converged, e] = InverseKinematics(obj, T, idx, q0, N, task_flags, AngularErrorThsd, LinearErrorThsd)
+        %function [q, converged, e] = InverseKinematics(obj, T, idx, q0, N, task_flags, AngularErrorThsd, LinearErrorThsd, UseGradientDescent, GradientDescentStepSize, ErrorWeight)
+        function [q, converged, e] = InverseKinematics(obj, T, options)
             %Evaluate the inverse kinematics numerically using a Newton-Rapson iteration scheme.
             %
             %Args:
@@ -580,45 +581,103 @@ classdef BodyTree < handle
             %   N   (double)                : Maximum number of iterations
             %   task_flags ([double, bool]) : Vector of flags specifying for each indexed body what components of the task vector should be considered
             %Return:
-            %   {[double], [sym]}: Homogeneous transformation matrices for each body.   
-            
-            % Default values
-            DefaultN                    = 4;   %Number of Newton iterations
-            DefaultAngularErrorThsd     = 1e-3;%Default threshold in the Newton scheme for the angular position
-            DefaultLinearErrorThsd      = 1e-2;%Default threshold in the Newton scheme for the linear position
-            
-            switch nargin
-                case 2
-                    idx         = linspace(1, obj.N_B, obj.N_B);
-                    q0          = zeros(obj.n, 1);
-                    N           = DefaultN;
-                    task_flags  = ones(obj.N_B*6, 1);
-                    AngularErrorThsd = DefaultAngularErrorThsd;
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
-                case 3
-                    q0  = zeros(obj.n, 1);
-                    N   = DefaultN;
-                    task_flags  = ones(obj.N_B*6, 1);
-                    AngularErrorThsd = DefaultAngularErrorThsd;
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
-                case 4
-                    N   = DefaultN;
-                    task_flags  = ones(obj.N_B*6, 1);
-                    AngularErrorThsd = DefaultAngularErrorThsd;
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
-                case 5
-                    task_flags  = ones(obj.N_B*6, 1);
-                    AngularErrorThsd = DefaultAngularErrorThsd;
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
-                case 6
-                    AngularErrorThsd = DefaultAngularErrorThsd;
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
-                case 7
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
+            %   {[double], [sym]}: Homogeneous transformation matrices for each body. 
+
+            arguments
+                obj 
+                T
+                options.BodyIndexes             = linspace(1, obj.N_B, obj.N_B)
+                options.InitialGuess            = zeros(obj.n, 1)
+                options.TaskFlags               = ones(obj.N_B*6, 1)
+                options.MaxIterationNumber      = 4
+                options.AngularErrorThreshold   = 1e-3
+                options.LinearErrorThreshold    = 1e-2
+                options.UseGradientDescent      = false
+                options.GradientDescentStepSize = 1
+                options.ErrorWeight             = 1
             end
+            
+            % Variable assignment
+            idx         = options.BodyIndexes;
+            q0          = options.InitialGuess;
+            task_flags  = options.TaskFlags;
+            N           = options.MaxIterationNumber;
+            AngularErrorThsd = options.AngularErrorThreshold;
+            LinearErrorThsd  = options.LinearErrorThreshold;
+            UseGradientDescent = options.UseGradientDescent;
+            GradientDescentStepSize = options.GradientDescentStepSize;
+            ErrorWeight = options.ErrorWeight;
+            
+
+            % % Default values
+            % DefaultN                    = 4;   %Number of Newton iterations
+            % DefaultAngularErrorThsd     = 1e-3;%Default threshold in the Newton scheme for the angular position
+            % DefaultLinearErrorThsd      = 1e-2;%Default threshold in the Newton scheme for the linear position
+            % DefaultUseGradientDescent   = false;% By default use a Newton iteration
+            % DefaultGradientDescentStepSize = 1;% By default, the gradient descent step size is 1
+            % DefaultErrorWeight          = 1;% By default all the error componenets of the task vector are equally weighted
+
+
+            % switch nargin
+            %     case 2
+            %         idx         = linspace(1, obj.N_B, obj.N_B);
+            %         q0          = zeros(obj.n, 1);
+            %         N           = DefaultN;
+            %         task_flags  = ones(obj.N_B*6, 1);
+            %         AngularErrorThsd = DefaultAngularErrorThsd;
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %         UseGradientDescent = DefaultUseGradientDescent;
+            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
+            %         ErrorWeight = DefaultErrorWeight;
+            %     case 3
+            %         q0  = zeros(obj.n, 1);
+            %         N   = DefaultN;
+            %         task_flags  = ones(obj.N_B*6, 1);
+            %         AngularErrorThsd = DefaultAngularErrorThsd;
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %         UseGradientDescent = DefaultUseGradientDescent;
+            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
+            %         ErrorWeight = DefaultErrorWeight;
+            %     case 4
+            %         N   = DefaultN;
+            %         task_flags  = ones(obj.N_B*6, 1);
+            %         AngularErrorThsd = DefaultAngularErrorThsd;
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %         UseGradientDescent = DefaultUseGradientDescent;
+            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
+            %         ErrorWeight = DefaultErrorWeight;
+            %     case 5
+            %         task_flags  = ones(obj.N_B*6, 1);
+            %         AngularErrorThsd = DefaultAngularErrorThsd;
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %         UseGradientDescent = DefaultUseGradientDescent;
+            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
+            %         ErrorWeight = DefaultErrorWeight;
+            %     case 6
+            %         AngularErrorThsd = DefaultAngularErrorThsd;
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %         UseGradientDescent = DefaultUseGradientDescent;
+            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
+            %         ErrorWeight = DefaultErrorWeight;
+            %     case 7
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %         UseGradientDescent = DefaultUseGradientDescent;
+            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
+            %         ErrorWeight = DefaultErrorWeight;
+            %     case 8
+            %         UseGradientDescent = DefaultUseGradientDescent;
+            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
+            %         ErrorWeight = DefaultErrorWeight;
+            %     case 9
+            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
+            %         ErrorWeight = DefaultErrorWeight;
+            %     case 10
+            %         ErrorWeight = DefaultErrorWeight;
+            % end
 
             % Store useful variables
             idxLength = length(idx);
+            taskFlagsLength = length(task_flags);
 
             % Convert the task flags to an index vector
             task_flags_l = logical(task_flags == 0);
@@ -628,8 +687,19 @@ classdef BodyTree < handle
                 error("The size of T and idx is not consistent.");
             end
             % Check that the dimensions of idx and task_flags are consistent
-            if 6*idxLength ~= length(task_flags)
+            if 6*idxLength ~= taskFlagsLength
                 error("The length of the body indexes is not consitent with the length of the task flags.");
+            end
+            % Check that the dimension of the weight matrix is consistent
+            % with the dimension of the task vector
+            [ew1, ew2] = size(ErrorWeight);
+            if ew1 ~= ew2
+                error("The weight matrix must be square.");
+            end
+            if ew1 ~= 1
+                if taskFlagsLength ~= ew1
+                    error("The size of the weight matrix must be equal the length of the task flags.");
+                end
             end
 
             % Preallocate the output for code generation
@@ -670,8 +740,12 @@ classdef BodyTree < handle
                     converged = 1;
                     break;
                 else
-                    % Update the configuration
-                    q = q + J_q\e;
+                    % Update the configuration using Gradient Descent
+                    if UseGradientDescent == true
+                        q = q + GradientDescentStepSize*(J_q')*ErrorWeight*e;
+                    else% Update the configuration using Newton-Rapson
+                        q = q + J_q\e;
+                    end
                 end
             end
 

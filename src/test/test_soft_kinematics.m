@@ -47,10 +47,26 @@ q_test = (q_max-q_min).*rand(r1.n,1) + q_min
 % Direct kinematics
 T = r1.DirectKinematics(q_test, L0*(1:N_B));
 
-% Inverse kinematics
-disp("The inverse kinematics result is ")
+% Inverse kinematics with Newton-Rapson
+disp("The inverse kinematics (Newton-Rapson) result is ")
 tic
-[q_ik, converged] = r1.InverseKinematics(T, L0*(1:N_B), zeros(r1.n, 1), 5, ones( 6*N_B, 1 ))
+[q_ik, converged] = r1.InverseKinematics(T, "Points", L0*(1:N_B), ...
+                                            "InitialGuess", zeros(r1.n, 1), ...
+                                            "MaxIterationNumber", 5, ...
+                                            "TaskFlags", ones( 6*N_B, 1 ))
+toc
+
+disp("The error norm is " + norm(q_test - q_ik))
+
+%% Inverse kinematics with Gradient Descent
+disp("The inverse kinematics (Gradient Descent) result is ")
+tic
+[q_ik, converged] = r1.InverseKinematics(T, "Points", L0*(1:N_B), ...
+                                            "InitialGuess", zeros(r1.n, 1), ...
+                                            "MaxIterationNumber", 200, ...
+                                            "TaskFlags", ones( 6*N_B, 1 ), ...
+                                            "UseGradientDescent", true, ...
+                                            "GradientDescentStepSize", 0.2)
 toc
 
 disp("The error norm is " + norm(q_test - q_ik))

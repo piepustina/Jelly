@@ -334,7 +334,8 @@ classdef SoftRobot < BodyTree
         end
         
         
-        function [q, converged, e] = InverseKinematics(obj, T, points, q0, N, task_flags, AngularErrorThsd, LinearErrorThsd)
+        function [q, converged, e] = InverseKinematics(obj, T, options)
+        %function [q, converged, e] = InverseKinematics(obj, T, points, q0, N, task_flags, AngularErrorThsd, LinearErrorThsd, UseGradientDescent, GradientDescentStepSize, ErrorWeight)
             %Evaluate the inverse kinematics numerically using a Newton-Rapson iteration scheme.
             %
             %Args:
@@ -346,45 +347,94 @@ classdef SoftRobot < BodyTree
             %Return:
             %   {[double], [sym]}: Homogeneous transformation matrices for each body.
 
-            % Default values
-            DefaultN                    = 4;   %Number of Newton iterations
-            DefaultAngularErrorThsd     = 1e-3;%Default threshold in the Newton scheme for the angular position
-            DefaultLinearErrorThsd      = 1e-2;%Default threshold in the Newton scheme for the linear position
-            
-            switch nargin
-                case 2
-                    points      = linspace(1, obj.N_B, obj.N_B);
-                    q0          = zeros(obj.n, 1);
-                    N           = DefaultN;
-                    task_flags  = ones(obj.N_B*6, 1);
-                    AngularErrorThsd = DefaultAngularErrorThsd;
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
-                case 3
-                    q0  = zeros(obj.n, 1);
-                    N   = DefaultN;
-                    task_flags  = ones(obj.N_B*6, 1);
-                    AngularErrorThsd = DefaultAngularErrorThsd;
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
-                case 4
-                    N   = DefaultN;
-                    task_flags  = ones(obj.N_B*6, 1);
-                    AngularErrorThsd = DefaultAngularErrorThsd;
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
-                case 5
-                    task_flags  = ones(obj.N_B*6, 1);
-                    AngularErrorThsd = DefaultAngularErrorThsd;
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
-                case 6
-                    AngularErrorThsd = DefaultAngularErrorThsd;
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
-                case 7
-                    LinearErrorThsd  = DefaultLinearErrorThsd;
+            % % Default values
+            % DefaultN                    = 4;   %Number of Newton iterations
+            % DefaultAngularErrorThsd     = 1e-3;%Default threshold in the Newton scheme for the angular position
+            % DefaultLinearErrorThsd      = 1e-2;%Default threshold in the Newton scheme for the linear position
+            % DefaultUseGradientDescent   = false;% By default use a Newton iteration
+            % DefaultGradientDescentStepSize = 1;% By default, the gradient descent step size is 1
+            % DefaultErrorWeight          = 1;% By default all the error componenets of the task vector are equally weighted
+            % 
+            % 
+            % switch nargin
+            %     case 2
+            %         points      = linspace(1, obj.N_B, obj.N_B);
+            %         q0          = zeros(obj.n, 1);
+            %         N           = DefaultN;
+            %         task_flags  = ones(obj.N_B*6, 1);
+            %         AngularErrorThsd = DefaultAngularErrorThsd;
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %     case 3
+            %         q0  = zeros(obj.n, 1);
+            %         N   = DefaultN;
+            %         task_flags  = ones(obj.N_B*6, 1);
+            %         AngularErrorThsd = DefaultAngularErrorThsd;
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %     case 4
+            %         N   = DefaultN;
+            %         task_flags  = ones(obj.N_B*6, 1);
+            %         AngularErrorThsd = DefaultAngularErrorThsd;
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %     case 5
+            %         task_flags  = ones(obj.N_B*6, 1);
+            %         AngularErrorThsd = DefaultAngularErrorThsd;
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %     case 6
+            %         AngularErrorThsd = DefaultAngularErrorThsd;
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %     case 7
+            %         LinearErrorThsd  = DefaultLinearErrorThsd;
+            %         UseGradientDescent = DefaultUseGradientDescent;
+            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
+            %         ErrorWeight = DefaultErrorWeight;
+            %     case 8
+            %         UseGradientDescent = DefaultUseGradientDescent;
+            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
+            %         ErrorWeight = DefaultErrorWeight;
+            %     case 9
+            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
+            %         ErrorWeight = DefaultErrorWeight;
+            %     case 10
+            %         ErrorWeight = DefaultErrorWeight;
+            % end
+
+            arguments
+                obj 
+                T
+                options.Points                  = linspace(1, obj.N_B, obj.N_B);
+                options.InitialGuess            = zeros(obj.n, 1)
+                options.TaskFlags               = ones(obj.N_B*6, 1)
+                options.MaxIterationNumber      = 4
+                options.AngularErrorThreshold   = 1e-3
+                options.LinearErrorThreshold    = 1e-2
+                options.UseGradientDescent      = false
+                options.GradientDescentStepSize = 1
+                options.ErrorWeight             = 1
             end
+            
+            % Variable assignment
+            points      = options.Points;
+            q0          = options.InitialGuess;
+            N           = options.MaxIterationNumber;
+            task_flags  = options.TaskFlags;
+            AngularErrorThsd = options.AngularErrorThreshold;
+            LinearErrorThsd  = options.LinearErrorThreshold;
+            UseGradientDescent = options.UseGradientDescent;
+            GradientDescentStepSize = options.GradientDescentStepSize;
+            ErrorWeight = options.ErrorWeight;
 
             % Call the superclass method that still works because of the
             % overloading of the methods DirectKinematics and BodyJacobian
             % of this class
-            [q, converged, e] = InverseKinematics@BodyTree(obj, T, points, q0, N, task_flags, AngularErrorThsd, LinearErrorThsd);
+            [q, converged, e] = InverseKinematics@BodyTree(obj, T, "BodyIndexes", points, ...
+                                                                   "InitialGuess", q0, ...
+                                                                   "MaxIterationNumber", N, ...
+                                                                   "TaskFlags", task_flags, ...
+                                                                   "AngularErrorThreshold", AngularErrorThsd, ...
+                                                                   "LinearErrorThreshold", LinearErrorThsd, ...
+                                                                   "UseGradientDescent", UseGradientDescent, ...
+                                                                   "GradientDescentStepSize", GradientDescentStepSize, ...
+                                                                   "ErrorWeight", ErrorWeight);
         end
         
         % Evaluate the strain at a given point along the robot structure and in the given configuration

@@ -8,13 +8,23 @@ classdef InverseKinematicsSoftRobotSystem < matlab.System
     properties (Nontunable)
         %
         %Structure representing the robot 
-        SoftRobotStruct         = 0;
+        SoftRobotStruct        = 0;
         %Points along the backbone to consider in the inverse kinematics
         BodyPoints             = 0;
-        %Maximum number of Newton iterations
+        %Maximum number of iterations
         MaximumNewtonIterations = 4;
         %Task space flags
         TaskSpaceFlags          = ones(6, 1);
+        %Angular error threshold
+        AngularErrorThreshold   = 1e-3;
+        %Linear error threshold
+        LinearErrorThreshold    = 1e-2;
+        %Use Gradient Descent
+        UseGradientDescent (1,1) logical = false;
+        %Step size for the gradient descent
+        GradientDescentStepSize = 1;
+        %Weight for the error
+        ErrorWeight             = 1;
     end
 
 
@@ -46,7 +56,16 @@ classdef InverseKinematicsSoftRobotSystem < matlab.System
             q    = cast(zeros(size(q0)), 'like', q0);
             e    = zeros(6*length(obj.BodyPoints), 1);
             % Run the inverse kinematics
-            [q_ik, converged, e_ik] = obj.Tree.InverseKinematics(double(T), obj.BodyPoints, double(q0), obj.MaximumNewtonIterations, obj.TaskSpaceFlags);
+            [q_ik, converged, e_ik] = obj.Tree.InverseKinematics(double(T), ...
+                                                                 "Points", obj.BodyPoints, ...
+                                                                 "InitialGuess", double(q0), ...
+                                                                 "MaxIterationNumber", obj.MaximumNewtonIterations, ...
+                                                                 "TaskFlags", obj.TaskSpaceFlags, ...
+                                                                 "AngularErrorThreshold", obj.AngularErrorThreshold, ...
+                                                                 "LinearErrorThreshold", obj.LinearErrorThreshold, ...
+                                                                 "ErrorWeight", obj.ErrorWeight, ...
+                                                                 "UseGradientDescent", obj.UseGradientDescent, ...
+                                                                 "GradientDescentStepSize", obj.GradientDescentStepSize);
             % Assign the output configuration
             q(:) = cast(q_ik, 'like', q0);
             e(:) = double(e_ik);
@@ -57,6 +76,16 @@ classdef InverseKinematicsSoftRobotSystem < matlab.System
         end
 
         %% Advanced functions
+        function flag = isInactivePropertyImpl(obj,propertyName)
+            % Set properties that are not visible. Return false if property is visible based on object 
+            % configuration, for the command line and System block dialog
+            if strcmp(propertyName, 'GradientDescentStepSize') || strcmp(propertyName, 'ErrorWeight')
+                flag = obj.UseGradientDescent == false;
+            else% For all the other properties, the display flag is always ok
+                flag = false;
+            end
+        end
+
         function validateInputsImpl(~, T, q0)
             % Validate inputs to the step method at initialization
             validateattributes(T , {'single','double'},    {'2d'}, 'InverseKinematicsSoftRobotSystem','Configuration');
@@ -124,10 +153,5 @@ classdef InverseKinematicsSoftRobotSystem < matlab.System
             out3 = true;
         end
 
-        function flag = isInactivePropertyImpl(~, ~)
-            % Return false if property is visible based on object 
-            % configuration, for the command line and System block dialog
-            flag = false;
-        end
     end
 end
