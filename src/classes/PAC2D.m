@@ -16,7 +16,7 @@ classdef PAC2D < GVSBody
 
         function Phi = StrainBasis(obj, s)
             Phi = [                0,                 0;
-                   -1/obj.RestLength, -s/obj.RestLength;
+                   -1/obj.RestLength, -s/(obj.RestLength^2);
                                    0,                 0;
                                    0,                 0;
                                    0,                 0;
