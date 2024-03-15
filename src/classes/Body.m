@@ -301,42 +301,60 @@ classdef Body < handle
             s = struct('BodyType', class(obj), 'BodyParameters', obj.Parameters, 'BodyDoF', obj.n);
         end
          
-        function Update(obj, q, dq, ddq)
+        function Update(obj, q, dq, ddq, options)
             %Update the current state of the body.
             %
             %Args:
                 %    q   ([double], [sym]): Configuration variables
                 %    dq  ([double], [sym]): First-order time derivative of the configuration variables
                 %    ddq ([double], [sym]): Second-order time derivative of the configuration variables
+            
+            % Arguments definition
+            arguments
+                obj (1, 1) Body
+                q {mustBeVector}
+                dq {mustBeVector}
+                ddq {mustBeVector}
+                options.EvaluateKinematicTerms (1, 1) logical = true
+                options.EvaluateInertialTerms (1, 1) logical  = true
+                options.EvaluateExternalForces (1, 1) logical = true
+            end
 
             % Kinematic terms
-            obj.T_                  = obj.T(q);
-            obj.v_rel_              = obj.v_rel(q, dq);
-            obj.omega_rel_          = obj.omega_rel(q, dq);
-            obj.a_rel_              = obj.a_rel(q, dq, ddq);
-            obj.domega_rel_         = obj.domega_rel(q, dq, ddq);
-            obj.v_par_              = obj.v_par(q);
-            obj.omega_par_          = obj.omega_par(q);
+            if options.EvaluateKinematicTerms == true
+                obj.T_                  = obj.T(q);
+                obj.v_rel_              = obj.v_rel(q, dq);
+                obj.omega_rel_          = obj.omega_rel(q, dq);
+                obj.a_rel_              = obj.a_rel(q, dq, ddq);
+                obj.domega_rel_         = obj.domega_rel(q, dq, ddq);
+                obj.v_par_              = obj.v_par(q);
+                obj.omega_par_          = obj.omega_par(q);
+            end
             % Inertial quantities
-            obj.p_com_              = obj.p_com(q);
-            obj.v_com_rel_          = obj.v_com_rel(q, dq);
-            obj.a_com_rel_          = obj.a_com_rel(q, dq, ddq);
-            obj.I_                  = obj.I(q);
-            obj.m_                  = obj.m();
-            obj.J_                  = obj.J(q, dq);
-            obj.int_dr_             = obj.int_dr(q, dq);
-            obj.int_ddr_            = obj.int_ddr(q, dq, ddq);
-            obj.int_r_X_dr_         = obj.int_r_X_dr(q, dq);
-            obj.int_r_X_ddr_        = obj.int_r_X_ddr(q, dq, ddq);
-            obj.int_dr_X_pv_r_      = obj.int_dr_X_pv_r(q, dq);
-            obj.int_pv_r_O_dd_r_    = obj.int_pv_r_O_dd_r(q, dq, ddq);
-            obj.int_dr_O_dr_        = obj.int_dr_O_dr(q, dq);
-            obj.grad_int_dr_        = obj.grad_int_dr(q);
-            obj.grad_int_r_X_dr_    = obj.grad_int_r_X_dr(q);
-            obj.grad_J_             = obj.grad_J(q);
-            obj.grad_v_com_         = obj.grad_v_com(q);
-            obj.K_                  = obj.K(q);
-            obj.D_                  = obj.D(q, dq);
+            if options.EvaluateInertialTerms == true
+                obj.p_com_              = obj.p_com(q);
+                obj.v_com_rel_          = obj.v_com_rel(q, dq);
+                obj.a_com_rel_          = obj.a_com_rel(q, dq, ddq);
+                obj.I_                  = obj.I(q);
+                obj.m_                  = obj.m();
+                obj.J_                  = obj.J(q, dq);
+                obj.int_dr_             = obj.int_dr(q, dq);
+                obj.int_ddr_            = obj.int_ddr(q, dq, ddq);
+                obj.int_r_X_dr_         = obj.int_r_X_dr(q, dq);
+                obj.int_r_X_ddr_        = obj.int_r_X_ddr(q, dq, ddq);
+                obj.int_dr_X_pv_r_      = obj.int_dr_X_pv_r(q, dq);
+                obj.int_pv_r_O_dd_r_    = obj.int_pv_r_O_dd_r(q, dq, ddq);
+                obj.int_dr_O_dr_        = obj.int_dr_O_dr(q, dq);
+                obj.grad_int_dr_        = obj.grad_int_dr(q);
+                obj.grad_int_r_X_dr_    = obj.grad_int_r_X_dr(q);
+                obj.grad_J_             = obj.grad_J(q);
+                obj.grad_v_com_         = obj.grad_v_com(q);
+            end
+            % Generalized external forces
+            if options.EvaluateExternalForces == true
+                obj.K_                  = obj.K(q);
+                obj.D_                  = obj.D(q, dq);
+            end
         end
     end
 end

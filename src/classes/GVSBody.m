@@ -91,39 +91,59 @@ classdef GVSBody < Body
 
         %% Body methods implementation
         % Overload the update body method
-        function Update(obj, q, dq, ddq)
-            [T_, omega_, v_, domega_, dv_, J_omega, J_v] = obj.Kinematics(q, dq, ddq); % Update the kinematics of the body
-            obj.T_                  = T_;
-            obj.v_rel_              = v_;
-            obj.omega_rel_          = omega_;
-            obj.a_rel_              = dv_;
-            obj.domega_rel_         = domega_;
-            RT                      = T_(1:3, 1:3)';
-            %The jacobians are expressed in the tip frame
-            obj.v_par_              = RT*J_v;
-            obj.omega_par_          = RT*J_omega;
+        function Update(obj, q, dq, ddq, options)
+            
+            % Arguments definition
+            arguments
+                obj (1, 1) GVSBody
+                q {mustBeVector}
+                dq {mustBeVector}
+                ddq {mustBeVector}
+                options.EvaluateKinematicTerms (1, 1) logical = true
+                options.EvaluateInertialTerms (1, 1) logical  = true
+                options.EvaluateExternalForces (1, 1) logical = true
+            end
+            
+            % Update the kinematics
+            if options.EvaluateKinematicTerms == true
+                [T_, omega_, v_, domega_, dv_, J_omega, J_v] = obj.Kinematics(q, dq, ddq); % Update the kinematics of the body
+                obj.T_                  = T_;
+                obj.v_rel_              = v_;
+                obj.omega_rel_          = omega_;
+                obj.a_rel_              = dv_;
+                obj.domega_rel_         = domega_;
+                RT                      = T_(1:3, 1:3)';
+                %The jacobians are expressed in the tip frame
+                obj.v_par_              = RT*J_v;
+                obj.omega_par_          = RT*J_omega;
+            end
             %Inertial quantities, the configuration variables are not
             %required since all the computations are done using internal
             %state variables
-            obj.p_com_              = obj.p_com();
-            obj.v_com_rel_          = obj.v_com_rel();
-            obj.a_com_rel_          = obj.a_com_rel();
-            obj.I_                  = obj.I();
-            obj.m_                  = obj.m();
-            obj.J_                  = obj.J();
-            obj.int_dr_             = obj.int_dr(q, dq);%TODO: To be removed since it is not required
-            obj.int_ddr_            = obj.int_ddr(q, dq, ddq);%TODO: To be removed since it is always zero
-            obj.int_r_X_dr_         = obj.int_r_X_dr();
-            obj.int_r_X_ddr_        = obj.int_r_X_ddr();
-            obj.int_dr_X_pv_r_      = obj.int_dr_X_pv_r();
-            obj.int_pv_r_O_dd_r_    = obj.int_pv_r_O_dd_r();
-            obj.int_dr_O_dr_        = obj.int_dr_O_dr(q, dq);%TODO: To be removed since it is always zero
-            obj.grad_int_dr_        = obj.grad_int_dr(q);%TODO: To be removed since it is always zero
-            obj.grad_int_r_X_dr_    = obj.grad_int_r_X_dr();
-            obj.grad_J_             = obj.grad_J();
-            obj.grad_v_com_         = obj.grad_v_com();
-            obj.K_                  = obj.K(q);
-            obj.D_                  = obj.D(q, dq);
+            if options.EvaluateInertialTerms == true
+                obj.p_com_              = obj.p_com();
+                obj.v_com_rel_          = obj.v_com_rel();
+                obj.a_com_rel_          = obj.a_com_rel();
+                obj.I_                  = obj.I();
+                obj.m_                  = obj.m();
+                obj.J_                  = obj.J();
+                obj.int_dr_             = obj.int_dr(q, dq);%TODO: To be removed since it is not required
+                obj.int_ddr_            = obj.int_ddr(q, dq, ddq);%TODO: To be removed since it is always zero
+                obj.int_r_X_dr_         = obj.int_r_X_dr();
+                obj.int_r_X_ddr_        = obj.int_r_X_ddr();
+                obj.int_dr_X_pv_r_      = obj.int_dr_X_pv_r();
+                obj.int_pv_r_O_dd_r_    = obj.int_pv_r_O_dd_r();
+                obj.int_dr_O_dr_        = obj.int_dr_O_dr(q, dq);%TODO: To be removed since it is always zero
+                obj.grad_int_dr_        = obj.grad_int_dr(q);%TODO: To be removed since it is always zero
+                obj.grad_int_r_X_dr_    = obj.grad_int_r_X_dr();
+                obj.grad_J_             = obj.grad_J();
+                obj.grad_v_com_         = obj.grad_v_com();
+            end
+            % Evaluate the generalized external forces
+            if options.EvaluateExternalForces == true
+                obj.K_                  = obj.K(q);
+                obj.D_                  = obj.D(q, dq);
+            end
         end
         % Transformation from base to body tip
         function T_ = T(obj, q)

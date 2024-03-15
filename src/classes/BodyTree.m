@@ -185,14 +185,25 @@ classdef BodyTree < handle
         % end
         
         % New update function with parallel support
-        function obj = TreeUpdate(obj, q, dq, ddq)
+        function obj = TreeUpdate(obj, q, dq, ddq, options)
             %Update the state of the BodyTree. 
             %
             %Args:
                 %    q   ([double], [sym]): Configuration variables
                 %    dq  ([double], [sym]): First-order time derivative of configuration variables
                 %    ddq ([double], [sym]): Second-order time derivative of configuration variables
-
+            
+            % Arguments definition
+            arguments
+                obj (1, 1) BodyTree
+                q {mustBeVector}
+                dq {mustBeVector}
+                ddq {mustBeVector}
+                options.EvaluateKinematicTerms (1, 1) logical = true
+                options.EvaluateInertialTerms (1, 1) logical  = true
+                options.EvaluateExternalForces (1, 1) logical = true
+            end
+            
             % Check that the vectors q, dq and ddq are columns.
             if ~iscolumn(q)
                 q = q';
@@ -219,9 +230,13 @@ classdef BodyTree < handle
                         q_start = obj.JointConfigurationIndexes(i, 1);
                         q_end   = obj.JointConfigurationIndexes(i, 2);
                         % Update the joint data
-                        obj.Joints{i}.Update(q(q_start:q_end), dq(q_start:q_end), ddq(q_start:q_end));
+                        obj.Joints{i}.Update(q(q_start:q_end), dq(q_start:q_end), ddq(q_start:q_end), "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                                                                                      "EvaluateInertialTerms" ,  options.EvaluateInertialTerms, ...
+                                                                                                      "EvaluateExternalForces", options.EvaluateExternalForces);
                     else
-                        obj.Joints{i}.Update([], [], []);
+                        obj.Joints{i}.Update([], [], [], "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                                         "EvaluateInertialTerms" ,  options.EvaluateInertialTerms, ...
+                                                         "EvaluateExternalForces", options.EvaluateExternalForces);
                     end
                     
                     % BODY UPDATE
@@ -232,9 +247,13 @@ classdef BodyTree < handle
                         q_start = obj.BodyConfigurationIndexes(i, 1);
                         q_end   = obj.BodyConfigurationIndexes(i, 2);
                         % Update the body data
-                        obj.Bodies{i}.Update(q(q_start:q_end), dq(q_start:q_end), ddq(q_start:q_end));
+                        obj.Bodies{i}.Update(q(q_start:q_end), dq(q_start:q_end), ddq(q_start:q_end), "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                                                                                      "EvaluateInertialTerms" ,  options.EvaluateInertialTerms, ...
+                                                                                                      "EvaluateExternalForces", options.EvaluateExternalForces);
                     else
-                        obj.Bodies{i}.Update([], [], []);
+                        obj.Bodies{i}.Update([], [], [], "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                                         "EvaluateInertialTerms" ,  options.EvaluateInertialTerms, ...
+                                                         "EvaluateExternalForces", options.EvaluateExternalForces);
                     end
                 end
             end
@@ -314,14 +333,22 @@ classdef BodyTree < handle
             %
             %Args:
                 %    q   ([double], [sym]): Configuration variables
-
-            % Update the tree only if q is passed as argument
-            switch nargin
-                case 1
-                    q = zeros(obj.n, 1);
-                case 2
-                    obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q));
+            
+            % Define arguments
+            arguments
+                obj (1, 1) BodyTree
+                q {mustBeVector} = zeros(obj.n, 1)
             end
+            % Update the tree
+            obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q), "EvaluateKinematicTerms", false, ...
+                                                                                      "EvaluateExternalForces", true, ...
+                                                                                      "EvaluateInertialTerms", false);
+            % switch nargin
+            %     case 1
+            %         q = zeros(obj.n, 1);
+            %     case 2
+            %         obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q));
+            % end
             Kq = zeros(obj.n, 1, "like", q);
             k_b = obj.n;
             l_B = obj.N_B_Internal;
@@ -346,16 +373,26 @@ classdef BodyTree < handle
             %Args:
                 %    q   ([double], [sym]): Configuration variables
                 %    dq  ([double], [sym]): First-order time derivative of configuration variables
+            
+            % Define arguments
+            arguments
+                obj (1, 1) BodyTree
+                q {mustBeVector} = zeros(obj.n, 1)
+                dq {mustBeVector} = zeros(obj.n, 1)
+            end
 
             % Update the tree only if q and dq are passed as arguments
-            switch nargin
-                case 1
-                    q = zeros(obj.n, 1);
-                case 2
-                    obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q));
-                case 3
-                    obj.TreeUpdate(q, dq, zeros(obj.n, 1, "like", q));
-            end
+            obj.TreeUpdate(q, dq, zeros(obj.n, 1, "like", q), "EvaluateKinematicTerms", false, ...
+                                                                                      "EvaluateExternalForces", true, ...
+                                                                                      "EvaluateInertialTerms", false);
+            % switch nargin
+            %     case 1
+            %         q = zeros(obj.n, 1);
+            %     case 2
+            %         obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q));
+            %     case 3
+            %         obj.TreeUpdate(q, dq, zeros(obj.n, 1, "like", q));
+            % end
             Dq = zeros(obj.n, 1, "like", q);
             k_b = obj.n;
             l_B = obj.N_B_Internal;
@@ -507,10 +544,23 @@ classdef BodyTree < handle
             %Return:
             %   ([double], [sym]): Homogeneous transformation matrices for the body specified by idx.   
 
-            switch nargin
-                case 2
-                    idx = linspace(1, obj.N_B, obj.N_B);
+            % Arguments definition
+            arguments
+                obj (1, 1) BodyTree
+                q {mustBeVector} = zeros(obj.n, 1)
+                idx {mustBeVector} = linspace(1, obj.N_B, obj.N_B);
             end
+
+            % switch nargin
+            %     case 2
+            %         idx = linspace(1, obj.N_B, obj.N_B);
+            % end
+
+            % Update the state of the kinematic tree
+            Zeron   = zeros(obj.n, 1, "like", q);
+            obj     = obj.TreeUpdate(q, Zeron, Zeron, "EvaluateKinematicTerms", true, ...
+                                                      "EvaluateInertialTerms", false, ...
+                                                      "EvaluateExternalForces", false);
 
             % Length of the index vector
             idxLength = length(idx);
@@ -525,10 +575,6 @@ classdef BodyTree < handle
 
             % T is matrix of vertically stacked 4x4 transformation matrices
             T   = repmat(eye(4, 'like', q), length(idx), 1);
-            
-            % Update the state of the kinematic tree
-            Zeron   = zeros(obj.n, 1, "like", q);
-            obj     = obj.TreeUpdate(q, Zeron, Zeron);
             
             % Variables initialization
             T_i         = obj.T0;
@@ -768,14 +814,26 @@ classdef BodyTree < handle
             %   idx           ([int]): Array of body indexes indicating the bodies for which the jacobian has to be evaluated
             %Return:
             %   {[double], [sym]}: length(idx)*6 x n body Jacobian with angular and linear components for each body specified by idx
-
-            switch nargin
-                case 1
-                    q   = zeros(obj.n, 1, 'like', q);
-                    idx = linspace(1, obj.N_B, obj.N_B);
-                case 2
-                    idx = linspace(1, obj.N_B, obj.N_B);
+            
+            % Arguments definition
+            arguments
+                obj (1, 1) BodyTree
+                q {mustBeVector} = zeros(obj.n, 1)
+                idx {mustBeVector} = linspace(1, obj.N_B, obj.N_B)
             end
+            % switch nargin
+            %     case 1
+            %         q   = zeros(obj.n, 1);
+            %         idx = linspace(1, obj.N_B, obj.N_B);
+            %     case 2
+            %         idx = linspace(1, obj.N_B, obj.N_B);
+            % end
+
+            % Update the BodyTree
+            Zeron   = zeros(obj.n, 1, 'like', q);
+            obj     = obj.TreeUpdate(q, Zeron, Zeron, "EvaluateKinematicTerms", true, ...
+                                                      "EvaluateExternalForces", false, ...
+                                                      "EvaluateInertialTerms", false);
 
             % Modify the index to account for the fact that internally the joints are modeled as bodies
             idx = 2*idx;
@@ -784,10 +842,6 @@ classdef BodyTree < handle
             if ~iscolumn(q)
                 q = q';
             end
-
-            % Update the BodyTree
-            Zeron   = zeros(obj.n, 1, 'like', q);
-            obj     = obj.TreeUpdate(q, Zeron, Zeron);
 
             % Define auxiliary variables
             % The joints are treated as massless bodies thus we augment the
