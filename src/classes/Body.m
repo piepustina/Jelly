@@ -312,9 +312,9 @@ classdef Body < handle
             % Arguments definition
             arguments
                 obj (1, 1) Body
-                q {mustBeVector}
-                dq {mustBeVector}
-                ddq {mustBeVector}
+                q {mustBeVectorOrEmpty}
+                dq {mustBeVectorOrEmpty}
+                ddq {mustBeVectorOrEmpty}
                 options.EvaluateKinematicTerms (1, 1) logical = true
                 options.EvaluateInertialTerms (1, 1) logical  = true
                 options.EvaluateExternalForces (1, 1) logical = true
