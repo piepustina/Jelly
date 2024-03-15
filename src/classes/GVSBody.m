@@ -106,7 +106,7 @@ classdef GVSBody < Body
             
             % Update the kinematics
             if options.EvaluateKinematicTerms == true
-                [T_, omega_, v_, domega_, dv_, J_omega, J_v] = obj.Kinematics(q, dq, ddq); % Update the kinematics of the body
+                [T_, omega_, v_, domega_, dv_, J_omega, J_v] = obj.Kinematics(q, dq, ddq, "EvaluateInertialTerms", options.EvaluateInertialTerms); % Update the kinematics of the body
                 obj.T_                  = T_;
                 obj.v_rel_              = v_;
                 obj.omega_rel_          = omega_;
@@ -170,28 +170,28 @@ classdef GVSBody < Body
 
         % Relative velocity of the body tip
         function v_rel_ = v_rel(obj, q, dq)
-            [~, ~, v_rel_, ~, ~, ~, ~] = obj.Kinematics(q, dq, zeros(obj.n, 1, 'like', q));
+            [~, ~, v_rel_, ~, ~, ~, ~] = obj.Kinematics(q, dq, zeros(obj.n, 1, 'like', q), "EvaluateInertialTerms", false);
         end
         % Relative angular velocity
         function omega_rel_ = omega_rel(obj, q, dq)
-            [~, omega_rel_, ~, ~, ~, ~, ~] = obj.Kinematics(q, dq, zeros(obj.n, 1, 'like', q));
+            [~, omega_rel_, ~, ~, ~, ~, ~] = obj.Kinematics(q, dq, zeros(obj.n, 1, 'like', q), "EvaluateInertialTerms", false);
         end
         % Relative linear acceleration of the tip
         function a_rel_ = a_rel(obj, q, dq, ddq)
-            [~, ~, ~, ~, a_rel_, ~, ~] = obj.Kinematics(q, dq, ddq);
+            [~, ~, ~, ~, a_rel_, ~, ~] = obj.Kinematics(q, dq, ddq, "EvaluateInertialTerms", false);
         end
         % Relative angular acceleration
         function domega_rel_ = domega_rel(obj, q, dq, ddq)
-            [~, ~, ~, domega_rel_, ~, ~, ~] = obj.Kinematics(q, dq, ddq);
+            [~, ~, ~, domega_rel_, ~, ~, ~] = obj.Kinematics(q, dq, ddq, "EvaluateInertialTerms", false);
         end
         % Jacobian of the linear velocity of the tip with respect to dq in the tip frame
         function v_par_ = v_par(obj, q)
-            [g, ~, ~, ~, ~, ~, v_par_] = obj.Kinematics(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q));
+            [g, ~, ~, ~, ~, ~, v_par_] = obj.Kinematics(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q), "EvaluateInertialTerms", false);
             v_par_ = g(1:3, 1:3)'*v_par_;
         end
         % Jacobian of the angular velocity with respect to dq in the tip frame
         function omega_par_ = omega_par(obj, q)
-            [g, ~, ~, ~, ~, omega_par_, ~] = obj.Kinematics(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q));
+            [g, ~, ~, ~, ~, omega_par_, ~] = obj.Kinematics(q, zeros(obj.n, 1, 'like', q), zeros(obj.n, 1, 'like', q), "EvaluateInertialTerms", false);
             omega_par_ = g(1:3, 1:3)'*omega_par_;
         end
 
@@ -468,9 +468,25 @@ classdef GVSBody < Body
     %% Private methods
     methods (Access = private)
         % Compute the kinematics
-        function [g, omega, v, domega, dv, J_omega, J_v] = Kinematics(obj, q, dq, ddq)
+        function [g, omega, v, domega, dv, J_omega, J_v] = Kinematics(obj, q, dq, ddq, options)
+            
+            % Arguments definition
+            arguments
+                obj (1, 1) GVSBody
+                q {mustBeVector}                              = zeros(obj.n, 1)
+                dq {mustBeVector}                             = zeros(obj.n, 1)
+                ddq {mustBeVector}                            = zeros(obj.n, 1)
+                options.EvaluateInertialTerms (1, 1) logical  = true
+            end
+
             % Compute the direct and differential kinamtics at the tip
             [g, omega, v, domega, dv, J_omega, J_v] = obj.Kinematics_s(q, dq, ddq, obj.RestLength);
+            
+            % Exit if the evaluation of the inertial terms is not required
+            if options.EvaluateInertialTerms == false
+                return;
+            end
+
             % Update the position of Gauss points of the backbone in the tip frame
             RT          = g(1:3, 1:3)';
             dRT         = -RT*skew(obj.EtaGauss(1:3, end));
@@ -607,7 +623,6 @@ classdef GVSBody < Body
                 ddxi_2  = obj.ddxi(q, dq, ddq, S + h/2 + sqrt(3)*h/6);
                 % Compute the Magnus expansion of the strain
                 Omega   = (h/2)*(xi_1 + xi_2) + (sqrt(3)*h^2)/12*ad(xi_1)*xi_2;
-                %OmegaHat= [skew(Omega(1:3)), Omega(4:6); zeros(1, 4)];
                 OmegaHat(1:3, 1:3) = skew(Omega(1:3));
                 OmegaHat(1:3, 4)   = Omega(4:6);
                 % Compute first order time derivative of Omega and its Jacobian with respect to q
