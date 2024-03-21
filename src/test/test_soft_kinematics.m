@@ -20,6 +20,9 @@ for i = 1:N_B
     %B1{i} = PCC2D([Parameters; NGaussPoints]);
     J1{i} = FixedJoint();
 end
+% Add also a rigid body at the tip with a mass of 1Kg at the tip
+B1{end+1} = RigidBody([1; 0; 0; 0; 0; 0; 0; 0; 0; 0]);
+J1{end+1} = FixedJoint();
 
 %% Test the direct and differential kinematics with respect to the bodytree class
 r1 = SoftRobot(J1, B1, {});

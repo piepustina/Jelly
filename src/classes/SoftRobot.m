@@ -58,15 +58,25 @@ classdef SoftRobot < BodyTree
             end
             obj.BodiesInterval = zeros(N_B, 2);
             
+            PrevBodyLength = 0;
             for i = 1:N_B
                 if isnumeric(obj.Bodies{i})
                     continue;
                 end
-                if i == 1
-                    obj.BodiesInterval(i, 1:2) = [0, obj.Bodies{i}.RestLength];
-                else
-                    obj.BodiesInterval(i, 1:2) = [obj.BodiesInterval(i-1, 2), obj.BodiesInterval(i-1, 2) + obj.Bodies{i}.RestLength];
+                % Check if there are bodies that might not have a rest
+                % length, e.g., a rigid body. In this case, do not assign a
+                % length to the body
+                if ~isa(obj.Bodies{i}, "GVSBody")
+                    obj.BodiesInterval(i, 1:2) = [0, 0];
+                    continue;
                 end
+                obj.BodiesInterval(i, 1:2) = [PrevBodyLength, PrevBodyLength + obj.Bodies{i}.RestLength];
+                PrevBodyLength = obj.BodiesInterval(i, 2);
+                %if i == 1
+                %    obj.BodiesInterval(i, 1:2) = [PrevBodyLength, obj.Bodies{i}.RestLength];
+                %else
+                %    obj.BodiesInterval(i, 1:2) = [obj.BodiesInterval(i-1, 2), obj.BodiesInterval(i-1, 2) + obj.Bodies{i}.RestLength];
+                %end
             end
 
             % Compute the number of actuators
@@ -146,8 +156,10 @@ classdef SoftRobot < BodyTree
             % Store the radius of each body for plotting purposes
             SegmentRadius = cell(N_B, 1);
             for i = 1:N_B
-                if isnumeric(Bodies{i})% Required for code generation
-                    SegmentRadius{i} = [0, 0];
+                % Check if the current index is not associated to a body
+                % that does not have a radius, e.g., a rigid body.
+                if isnumeric(Bodies{i}) || ~isa(obj.Bodies{i}, "GVSBody")
+                    SegmentRadius{i} = [0, 0];% Required for code generation
                     continue;
                 end
                 SegmentRadius{i, 1} = [Bodies{i}.Parameters(2), Bodies{i}.Parameters(3)];
@@ -205,7 +217,7 @@ classdef SoftRobot < BodyTree
             j = 1;
             for i = 1:obj.MaxBodiesNumber
                 if i <= obj.N_B
-                    if isnumeric(obj.Bodies{i})
+                    if isnumeric(obj.Bodies{i}) || ~isa(obj.Bodies{i}, "GVSBody")
                         continue;
                     end
                     % Check if the current body is the starting index
@@ -286,7 +298,7 @@ classdef SoftRobot < BodyTree
             % generation
             for i = 1:obj.MaxBodiesNumber
                 if i <= obj.N_B
-                    if isnumeric(obj.Bodies{i})
+                    if isnumeric(obj.Bodies{i}) || ~isa(obj.Bodies{i}, "GVSBody")
                         continue;
                     end
 
