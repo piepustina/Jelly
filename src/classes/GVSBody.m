@@ -409,22 +409,27 @@ classdef GVSBody < Body
 
         % Strain function
         function xi_ = xi(obj, q, s)
-            xi_ = obj.StrainBasis(s)*q + obj.ReferenceStrain;
+            % Output preallocation
+            xi_      = zeros(6, 1, "like", q);
+            xi_(1:6) = obj.StrainBasis(s)*q + obj.ReferenceStrain;
         end
 
         % Strain Jacobian with respect to q
         function Jxi_ = Jxi(obj, q, s)
-            Jxi_ = obj.StrainBasis(s);
+            Jxi_ = zeros(6, obj.n, "like", q);
+            Jxi_(1:6, 1:obj.n) = obj.StrainBasis(s);
         end
 
         % First time derivative of the strain
         function dxi_ = dxi(obj, q, dq, s)
-            dxi_ = obj.Jxi(q, s)*dq;
+            dxi_ = zeros(6, 1, "like", q);
+            dxi_(1:6) = obj.Jxi(q, s)*dq;
         end
 
         % Second time derivative of the strain
         function ddxi_ = ddxi(obj, q, dq, ddq, s)
-            ddxi_ = obj.Jxi(q, s)*ddq;
+            ddxi_ = zeros(6, 1, "like", q);
+            ddxi_(1:6) = obj.Jxi(q, s)*ddq;
         end
 
         % Generalized elastic force
