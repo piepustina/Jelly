@@ -1,4 +1,4 @@
-classdef Plotter
+classdef Plotter < handle
     %Utility class for the plots.
     
     properties
@@ -22,10 +22,32 @@ classdef Plotter
         YScale   = 'linear'; % or 'log'
         XScale   = 'linear'; % or 'log'
         DrawNow  = false;
+        Colors   = [];
     end
     
     methods
         function obj = Plotter()
+            obj.Colors = colororder;
+        end
+
+        % Get a value of the colors
+        function c = GetColor(obj, idx)
+            lColors = length(obj.Colors);
+            if idx > lColors
+                idx = idx - (fix(idx/lColors))*lColors;
+                if idx == 0
+                    idx = lColors;
+                end
+            end
+            c = obj.Colors(idx, :);
+        end
+
+        function SetColors(obj, colors)
+            [~, s2] = size(colors);
+            if s2 ~= 3
+                error("The colors must be a N x 3 matrix where each row is a different color.");
+            end
+            obj.Colors = colors;
         end
         
         %Custom plot function
@@ -105,6 +127,8 @@ classdef Plotter
            %
            if ~isempty(char(p.Results.Color))
                 pl.Color = p.Results.Color;
+           else
+                colororder(gca(), obj.Colors);% If no color is specified use the color order
            end
 
            %Set the font of the axes
@@ -177,6 +201,11 @@ classdef Plotter
                     FileName = string(p.Results.path) + string(FigName);
                 else
                     FileName = string(p.Results.path) + string(p.Results.AppendName) + "_" + string(FigName);
+                end
+
+                [fPath, ~, ~]    = fileparts(FileName);
+                if ~exist(fPath, "dir")
+                    mkdir(fPath);
                 end
                 
                 if contains(FigName, "pdf")
