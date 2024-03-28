@@ -186,15 +186,18 @@ classdef Plotter < handle
             addRequired(p, 'path', pathcheck);
             addParameter(p, 'AppendName', "");
             addParameter(p, 'SaveAsMatlabFig', false);%Save also the image as a Matlab figure
+            addParameter(p, "PreventAxisScaling", true);
             parse(p, figs, path, varargin{:});
            
             
             for i = 1:length(figs)
                 FigAxes = gca(p.Results.figs{i});
                 %Prevent any scaling of the axis
-                FigAxes.XTickMode = 'manual';
-                FigAxes.YTickMode = 'manual';
-                FigAxes.ZTickMode = 'manual';
+                if p.Results.PreventAxisScaling == true
+                    FigAxes.XTickMode = 'manual';
+                    FigAxes.YTickMode = 'manual';
+                    FigAxes.ZTickMode = 'manual';
+                end
                 %Get the name of the figure
                 FigName  = p.Results.figs{i}.FileName;
                 if p.Results.AppendName == ""
