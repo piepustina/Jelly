@@ -86,16 +86,14 @@ classdef BodyTree < handle
                 end
             end
             % Assign the joints and bodies
-            obj.Joints = cell(BodyTree.MaxBodiesNumber, 1);
-            obj.Bodies = cell(BodyTree.MaxBodiesNumber, 1);
-            if coder.target("MATLAB")% Augment the joints and bodies
-                Joints = [Joints; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
-                Bodies = [Bodies; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
-            end
+            % obj.Joints = cell(BodyTree.MaxBodiesNumber, 1);
+            % obj.Bodies = cell(BodyTree.MaxBodiesNumber, 1);
+            % if coder.target("MATLAB")% Augment the joints and bodies
+            %     Joints = [Joints; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
+            %     Bodies = [Bodies; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
+            % end
             obj.Joints = Joints;
             obj.Bodies = Bodies;
-            
-        
 
             % Allocate the augmeneted bodies for code generation
             obj.N_B_Internal    = 2*obj.N_B;
@@ -322,7 +320,7 @@ classdef BodyTree < handle
             % values are used
             CG = obj.ApparentForce(q, dq) + obj.GravityForce(q);
             % Overall forces
-            f  =  -CG - obj.K(q) - obj.D(q, dq) + tau;
+            f  =  -CG - obj.K() - obj.D() + tau;
             % Perform scaling to improve simulation accuracy
             % Compute the acceleration
             ddq = M\f;
@@ -340,9 +338,11 @@ classdef BodyTree < handle
                 q {mustBeVector} = zeros(obj.n, 1)
             end
             % Update the tree
-            obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q), "EvaluateKinematicTerms", false, ...
-                                                                                      "EvaluateExternalForces", true, ...
-                                                                                      "EvaluateInertialTerms", false);
+            if nargin == 2
+                obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q), "EvaluateKinematicTerms", false, ...
+                                                                                          "EvaluateExternalForces", true, ...
+                                                                                          "EvaluateInertialTerms", false);
+            end
             % switch nargin
             %     case 1
             %         q = zeros(obj.n, 1);
@@ -377,14 +377,16 @@ classdef BodyTree < handle
             % Define arguments
             arguments
                 obj (1, 1) BodyTree
-                q {mustBeVector} = zeros(obj.n, 1)
-                dq {mustBeVector} = zeros(obj.n, 1)
+                q   (:, 1)   = zeros(obj.n, 1)
+                dq  (:, 1)   = zeros(obj.n, 1)
             end
 
             % Update the tree only if q and dq are passed as arguments
-            obj.TreeUpdate(q, dq, zeros(obj.n, 1, "like", q), "EvaluateKinematicTerms", false, ...
-                                                                                      "EvaluateExternalForces", true, ...
-                                                                                      "EvaluateInertialTerms", false);
+            if nargin >= 2
+                obj.TreeUpdate(q, dq, zeros(obj.n, 1, "like", q), "EvaluateKinematicTerms", false, ...
+                                                                                          "EvaluateExternalForces", true, ...
+                                                                                          "EvaluateInertialTerms", false);
+            end
             % switch nargin
             %     case 1
             %         q = zeros(obj.n, 1);

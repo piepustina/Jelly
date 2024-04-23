@@ -1,7 +1,7 @@
 classdef PGC3D < GVSBody
     %Class modeling a 3D piecewise Gaussian curvature (PGC) body with elongation.
     
-    properties(Constant)
+    properties
         n    = 5;
     end
     
@@ -11,7 +11,7 @@ classdef PGC3D < GVSBody
             %
             %Args:
             %   Parameters ([double], [sym]): Parameters of the body, specified as for :class:`GVSBody`
-            obj      = obj@GVSBody(PGC3D.n, Parameters);
+            obj      = obj@GVSBody(Parameters);
         end
         
         function Phi = StrainBasis(obj, s)

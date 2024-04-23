@@ -1,7 +1,7 @@
 classdef PCC2DElongation < GVSBody
     %Class modeling a 2D piecewise constant curvature (PCC) body with elongation.
 
-    properties(Constant)
+    properties
         n    = 2;
     end
     
@@ -12,7 +12,7 @@ classdef PCC2DElongation < GVSBody
             %
             %Args:
             %   Parameters ([double], [sym]): Parameters of the body, specified as for :class:`GVSBody`
-            obj      = obj@GVSBody(PCC2DElongation.n, Parameters);
+            obj      = obj@GVSBody(Parameters);
         end
 
         function Phi = StrainBasis(obj, s)

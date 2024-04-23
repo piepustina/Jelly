@@ -5,7 +5,7 @@ classdef RigidBody < Body
     % To represent a floating rigid body, attach a 6 degrees of freedom joint to the body.
     
     % Abstract properties implementation
-    properties(Constant)
+    properties
         n = 0
     end
     properties
@@ -22,7 +22,7 @@ classdef RigidBody < Body
             %Args:
             %   Parameters ([double], [sym]): Parameters of the body, specified as :math:`m, p_{\mathrm{CoM}_{x}}, p_{\mathrm{CoM}_{y}}, p_{\mathrm{CoM}_{z}}, I_{xx}, I_{yy}, I_{zz}, I_{xy}, I_{xz}` and :math:`I_{yz}`
 
-            obj             = obj@Body(RigidBody.n);
+            obj             = obj@Body();
             if isrow(Parameters)
                 Parameters = Parameters';
             end

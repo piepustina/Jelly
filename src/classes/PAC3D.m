@@ -1,7 +1,7 @@
 classdef PAC3D < GVSBody
     %Class modeling a 3D piecewise affine curvature (PAC) body with elongation.
 
-    properties(Constant)
+    properties
         n    = 5;
     end
     
@@ -12,7 +12,7 @@ classdef PAC3D < GVSBody
             %
             %Args:
             %   Parameters ([double], [sym]): Parameters of the body, specified as for :class:`GVSBody`
-            obj      = obj@GVSBody(PAC3D.n, Parameters);
+            obj      = obj@GVSBody(Parameters);
         end
 
         function Phi = StrainBasis(obj, s)

@@ -2,7 +2,7 @@ classdef VPCC2D < VGVSBody
     %Class modeling a 2D volumetric piecewise constant curvature (VPCC) body without elongation.
     %The radius is modeled using a multivariate bump function.
     
-    properties(Constant)
+    properties
         n    = 4;
     end
     
@@ -12,7 +12,7 @@ classdef VPCC2D < VGVSBody
             %
             %Args:
             %   Parameters ([double], [sym]): Parameters of the body, specified as for :class:`VGVSBody`
-            obj      = obj@VGVSBody(VPCC2D.n, Parameters);
+            obj      = obj@VGVSBody(Parameters);
         end
 
         % Strain basis

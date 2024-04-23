@@ -15,7 +15,7 @@ classdef GVSBody < Body
     end
 
     % Private properties extracted from the parameters for ease of use
-    properties (Access = protected)
+    properties (Access = public)
         BaseRadius      = 0;
         TipRadius       = 0;
         MassDensity     = 0;
@@ -40,19 +40,21 @@ classdef GVSBody < Body
     
     methods
         %% Class constructor
-        function obj = GVSBody(n, Parameters)
+        function obj = GVSBody(Parameters)
             %Construct a GVS body.
             %
             %Args:
             %   n          (double)         : Number of DoF of the body
             %   Parameters ([double], [sym]): Parameters of the body, specified as :math:`L_{0}, R_{\mathrm{base}}, R_{\mathrm{tip}}, \rho, E, \nu, \eta` and :math:`N_{\mathrm{Gauss}}`
-            
-            %Convert the parameters to a column vector, if needed
-            if isrow(Parameters)
-                Parameters = Parameters';
+            arguments
+                Parameters (:, 1)
             end
+            % %Convert the parameters to a column vector, if needed
+            % if isrow(Parameters)
+            %     Parameters = Parameters';
+            % end
             % Call the superclass constructor
-            obj                     = obj@Body(n);
+            obj                     = obj@Body();
             % Set the parameters
             obj.Parameters          = Parameters;
             obj.RestLength          = Parameters(1);
@@ -96,9 +98,9 @@ classdef GVSBody < Body
             % Arguments definition
             arguments
                 obj (1, 1) GVSBody
-                q {mustBeVector}
-                dq {mustBeVector}
-                ddq {mustBeVector}
+                q   (:, 1) {mustBeVector}
+                dq  (:, 1) {mustBeVector}
+                ddq (:, 1) {mustBeVector}
                 options.EvaluateKinematicTerms (1, 1) logical = true
                 options.EvaluateInertialTerms (1, 1) logical  = true
                 options.EvaluateExternalForces (1, 1) logical = true
@@ -411,7 +413,7 @@ classdef GVSBody < Body
         function xi_ = xi(obj, q, s)
             % Output preallocation
             xi_      = zeros(6, 1, "like", q);
-            xi_(1:6) = obj.StrainBasis(s)*q + obj.ReferenceStrain;
+            xi_(1:6) = obj.StrainBasis(s)*q(1:obj.n, 1) + obj.ReferenceStrain;
         end
 
         % Strain Jacobian with respect to q
@@ -423,13 +425,13 @@ classdef GVSBody < Body
         % First time derivative of the strain
         function dxi_ = dxi(obj, q, dq, s)
             dxi_ = zeros(6, 1, "like", q);
-            dxi_(1:6) = obj.Jxi(q, s)*dq;
+            dxi_(1:6) = obj.Jxi(q, s)*dq(1:obj.n, 1);
         end
 
         % Second time derivative of the strain
         function ddxi_ = ddxi(obj, q, dq, ddq, s)
             ddxi_ = zeros(6, 1, "like", q);
-            ddxi_(1:6) = obj.Jxi(q, s)*ddq;
+            ddxi_(1:6) = obj.Jxi(q, s)*ddq(1:obj.n, 1);
         end
 
         % Generalized elastic force
@@ -513,7 +515,9 @@ classdef GVSBody < Body
                 pGauss(:, i)    = RT*(obj.gGauss(1:3, 4, i) - d);
                 dpGauss(:, i)   = (dRT*(obj.gGauss(1:3, 4, i) - obj.gGauss(1:3, 4, end)) + ...
                                          RT*(obj.EtaGauss(4:6, i)  - obj.EtaGauss(4:6, end)));
-                JdpGauss(:, 1:obj.n, i) = RT*(obj.JEtaGauss(4:6, 1:obj.n, i) + skew(obj.gGauss(1:3, 4, i))*obj.JEtaGauss(1:3, 1:obj.n, end));
+                %JdpGauss(:, 1:obj.n, i) = RT*(obj.JEtaGauss(4:6, 1:obj.n, i) + skew(obj.gGauss(1:3, 4, i))*obj.JEtaGauss(1:3, 1:obj.n, end));
+                % The above commented version is likely wrong! The correct version is below.
+                JdpGauss(:, 1:obj.n, i) = RT*(obj.JEtaGauss(4:6, 1:obj.n, i) - obj.JEtaGauss(4:6, 1:obj.n, end)  + skew(obj.gGauss(1:3, 4, i) - obj.gGauss(1:3, 4, end))*obj.JEtaGauss(1:3, 1:obj.n, end));
                 ddpGauss(:, i)  = (ddRT*(obj.gGauss(1:3, 4, i) - obj.gGauss(1:3, 4, end)) + ...
                                          2*dRT*(obj.EtaGauss(4:6, i)  - obj.EtaGauss(4:6, end)) + ...
                                           RT*(obj.dEtaGauss(4:6, i)  - obj.dEtaGauss(4:6, end)));
@@ -562,6 +566,14 @@ classdef GVSBody < Body
         end
         %% Compute all the kinematic quantities at point s
         function [g, omega, v, domega, dv, J_omega, J_v] = Kinematics_s(obj, q, dq, ddq, s)
+            arguments
+                obj (1, 1) GVSBody
+                q   (:, 1)
+                dq  (:, 1)
+                ddq (:, 1)
+                s   (1, 1)
+            end
+
             % Transformation matrix from s to base 
             g        = eye(4, 'like', q);
             % Angular velocity

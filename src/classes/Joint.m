@@ -3,12 +3,12 @@ classdef Joint < Body
     
     %#codegen
     methods (Access = protected)
-        function obj = Joint(n)
+        function obj = Joint()
             %Construct the joint.
             %
             %Args:
             %   n (double): Number of DoF of the joint
-            obj = obj@Body(n);
+            obj = obj@Body();
         end
     end
 

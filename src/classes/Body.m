@@ -31,9 +31,9 @@ classdef Body < handle
         D_
     end
 
-    properties(Abstract, Constant)
+    properties(Abstract)
         %Number of DoF of the body.
-        n;
+        n int32 {mustBeNonnegative};
     end
 
     properties(Abstract)
@@ -275,23 +275,23 @@ classdef Body < handle
 
     methods (Access = protected)
         %Class constructor
-        function obj = Body(n)
+        function obj = Body()
             %Construct the body.
             %
             %Args:
             %   n (double): Number of DoF of the body
             
             % Initialize all the variables
-            obj.v_par_              = zeros(3, n);
-            obj.omega_par_          = zeros(3, n);
-            obj.int_dr_X_pv_r_      = zeros(n, 3);
-            obj.int_pv_r_O_dd_r_    = zeros(n, 1);
-            obj.grad_int_dr_        = zeros(n, 3);
-            obj.grad_int_r_X_dr_    = zeros(n, 3);
-            obj.grad_J_             = zeros(3, 3, n);
-            obj.grad_v_com_         = zeros(n, 3);
-            obj.K_                  = zeros(n, 1);
-            obj.D_                  = zeros(n, 1);
+            obj.v_par_              = zeros(3, obj.n);
+            obj.omega_par_          = zeros(3, obj.n);
+            obj.int_dr_X_pv_r_      = zeros(obj.n, 3);
+            obj.int_pv_r_O_dd_r_    = zeros(obj.n, 1);
+            obj.grad_int_dr_        = zeros(obj.n, 3);
+            obj.grad_int_r_X_dr_    = zeros(obj.n, 3);
+            obj.grad_J_             = zeros(3, 3, obj.n);
+            obj.grad_v_com_         = zeros(obj.n, 3);
+            obj.K_                  = zeros(obj.n, 1);
+            obj.D_                  = zeros(obj.n, 1);
         end
     end
 
@@ -311,13 +311,13 @@ classdef Body < handle
             
             % Arguments definition
             arguments
-                obj (1, 1) Body
-                q {mustBeVectorOrEmpty}
-                dq {mustBeVectorOrEmpty}
-                ddq {mustBeVectorOrEmpty}
-                options.EvaluateKinematicTerms (1, 1) logical = true
-                options.EvaluateInertialTerms (1, 1) logical  = true
-                options.EvaluateExternalForces (1, 1) logical = true
+                obj                             (1, 1) Body
+                q                               (:, 1) {mustBeVectorOrEmpty}
+                dq                              (:, 1) {mustBeVectorOrEmpty}
+                ddq                             (:, 1) {mustBeVectorOrEmpty}
+                options.EvaluateKinematicTerms  (1, 1) logical = true
+                options.EvaluateInertialTerms   (1, 1) logical  = true
+                options.EvaluateExternalForces  (1, 1) logical = true
             end
 
             % Kinematic terms

@@ -3,7 +3,7 @@ classdef RotationalJoint < Joint
     
     % Abstract properties implementation
     % n = 1 since the joint has 1 DoF
-    properties(Constant)
+    properties
         n = 1
     end
 
@@ -19,7 +19,7 @@ classdef RotationalJoint < Joint
             %
             %Args:
             %   Parameters ([double], [sym]): DH parameters of the joint, specified as :math:`\alpha, a, d` and :math:`\theta`
-            obj  = obj@Joint(RotationalJoint.n);
+            obj  = obj@Joint();
             if isrow(Parameters)
                 Parameters = Parameters';
             end

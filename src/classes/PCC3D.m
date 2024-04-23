@@ -1,7 +1,7 @@
 classdef PCC3D < GVSBody
     %Class modeling a 3D piecewise constant curvature (PCC) body with elongation.
     
-    properties(Constant)
+    properties
         n    = 3;
     end
     
@@ -12,7 +12,7 @@ classdef PCC3D < GVSBody
             %
             %Args:
             %   Parameters ([double], [sym]): Parameters of the body, specified as for :class:`GVSBody`
-            obj      = obj@GVSBody(PCC3D.n, Parameters);
+            obj      = obj@GVSBody(Parameters);
         end
         
         function Phi = StrainBasis(obj, s)

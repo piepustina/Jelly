@@ -2,7 +2,7 @@ classdef FixedJoint < Joint
     %Class modeling a fixed joint, i.e., a hinge. 
     
     % Abstract properties implementation
-    properties(Constant)
+    properties
         n = 0
     end
     properties
@@ -12,7 +12,7 @@ classdef FixedJoint < Joint
     methods
         % Class constructor
         function obj = FixedJoint()
-            obj  = obj@Joint(FixedJoint.n);
+            obj  = obj@Joint();
         end
     end
 end

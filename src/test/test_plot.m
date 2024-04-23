@@ -21,10 +21,8 @@ end
 %Build the soft robot
 sr = SoftRobot(J1, B1);
 
-
-%% Plot the robot
+%%
 figure; hold on; grid on; 
-
 light; lighting gouraud
 %Generate a random configuration
 q_lb   = repmat([-pi; -pi; -0.05], N_B, 1);

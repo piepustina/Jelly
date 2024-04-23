@@ -575,7 +575,7 @@ classdef SoftRobot < BodyTree
                   'FaceAlpha', p.Results.FaceAlpha);
         end
 
-        function plotBackbone(obj, q, varargin)
+        function handles = plotBackbone(obj, q, varargin)
             %Parse the optional paramters
             p = inputParser;
             addRequired(p,  'q');
@@ -584,20 +584,35 @@ classdef SoftRobot < BodyTree
             addParameter(p, 'Frame', true);
             addParameter(p, 'FrameScale', 0.03);
             addParameter(p, 'FrameSkip', 10);
+            addParameter(p, 'ShowBackbone', true);
+            addParameter(p, 'ShowLastFrameOnly', true);
             parse(p, q, varargin{:});
+            % Preallocate the handles output
+            handles = [];
             %Compute the backbone of the robot
             [x, y, z, R] = obj.robotBackbone(q);
-            plot3(x, y, z, 'Color', p.Results.Color, 'LineWidth', p.Results.LineWidth);
+            if p.Results.ShowBackbone == true
+                handles(end+1) = plot3(x, y, z, 'Color', p.Results.Color, 'LineWidth', p.Results.LineWidth);            
+            end
             hold on;
             %Plot also the reference frames
             if p.Results.Frame
-                for i = 1:p.Results.FrameSkip:size(R, 3)
-                    n1 = norm(R(:, 1))/p.Results.FrameScale;
-                    n2 = norm(R(:, 2))/p.Results.FrameScale;
-                    n3 = norm(R(:, 3))/p.Results.FrameScale;
-                    quiver3(x(i), y(i), z(i), R(1, 1, i)/n1, R(2, 1, i)/n1, R(3, 1, i)/n1, 'Color', 'r');
-                    quiver3(x(i), y(i), z(i), R(1, 2, i)/n2, R(2, 2, i)/n2, R(3, 2, i)/n2, 'Color', 'g');
-                    quiver3(x(i), y(i), z(i), R(1, 3, i)/n3, R(2, 3, i)/n3, R(3, 3, i)/n3, 'Color', 'b');
+                if p.Results.ShowLastFrameOnly == false
+                    for i = 1:p.Results.FrameSkip:size(R, 3)
+                        n1 = norm(R(:, 1, i))/p.Results.FrameScale;
+                        n2 = norm(R(:, 2, i))/p.Results.FrameScale;
+                        n3 = norm(R(:, 3, i))/p.Results.FrameScale;
+                        handles(end+1) = quiver3(x(i), y(i), z(i), R(1, 1, i)/n1, R(2, 1, i)/n1, R(3, 1, i)/n1, 'Color', 'r');
+                        handles(end+1) = quiver3(x(i), y(i), z(i), R(1, 2, i)/n2, R(2, 2, i)/n2, R(3, 2, i)/n2, 'Color', 'g');
+                        handles(end+1) = quiver3(x(i), y(i), z(i), R(1, 3, i)/n3, R(2, 3, i)/n3, R(3, 3, i)/n3, 'Color', 'b');
+                    end
+                else
+                    n1 = norm(R(:, 1, end))/p.Results.FrameScale;
+                    n2 = norm(R(:, 2, end))/p.Results.FrameScale;
+                    n3 = norm(R(:, 3, end))/p.Results.FrameScale;
+                    handles(end+1) = quiver3(x(end), y(end), z(end), R(1, 1, end)/n1, R(2, 1, end)/n1, R(3, 1, end)/n1, 'Color', 'r', "LineWidth", p.Results.LineWidth);
+                    handles(end+1) = quiver3(x(end), y(end), z(end), R(1, 2, end)/n2, R(2, 2, end)/n2, R(3, 2, end)/n2, 'Color', 'g', "LineWidth", p.Results.LineWidth);
+                    handles(end+1) = quiver3(x(end), y(end), z(end), R(1, 3, end)/n3, R(2, 3, end)/n3, R(3, 3, end)/n3, 'Color', 'b', "LineWidth", p.Results.LineWidth);
                 end
             end
         end
