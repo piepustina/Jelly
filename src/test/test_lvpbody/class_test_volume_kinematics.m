@@ -2,9 +2,9 @@
 clc; clear; close all;
 femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
 
-%model = generateMesh(femodel, "Hmax", 60, "Hmin", 60, "Hgrad", 2);
+model = generateMesh(femodel, "Hmax", 60, "Hmin", 60, "Hgrad", 2);
 %model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
-model = generateMesh(femodel);
+%model = generateMesh(femodel);
 
 % Get the nodes and elements
 Nodes    = model.Geometry.Mesh.Nodes./1000;% Scale from [mm] to [m]. The mesh should be already with [m] units!
@@ -25,6 +25,8 @@ q_test  = (q_max-q_min).*rand(B.n,1) + q_min;
 
 q_test = [-1; 10; -0.1; 0.1; 2; 1];
 
+q_test = gpuArray(q_test);
+
 
 % First order time derivative of the configuration
 dq_min  = -100;
@@ -34,6 +36,9 @@ dq_test = (dq_max-dq_min).*rand(B.n,1) + dq_min;
 ddq_min  = -5;
 ddq_max  =  5;
 ddq_test = (ddq_max-dq_min).*rand(B.n,1) + ddq_min;
+
+dq_test = gpuArray(dq_test);
+ddq_test = gpuArray(ddq_test);
 
 tic
 [xq, dxq, ddxq, Jq, Jx_ref, JJq] = B.UpdateKinematics(q_test, dq_test, ddq_test); 

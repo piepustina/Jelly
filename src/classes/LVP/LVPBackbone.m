@@ -433,24 +433,36 @@ classdef LVPBackbone < Body
             end
 
             % Update the elongation quantities
+            GaussPointsVal1         = obj.UniquePointsToGaussPoints(1:end-1, 1) + 1;
+            %if GaussPointsVal1(1) == 0
+            %    GaussPointsVal1 = GaussPointsVal1 + 1;
+            %end
+            GaussPointsVal2         = obj.UniquePointsToGaussPoints(:, 1) + 1;
+            %if GaussPointsVal2(1) == 0
+            %    GaussPointsVal2     = GaussPointsVal2 + 1;
+            %end
             GaussPointsRep          = obj.UniquePointsToGaussPoints(:, 2);
-            PointsToGaussPointsRep  = repelem(obj.UniquePointsToGaussPoints(:, 1) + 1, GaussPointsRep);
+            if obj.UniquePointsToGaussPoints(1, 1) == 0
+                PointsToGaussPointsRep  = repelem(GaussPointsVal2, GaussPointsRep);
+            else
+                PointsToGaussPointsRep  = repelem(obj.UniquePointsToGaussPoints(:, 1), GaussPointsRep);
+            end
 
             % Normalize the location of the points along the backbone
             s       = obj.UniquePoints;
-            IntvLb  = repelem([0, obj.GaussPoints(1:end-1)], 1, GaussPointsRep);
-            IntvUb  = repelem(obj.GaussPoints, 1, GaussPointsRep);
+            IntvLb  = repelem([0, obj.GaussPoints(GaussPointsVal1)], 1, GaussPointsRep);
+            IntvUb  = repelem(obj.GaussPoints(GaussPointsVal2), 1, GaussPointsRep);
             s_norm  = (s-IntvLb)./(IntvUb-IntvLb);
             
             % Compute the interpolating terms
-            DeltaL1     = repelem([0, obj.ElongationGauss(1:end-1)], 1, GaussPointsRep);
-            DeltaL2     = repelem(obj.ElongationGauss, 1, GaussPointsRep);
-            dDeltaL1    = repelem([0, obj.dElongationGauss(1:end-1)], 1, GaussPointsRep);
-            dDeltaL2    = repelem(obj.dElongationGauss, 1, GaussPointsRep);
-            ddDeltaL1   = repelem([0, obj.ddElongationGauss(1:end-1)], 1, GaussPointsRep);
-            ddDeltaL2   = repelem(obj.ddElongationGauss, 1, GaussPointsRep);
-            JL1Gauss    = cat(2, zeros(obj.n, 1), obj.JElongationGauss(1:obj.n, 1:end-1));
-            JL2Gauss    = obj.JElongationGauss;
+            DeltaL1     = repelem([0, obj.ElongationGauss(GaussPointsVal1)], 1, GaussPointsRep);
+            DeltaL2     = repelem(obj.ElongationGauss(GaussPointsVal2), 1, GaussPointsRep);
+            dDeltaL1    = repelem([0, obj.dElongationGauss(GaussPointsVal1)], 1, GaussPointsRep);
+            dDeltaL2    = repelem(obj.dElongationGauss(GaussPointsVal2), 1, GaussPointsRep);
+            ddDeltaL1   = repelem([0, obj.ddElongationGauss(GaussPointsVal1)], 1, GaussPointsRep);
+            ddDeltaL2   = repelem(obj.ddElongationGauss(GaussPointsVal2), 1, GaussPointsRep);
+            JL1Gauss    = cat(2, zeros(obj.n, 1), obj.JElongationGauss(1:obj.n, GaussPointsVal1));
+            JL2Gauss    = obj.JElongationGauss(1:obj.n, GaussPointsVal2);
             JL1         = JL1Gauss(:, PointsToGaussPointsRep);
             JL2         = JL2Gauss(:, PointsToGaussPointsRep);
             

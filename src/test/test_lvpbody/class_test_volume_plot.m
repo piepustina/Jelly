@@ -37,14 +37,11 @@ lighting gouraud
 
 q_test = [-1; 10; -0.1; 0.1; 2; 1];
 
+q_test = gpuArray([-1; 10; -0.1; 0.1; 2; 1]);
+
 B.plot(q_test, "LineStyle", "-", "FaceAlpha", 1);
 
 axis equal
 
 %% Test code generation
 codegen -o test/test_lvpbody/lvp_codegen_mex lvp_codegen -args {Nodes, Elements}
-
-
-
-
-
