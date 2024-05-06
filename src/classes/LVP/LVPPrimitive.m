@@ -16,6 +16,25 @@ classdef LVPPrimitive < handle
         % Basis for the primitive
         P = PrimitiveBasis(obj, x);
     end
+
+    methods (Static)
+        function obj = loadobj(S)
+            % Load a LVP Primitive
+            Constructor = str2func(S.PrimitiveType);
+            Parameters  = S.PrimitiveParameters;
+            if isempty(Parameters)
+                obj = Constructor();
+            else
+                obj = Constructor(Parameters{1:end});
+            end
+        end
+    end
+
+    methods
+        function S = saveobj(obj)
+            S = struct('PrimitiveType', class(obj), 'PrimitiveParameters', {obj.Parameters});
+        end
+    end
     
     methods
         function obj = LVPPrimitive(Parameters)

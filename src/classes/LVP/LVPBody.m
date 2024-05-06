@@ -42,17 +42,38 @@ classdef LVPBody < Body
     end
 
     methods (Static)
-        % Load a LVPBody from its struct representation
-        function B = loadobj(S)
-            disp("Ciao")
+        % Overload the loadobj method from the Body class
+        function obj = loadobj(S)
+            % Load the primitives
+            Primitives  = cell(LVPBody.MaxPrimitivesNumber, 1);
+            NP          = length(S.BodyPrimitivesClass);
+            for i=1:LVPBody.MaxPrimitivesNumber
+                if i <= NP
+                    loadobjPrimitive     = str2func(string(S.BodyPrimitivesClass{i}) + ".loadobj");
+                    Primitives{i}        = loadobjPrimitive(S.BodyPrimitives{i});
+                else
+                    Primitives{i} = 0;
+                end
+            end
+
+            % Build the LBPBody object
+            %obj = LVPBody(S.BodyParameters{1}, S.BodyParameters{2}, Primitives, S.BodyParameters{3}, S.BodyParameters{4}, S.BodyParameters{5}, S.BodyParameters{6}, S.BodyParameters{7});
+            obj = LVPBody(S.BodyParameters{1:2}, Primitives, S.BodyParameters{3:end});
         end
 
     end
 
     methods
-        % Save a LVPBody as a struct
+        % Overload the saveobj method from the Body class
         function S = saveobj(obj)
-             S = struct('BodyType', class(obj), 'BodyParameters', {obj.Parameters}, 'BodyDoF', obj.n);
+            % Create a cell array containig a struct representation of the primitives
+            PrimitivesStuctArray = cellfun(@saveobj, obj.Primitives, "UniformOutput", false);
+            PrimitivesClass      = cellfun(@class, obj.Primitives, "UniformOutput", false);
+            S = struct('BodyType', class(obj), ...
+                       'BodyParameters', {obj.Parameters}, ...
+                       'BodyDoF', obj.n, ...
+                       'BodyPrimitives', {PrimitivesStuctArray}, ...
+                       'BodyPrimitivesClass', {PrimitivesClass});
         end
     end
 

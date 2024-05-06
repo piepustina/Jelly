@@ -1,7 +1,6 @@
 classdef TreeFactory < handle
     %"Factory" class to programmatically create joints and bodies during code generation.
-    %TODO: Remove n
-    %TODO: Move the methods of this class inside the TreeStructConverter.
+    %TODO: Remove, NOT needed anymore
     
     
     methods (Static)
