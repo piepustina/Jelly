@@ -9,7 +9,7 @@ classdef LVPPrimitive < handle
     properties (Access = public)
         % Homogeneous cell array of parameters for the primitive.
         % Each element of the parameters is a matrix of doubles that represents an argument for the contructor of the concrete classes inheriting this class.
-        Parameters %(:, 1) cell;
+        Parameters (:, 1) cell;
     end
 
     methods (Abstract)
@@ -31,6 +31,11 @@ classdef LVPPrimitive < handle
             
             % Store the parameters for the primitive
             obj.Parameters      = Parameters;
+        end
+
+        function S = toStruct(obj)
+            % Convert the object primitive to a struct
+            S = struct('PrimitiveType', class(obj), 'PrimitiveParameters', {obj.Parameters});
         end
         
         % Update method for the primitive

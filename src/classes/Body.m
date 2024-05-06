@@ -33,7 +33,7 @@ classdef Body < handle
 
     properties(Abstract)
         %Number of DoF of the body.
-        n int32 {mustBeNonnegative};
+        n %int32 {mustBeNonnegative};
     end
 
     properties(Abstract)
@@ -271,6 +271,27 @@ classdef Body < handle
                 %    dq  ([double], [sym]): First-order time derivative of the configuration variables
                 D_ = zeros(obj.n, 1, 'like', q);
             end
+    end
+
+    methods (Static)
+        % Load a body class object from its struct representation
+        function obj = loadobj(S)
+            % Get the object contructor
+            Constructor = str2func(S.BodyType);
+            Parameters  = S.BodyParameters;
+            if isempty(Parameters)
+                obj = Constructor();
+            else
+                obj = Constructor(Parameters);
+            end
+        end
+    end
+
+    methods
+        % Create a struct representing a Body object
+        function S = saveobj(obj)
+            S = struct('BodyType', class(obj), 'BodyParameters', obj.Parameters, 'BodyDoF', obj.n);
+        end
     end
 
     methods (Access = protected)

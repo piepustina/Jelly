@@ -1,5 +1,5 @@
 %#codegen
-classdef LVPBody < Body  % This should inherit from the body class
+classdef LVPBody < Body
     %LVPBODY Class that models a locally volume preserving body
     
     properties (Access = public)
@@ -41,6 +41,21 @@ classdef LVPBody < Body  % This should inherit from the body class
         MaxPrimitivesNumber                 = 10;
     end
 
+    methods (Static)
+        % Load a LVPBody from its struct representation
+        function B = loadobj(S)
+            disp("Ciao")
+        end
+
+    end
+
+    methods
+        % Save a LVPBody as a struct
+        function S = saveobj(obj)
+             S = struct('BodyType', class(obj), 'BodyParameters', {obj.Parameters}, 'BodyDoF', obj.n);
+        end
+    end
+
     methods
         function obj = LVPBody(Nodes, Elements, Primitives, NGaussPoints, MassDensity, YoungModulus, PoissonRatio, DampingFactor)
             %LVPBODY Construct a locally volume preserving body. Nodes and elements follow the same notation described in
@@ -68,7 +83,7 @@ classdef LVPBody < Body  % This should inherit from the body class
             obj.NElements   = size(obj.Elements, 2);
             
             % Store the parameters to build the body
-            obj.Parameters  = {Nodes, Elements, NGaussPoints};
+            obj.Parameters  = {Nodes; Elements; NGaussPoints; MassDensity; YoungModulus; PoissonRatio; DampingFactor};
 
             % Store the primitives and their number   
             obj.Primitives  = Primitives;

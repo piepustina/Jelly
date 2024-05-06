@@ -1,6 +1,8 @@
 function lvp_codegen(Nodes, Elements)
 %LVP_CODEGEN Test code generation for the locally volume preserving body
 
+coder.gpu.kernelfun;
+
 Primitives = cell(1, LVPBody.MaxPrimitivesNumber);
 Primitives{1} = PCStretchCompressionPrimitive(0.3);
 Primitives{2} = PCTwistShearPrimitive(0.3);

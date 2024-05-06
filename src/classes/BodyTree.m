@@ -40,6 +40,61 @@ classdef BodyTree < handle
         % vector for each joint
         JointConfigurationIndexes;
     end
+
+    methods (Static)
+        % Load a BodyTree object from its structure representation
+        function obj = loadobj(S)
+            % Create the cell arrays containing the joints and bodies of the tree
+            Joints = cell(BodyTree.MaxBodiesNumber, 1);
+            Bodies = cell(BodyTree.MaxBodiesNumber, 1);
+            
+            BodiesClasses = S.BodiesClasses;
+            BodiesArray   = S.BodiesArray;
+            JointsClasses = S.JointsClasses;
+            JointsArray   = S.JointsArray;
+
+            NB = length(BodiesArray);
+            for i = 1:BodyTree.MaxBodiesNumber
+                if i <= NB
+                    % Call the loadobj method of the body
+                    loadobjBody     = str2func(string(BodiesClasses{i}) + ".loadobj");
+                    Bodies{i}       = loadobjBody(BodiesArray{i});
+                    % Call the loadobj method of the joint
+                    loadobjJoint    = str2func(string(JointsClasses{i}) + ".loadobj");
+                    Joints{i}       = loadobjJoint(JointsArray{i});
+                else
+                    Bodies{i} = 0;
+                    Joints{i} = 0;
+                end
+            end
+
+            % Build the BodyTree class
+            obj = BodyTree(Joints, Bodies);
+
+            % Restore the other parameters of the tree
+            obj.T0 = S.T0;
+            obj.g  = S.g;
+            obj.MassConditionNumber = S.MassConditionNumber;
+        end
+    end
+
+    methods
+        % Store a structure representation of the bodytree
+        function S = saveobj(obj)
+            BodiesStructArray = cellfun(@saveobj, obj.Bodies, "UniformOutput", false);
+            JointsStructArray = cellfun(@saveobj, obj.Joints, "UniformOutput", false);
+            BodiesClasses     = cellfun(@class, obj.Bodies, "UniformOutput", false);
+            JointsClasses     = cellfun(@class, obj.Joints, "UniformOutput", false);
+            S = struct('n', obj.n, ...
+                       'T0', obj.T0, ...
+                       'g', obj.g, ...
+                       'MassConditionNumber', obj.MassConditionNumber, ...
+                       'BodiesArray', {BodiesStructArray}, ...
+                       'BodiesClasses', {BodiesClasses}, ...
+                       'JointsArray', {JointsStructArray}, ...
+                       'JointsClasses', {JointsClasses});
+        end
+    end
     
     methods
         function obj = BodyTree(Joints, Bodies)
