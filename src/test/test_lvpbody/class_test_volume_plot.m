@@ -44,16 +44,7 @@ B.plot(q_test, "LineStyle", "-", "FaceAlpha", 1);
 axis equal
 
 %% Test code generation
-<<<<<<< Updated upstream
-codegen -o test/test_lvpbody/lvp_codegen_mex lvp_codegen -args {Nodes, Elements}
-=======
 codegen -o test/test_lvpbody/lvp_codegen_mex lvp_codegen -args {Nodes, Elements}
 
 %% Test code generation with cuda
-
 codegen -config coder.gpuConfig('mex') -o test/test_lvpbody/lvp_codegen_mex_cuda lvp_codegen -args {Nodes, Elements}
-
-
-
-
->>>>>>> Stashed changes
