@@ -35,9 +35,13 @@ light("Position", [-0.1, -0.1, 0.1])
 lighting gouraud
 %q_test = [0; 0; 0; 0; 0; pi];
 
-q_test = [-1; 10; -0.1; 0.1; 2; 1];
+q_test = 0*[-1; 10; -0.1; 0.1; 2; 1];
 
 B.plot(q_test, "LineStyle", "-", "FaceAlpha", 1);
+
+xlabel("$x$", "Interpreter", "latex", "FontSize", 14)
+ylabel("$y$", "Interpreter", "latex", "FontSize", 14)
+zlabel("$z$", "Interpreter", "latex", "FontSize", 14)
 
 axis equal
 

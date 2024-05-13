@@ -659,9 +659,15 @@ classdef LVPBody < Body
 
             
             % Extract the diagonal elements, i.e., the principal stretches
-            GradCStretches = squeeze(gradC(1, 1, 1:obj.n, 1:obj.NElements)) ...
-                           + squeeze(gradC(2, 2, 1:obj.n, 1:obj.NElements)) ...
-                           + squeeze(gradC(3, 3, 1:obj.n, 1:obj.NElements));
+            if obj.n ~= 1
+                GradCStretches = squeeze(gradC(1, 1, 1:obj.n, 1:obj.NElements)) ...
+                               + squeeze(gradC(2, 2, 1:obj.n, 1:obj.NElements)) ...
+                               + squeeze(gradC(3, 3, 1:obj.n, 1:obj.NElements));
+            else
+                GradCStretches = reshape(squeeze(gradC(1, 1, 1:obj.n, 1:obj.NElements)) ...
+                               + squeeze(gradC(2, 2, 1:obj.n, 1:obj.NElements)) ...
+                               + squeeze(gradC(3, 3, 1:obj.n, 1:obj.NElements)), 1, []);
+            end
 
             % Compute the Lamè constants
             %lambda = obj.YoungModulus*obj.PoissonRatio/((1+obj.PoissonRatio)*(1-2*obj.PoissonRatio));
@@ -669,6 +675,9 @@ classdef LVPBody < Body
 
             % Compute the elastic energy
             Kq          = zeros(obj.n, 1, "like", q);
+            % if norm(q) <= 1e-4
+            %     return;
+            % end
             Kq          = mi*sum(GradCStretches.*obj.ElementsVolume, 2);
 
         end
@@ -704,10 +713,15 @@ classdef LVPBody < Body
             dgradC  = pagemtimes(pagetranspose(JF), dF) + pagemtimes(pagetranspose(dF), JF);
 
             % Extract the diagonal elements, i.e., the time derivative of the principal stretches
-            dGradCStretches = squeeze(dgradC(1, 1, 1:obj.n, 1:obj.NElements)) ...
-                            + squeeze(dgradC(2, 2, 1:obj.n, 1:obj.NElements)) ...
-                            + squeeze(dgradC(3, 3, 1:obj.n, 1:obj.NElements));
-
+            if obj.n ~= 1
+                dGradCStretches = squeeze(dgradC(1, 1, 1:obj.n, 1:obj.NElements)) ...
+                                + squeeze(dgradC(2, 2, 1:obj.n, 1:obj.NElements)) ...
+                                + squeeze(dgradC(3, 3, 1:obj.n, 1:obj.NElements));
+            else
+                dGradCStretches = reshape(squeeze(dgradC(1, 1, 1:obj.n, 1:obj.NElements)) ...
+                                + squeeze(dgradC(2, 2, 1:obj.n, 1:obj.NElements)) ...
+                                + squeeze(dgradC(3, 3, 1:obj.n, 1:obj.NElements)), 1 , []);
+            end
             % Compute the Lamè constants
             %lambda = obj.YoungModulus*obj.PoissonRatio/((1+obj.PoissonRatio)*(1-2*obj.PoissonRatio));
             mi     = obj.YoungModulus/(2*(1+obj.PoissonRatio));

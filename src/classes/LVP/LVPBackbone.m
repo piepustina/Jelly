@@ -656,8 +656,13 @@ classdef LVPBackbone < Body
             end
 
             % Evaluate the strain and its time derivatives at the zanna quadrature points
-            Jxi_1   = squeeze(obj.JxiGaussZanna(1:6, 1:obj.n, 1:obj.NGaussPointsInt, 1));
-            Jxi_2   = squeeze(obj.JxiGaussZanna(1:6, 1:obj.n, 1:obj.NGaussPointsInt, 2));
+            if obj.n ~= 1
+                Jxi_1   = squeeze(obj.JxiGaussZanna(1:6, 1:obj.n, 1:obj.NGaussPointsInt, 1));
+                Jxi_2   = squeeze(obj.JxiGaussZanna(1:6, 1:obj.n, 1:obj.NGaussPointsInt, 2));
+            else
+                Jxi_1   = reshape(squeeze(obj.JxiGaussZanna(1:6, 1:obj.n, 1:obj.NGaussPointsInt, 1)), 6, obj.n, obj.NGaussPointsInt);
+                Jxi_2   = reshape(squeeze(obj.JxiGaussZanna(1:6, 1:obj.n, 1:obj.NGaussPointsInt, 1)), 6, obj.n, obj.NGaussPointsInt);
+            end
             xi_1    = squeeze(pagemtimes(Jxi_1, q)) + obj.ReferenceStrain;
             xi_2    = squeeze(pagemtimes(Jxi_2, q)) + obj.ReferenceStrain;
             dxi_1   = squeeze(pagemtimes(Jxi_1, dq));

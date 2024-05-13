@@ -32,21 +32,12 @@ classdef PCBendingPrimitive < BendingPrimitive
             
             % Basis evaluation
             P                   = zeros(2, obj.n);
-            P(1:2, 1:obj.n)     = [1/obj.BodyRestLength, 0; ...
+
+            P(1:2, 1:obj.n)     = [1/obj.BodyRestLength,  0; ...
                                                       0, -1/obj.BodyRestLength];
 
             % Derivative of the basis w.r.t. x3
             dP                  = zeros(2, obj.n);
-
-            % % Basis 
-            % P                 = zeros(2, obj.n);
-            % P(1:2, 1:obj.n)   = [x3/obj.BodyRestLength, 0; 
-            %                      0                    , -x3/obj.BodyRestLength];
-            % 
-            % % Derivative of the basis w.r.t. x3 
-            % dP                = zeros(2, obj.n);
-            % dP(1:2, 1:obj.n)  = [1/obj.BodyRestLength, 0; 
-            %                      0                   , -1/obj.BodyRestLength];
 
         end
     end
