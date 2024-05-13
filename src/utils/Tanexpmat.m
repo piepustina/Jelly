@@ -2,7 +2,7 @@ function TA = Tanexpmat(A)
 %TANMAT Compute the tangent operator to the exponential map of the skew
 %symmetric matrix A
 
-% Non vectorized version
+% % Non vectorized version
 % Theta = norm(A(1:3));
 % 
 % %Approximate theta if too small

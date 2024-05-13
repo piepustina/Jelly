@@ -53,7 +53,7 @@ classdef BodyTree < handle
             JointsClasses = S.JointsClasses;
             JointsArray   = S.JointsArray;
 
-            NB = length(BodiesArray);
+            NB = S.N_B;
             for i = 1:BodyTree.MaxBodiesNumber
                 if i <= NB
                     % Call the loadobj method of the body
@@ -81,14 +81,15 @@ classdef BodyTree < handle
     methods
         % Store a structure representation of the bodytree
         function S = saveobj(obj)
-            BodiesStructArray = cellfun(@saveobj, obj.Bodies, "UniformOutput", false);
-            JointsStructArray = cellfun(@saveobj, obj.Joints, "UniformOutput", false);
-            BodiesClasses     = cellfun(@class, obj.Bodies, "UniformOutput", false);
-            JointsClasses     = cellfun(@class, obj.Joints, "UniformOutput", false);
+            BodiesStructArray              = cellfun(@saveobj, obj.Bodies, "UniformOutput", false);
+            BodiesClasses                  = cellfun(@class, obj.Bodies, "UniformOutput", false);
+            JointsStructArray              = cellfun(@saveobj, obj.Joints, "UniformOutput", false);
+            JointsClasses                  = cellfun(@class, obj.Joints, "UniformOutput", false);
             S = struct('n', obj.n, ...
                        'T0', obj.T0, ...
                        'g', obj.g, ...
                        'MassConditionNumber', obj.MassConditionNumber, ...
+                       'N_B', obj.N_B, ...
                        'BodiesArray', {BodiesStructArray}, ...
                        'BodiesClasses', {BodiesClasses}, ...
                        'JointsArray', {JointsStructArray}, ...
@@ -312,7 +313,7 @@ classdef BodyTree < handle
             end
         end
         
-        function tau = InverseDynamics(obj, q, dq, ddq)
+        function tau = InverseDynamics(obj, q, dq, ddq, options)
             % Evaluate the inverse dynamics using the Generalized Inverse Dynamics (GID) algorithm.
             %
             %Args:
@@ -320,18 +321,31 @@ classdef BodyTree < handle
                 %    dq  ([double], [sym]): First-order time derivative of configuration variables
                 %    ddq ([double], [sym]): Second-order time derivative of configuration variables
 
-            % Check that the input vectors are in column format.
-            if ~iscolumn(q)
-                q = q';
+            arguments (Input)
+                obj (1, 1) BodyTree
+                q   (:, 1)
+                dq  (:, 1)
+                ddq (:, 1)
+                options.EvaluateKinematicTerms (1, 1) logical  = true
+                options.EvaluateInertialTerms  (1, 1) logical  = true
+                options.EvaluateExternalForces (1, 1) logical  = true
             end
-            if ~iscolumn(dq)
-                dq = dq';
-            end
-            if ~iscolumn(ddq)
-                ddq = ddq';
-            end
+
+            % % Check that the input vectors are in column format.
+            % if ~iscolumn(q)
+            %     q = q';
+            % end
+            % if ~iscolumn(dq)
+            %     dq = dq';
+            % end
+            % if ~iscolumn(ddq)
+            %     ddq = ddq';
+            % end
             % Update the BodyTree
-            obj = obj.TreeUpdate(q, dq, ddq);
+            obj = obj.TreeUpdate(q, dq, ddq, ...
+                                    "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                    "EvaluateInertialTerms",  options.EvaluateInertialTerms, ...
+                                    "EvaluateExternalForces", options.EvaluateExternalForces);
             % Run the GID algorithm,  q is only passed to
             % retreive its type.
             tau = obj.Kane_aux(obj.g, q);
@@ -373,15 +387,16 @@ classdef BodyTree < handle
             % Coriolis and gravitational terms
             % Less efficient but handles better equilibria because different
             % values are used
-            CG = obj.ApparentForce(q, dq) + obj.GravityForce(q);
+            G  = obj.GravityForce(q);
+            C  = obj.ApparentForce(q, dq);% We evaluate last C so that both elastic and damping forces can be computed withou running again all the computations
             % Overall forces
-            f  =  -CG - obj.K() - obj.D() + tau;
+            f  =  -C - G - obj.K(q, "EvaluateKinematicTerms", false, "EvaluateInertialTerms", false) - obj.D(q, dq, "EvaluateKinematicTerms", false, "EvaluateInertialTerms", false) + tau;
             % Perform scaling to improve simulation accuracy
             % Compute the acceleration
             ddq = M\f;
         end
 
-        function Kq = K(obj, q)
+        function Kq = K(obj, q, options)
             %Evaluate the generalized elastic force.
             %
             %Args:
@@ -389,14 +404,16 @@ classdef BodyTree < handle
             
             % Define arguments
             arguments
-                obj (1, 1) BodyTree
-                q {mustBeVector} = zeros(obj.n, 1)
+                obj                (1, 1) BodyTree
+                q                  (:, 1)
+                options.EvaluateKinematicTerms (1, 1) logical = true
+                options.EvaluateInertialTerms  (1, 1) logical = true
             end
-            % Update the tree
+            % Update the tree, but only the stiffness force 
             if nargin == 2
-                obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q), "EvaluateKinematicTerms", false, ...
+                obj.TreeUpdate(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q), "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
                                                                                           "EvaluateExternalForces", true, ...
-                                                                                          "EvaluateInertialTerms", false);
+                                                                                          "EvaluateInertialTerms", options.EvaluateInertialTerms);
             end
             % switch nargin
             %     case 1
@@ -422,7 +439,7 @@ classdef BodyTree < handle
             end
         end
 
-        function Dq = D(obj, q, dq)
+        function Dq = D(obj, q, dq, options)
             %Evaluate the generalized damping force.
             %
             %Args:
@@ -432,15 +449,17 @@ classdef BodyTree < handle
             % Define arguments
             arguments
                 obj (1, 1) BodyTree
-                q   (:, 1)   = zeros(obj.n, 1)
-                dq  (:, 1)   = zeros(obj.n, 1)
+                q   (:, 1)
+                dq  (:, 1)
+                options.EvaluateKinematicTerms (1, 1) logical = true
+                options.EvaluateInertialTerms  (1, 1) logical = true
             end
 
             % Update the tree only if q and dq are passed as arguments
             if nargin >= 2
-                obj.TreeUpdate(q, dq, zeros(obj.n, 1, "like", q), "EvaluateKinematicTerms", false, ...
-                                                                                          "EvaluateExternalForces", true, ...
-                                                                                          "EvaluateInertialTerms", false);
+                obj.TreeUpdate(q, dq, zeros(obj.n, 1, "like", q), "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                                                  "EvaluateExternalForces", true, ...
+                                                                  "EvaluateInertialTerms", options.EvaluateInertialTerms);
             end
             % switch nargin
             %     case 1
@@ -482,7 +501,7 @@ classdef BodyTree < handle
             Zeron   = zeros(obj.n, 1, "like", q);
             Id      = eye(obj.n, "like", q);
             for i = 1:obj.n
-                M(:, i) = obj.InverseDynamics(q, Zeron, Id(:, i));
+                M(:, i) = obj.InverseDynamics(q, Zeron, Id(:, i), "EvaluateKinematicTerms", true, "EvaluateInertialTerms", true, "EvaluateExternalForces", false);
             end
             % Symmetrize the result because of possible numerical
             % approximations
@@ -498,7 +517,7 @@ classdef BodyTree < handle
                 %    q   ([double], [sym]): Configuration variables
 
             Zeron = zeros(obj.n, 1, "like", q);
-            G     = obj.InverseDynamics(q, Zeron, Zeron);
+            G     = obj.InverseDynamics(q, Zeron, Zeron, "EvaluateKinematicTerms", true, "EvaluateInertialTerms", true, "EvaluateExternalForces", false);
         end
 
         function C = ApparentForce(obj, q, dq)
@@ -512,7 +531,7 @@ classdef BodyTree < handle
             g_ = obj.g;
             obj.g = zeros(3, 1, "like", g_);
             % Compute the apparent forces
-            C = obj.InverseDynamics(q, dq, zeros(obj.n, 1, "like", q));
+            C = obj.InverseDynamics(q, dq, zeros(obj.n, 1, "like", q), "EvaluateKinematicTerms", true, "EvaluateInertialTerms", true, "EvaluateExternalForces", false);
             % Restore back gravity
             obj.g = g_;
         end

@@ -12,11 +12,14 @@ classdef LVPBody < Body
         Backbone                    (1, 1)
         ConnectorPoint              (3, 1) double% Point where the successor body is connected
         n = 0 % Number of DOFs
-        Parameters
         MassDensity                 (1, 1) double
         YoungModulus                (1, 1) double
         PoissonRatio                (1, 1) double
         DampingFactor               (1, 1) double
+    end
+
+    properties
+        Parameters = 0
     end
 
     properties (Access = private) % Make this private
@@ -34,6 +37,7 @@ classdef LVPBody < Body
         DeformationGradientCentroid     (3, 3, :) % Deformation gradient at the centroids
         JDeformationGradientCentroid    (9, :, :) % Jacobian of the deformation gradient at the centroids w.r.t. q
         % dDeformationGradientCentroid    (3, 3, :) % Time derivative of the deformation gradient at the centroids
+        nGaussPoints                    (1, 1)
     end
 
     properties (Access = public, Constant)
@@ -46,19 +50,19 @@ classdef LVPBody < Body
         function obj = loadobj(S)
             % Load the primitives
             Primitives  = cell(LVPBody.MaxPrimitivesNumber, 1);
-            NP          = length(S.BodyPrimitivesClass);
+
+            NP          = length(S.BodyPrimitives);
             for i=1:LVPBody.MaxPrimitivesNumber
                 if i <= NP
-                    loadobjPrimitive     = str2func(string(S.BodyPrimitivesClass{i}) + ".loadobj");
-                    Primitives{i}        = loadobjPrimitive(S.BodyPrimitives{i});
+                    loadobjPrimitive     = str2func(string(deblank(S.BodyPrimitivesClass(i, :))) + ".loadobj");
+                    Primitives{i}        = loadobjPrimitive(S.BodyPrimitives(i));
                 else
                     Primitives{i} = 0;
                 end
             end
 
             % Build the LBPBody object
-            %obj = LVPBody(S.BodyParameters{1}, S.BodyParameters{2}, Primitives, S.BodyParameters{3}, S.BodyParameters{4}, S.BodyParameters{5}, S.BodyParameters{6}, S.BodyParameters{7});
-            obj = LVPBody(S.BodyParameters{1:2}, Primitives, S.BodyParameters{3:end});
+            obj = LVPBody(S.Nodes, S.Elements, Primitives, S.NGaussPoints, S.MassDensity, S.YoungModulus, S.PoissonRatio, S.DampingFactor);
         end
 
     end
@@ -66,14 +70,23 @@ classdef LVPBody < Body
     methods
         % Overload the saveobj method from the Body class
         function S = saveobj(obj)
-            % Create a cell array containig a struct representation of the primitives
+            % NOTE: Since MATLAB does not support nested struct with cell arrays, for the primitives we have to use struct arrays all with fileds that are primitive datatypes.
+            % Create a cell array containig a struct representation of the primitives            
             PrimitivesStuctArray = cellfun(@saveobj, obj.Primitives, "UniformOutput", false);
             PrimitivesClass      = cellfun(@class, obj.Primitives, "UniformOutput", false);
+
+            % Build the struct representing the LVPBody
             S = struct('BodyType', class(obj), ...
-                       'BodyParameters', {obj.Parameters}, ...
                        'BodyDoF', obj.n, ...
-                       'BodyPrimitives', {PrimitivesStuctArray}, ...
-                       'BodyPrimitivesClass', {PrimitivesClass});
+                       'Nodes', obj.Nodes, ...
+                       'Elements', obj.Elements, ...
+                       'NGaussPoints', obj.nGaussPoints, ...
+                       'MassDensity', obj.MassDensity, ...
+                       'YoungModulus', obj.YoungModulus, ...
+                       'PoissonRatio', obj.PoissonRatio, ...
+                       'DampingFactor', obj.DampingFactor, ...
+                       'BodyPrimitivesClass', char(PrimitivesClass), ...
+                       'BodyPrimitives', {cell2mat(PrimitivesStuctArray)});
         end
     end
 
@@ -99,13 +112,11 @@ classdef LVPBody < Body
             obj.YoungModulus    = YoungModulus;
             obj.PoissonRatio    = PoissonRatio;
             obj.DampingFactor   = DampingFactor;
+            obj.nGaussPoints    = NGaussPoints;
             % Compute the number of nodes, elements, primitives and centroids
             obj.NNodes      = size(obj.Nodes, 2);
             obj.NElements   = size(obj.Elements, 2);
             
-            % Store the parameters to build the body
-            obj.Parameters  = {Nodes; Elements; NGaussPoints; MassDensity; YoungModulus; PoissonRatio; DampingFactor};
-
             % Store the primitives and their number   
             obj.Primitives  = Primitives;
             obj.PrimitiveUsesBackbone = false(length(Primitives), 1);
@@ -646,6 +657,7 @@ classdef LVPBody < Body
             % Compute the projection of the right Caucy strain tensor in the configuration space
             gradC   = pagemtimes(pagetranspose(JF), F) + pagemtimes(pagetranspose(F), JF);
 
+            
             % Extract the diagonal elements, i.e., the principal stretches
             GradCStretches = squeeze(gradC(1, 1, 1:obj.n, 1:obj.NElements)) ...
                            + squeeze(gradC(2, 2, 1:obj.n, 1:obj.NElements)) ...
@@ -679,6 +691,8 @@ classdef LVPBody < Body
             if options.UpdateKinematics == true
                 obj.UpdateKinematics(q, dq, zeros(obj.n, 1, "like", q));
             end
+
+            %Dq = obj.DampingFactor*dq;return;
 
             % Get the time derivative of the deformation gradient
             dF      = repmat(reshape(pagemtimes(obj.JDeformationGradientCentroid, dq), 3, 3, 1, obj.NElements), 1, 1, obj.n, 1);

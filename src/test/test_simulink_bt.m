@@ -21,6 +21,8 @@ for i = 1:N_B
     J1{i} = FixedJoint();
 end
 
+B1{end+1} = RigidBody(zeros(10, 1));
+J1{end+1} = FixedJoint();
 
 %% Build the robot
 r1 = BodyTree(J1, B1);

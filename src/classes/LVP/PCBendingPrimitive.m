@@ -13,7 +13,7 @@ classdef PCBendingPrimitive < BendingPrimitive
             %Construct an instance of the piecewise constant stretch and compression primitive.
 
             % Call the superclass
-            obj = obj@BendingPrimitive({BodyRestLength});
+            obj = obj@BendingPrimitive([BodyRestLength]);
 
             % Store the rest length for future use
             obj.BodyRestLength = BodyRestLength;
@@ -33,10 +33,21 @@ classdef PCBendingPrimitive < BendingPrimitive
             % Basis evaluation
             P                   = zeros(2, obj.n);
             P(1:2, 1:obj.n)     = [1/obj.BodyRestLength, 0; ...
-                                                      0, 1/obj.BodyRestLength];
+                                                      0, -1/obj.BodyRestLength];
 
             % Derivative of the basis w.r.t. x3
             dP                  = zeros(2, obj.n);
+
+            % % Basis 
+            % P                 = zeros(2, obj.n);
+            % P(1:2, 1:obj.n)   = [x3/obj.BodyRestLength, 0; 
+            %                      0                    , -x3/obj.BodyRestLength];
+            % 
+            % % Derivative of the basis w.r.t. x3 
+            % dP                = zeros(2, obj.n);
+            % dP(1:2, 1:obj.n)  = [1/obj.BodyRestLength, 0; 
+            %                      0                   , -1/obj.BodyRestLength];
+
         end
     end
 end

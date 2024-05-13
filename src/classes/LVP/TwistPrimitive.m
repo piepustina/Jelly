@@ -7,7 +7,7 @@ classdef TwistPrimitive < LVPPrimitive & BackbonePrimitive
         function obj = TwistPrimitive(Parameters)
             %Construct an instance of the twist primitive.
             arguments (Input)
-                Parameters (:, 1) cell
+                Parameters (:, 1) double
             end
 
             % Call the superclass constructor

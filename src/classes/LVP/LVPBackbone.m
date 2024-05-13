@@ -723,9 +723,11 @@ classdef LVPBackbone < Body
             R                                   = obj.gGauss(1:3, 1:3, :);
             omega                               = squeeze(pagemtimes(R, reshape(obj.EtaGauss(1:3, :), 3, 1, [])));
             dR                                  = pagemtimes(skew(omega), R);
+            
             % NOTE: We first compute the acceleration because the velocity must be in local coordinates!
             obj.dEtaGauss(1:3, :)               = squeeze(pagemtimes(dR, reshape(obj.EtaGauss(1:3, :), 3, 1, [])) + pagemtimes(R, reshape(obj.dEtaGaussLocal(1:3, :), 3, 1, [])));
             obj.dEtaGauss(4:6, :)               = squeeze(pagemtimes(dR, reshape(obj.EtaGauss(4:6, :), 3, 1, [])) + pagemtimes(R, reshape(obj.dEtaGaussLocal(4:6, :), 3, 1, [])));
+            
             % Update the velocity
             obj.JEtaGauss(1:3, 1:obj.n, :)      = pagemtimes(R, reshape(obj.JEtaGaussLocal(1:3, 1:obj.n, :), 3, obj.n, []));
             obj.JEtaGauss(4:6, 1:obj.n, :)      = pagemtimes(R, reshape(obj.JEtaGaussLocal(4:6, 1:obj.n, :), 3, obj.n, []));

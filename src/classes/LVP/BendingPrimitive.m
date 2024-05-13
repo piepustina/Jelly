@@ -6,7 +6,7 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
         function obj = BendingPrimitive(Parameters)
             %Construct an instance of the bending primitive.
             arguments (Input)
-                Parameters (:, 1) cell
+                Parameters (:, 1) double
             end
 
             % Call the superclass constructor
@@ -78,27 +78,37 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             JJfx_ref_q      = zeros(9*nBackbone, Nx, "like", x);
 
             %% Evaluate the primitive
+            % % Get the pose of the backbone at the query points 
+            % Pose              = Backbone.Pose;
+            % % Compute the position in the global frame of each backbone points
+            % t                 = squeeze(Pose(1:3, 4, 1:Nx));
+            % n1                = squeeze(Pose(1:3, 1, 1:Nx));
+            % n2                = squeeze(Pose(1:3, 2, 1:Nx));
+            % % Get the curvature strain
+            % Kappa             = Backbone.Strain(1:2, 1:Nx);
+            % % Compute the polar coordinates of the points x1 and x2
+            % [theta, r]        = cart2pol(x(1, 1:Nx), x(2, 1:Nx));
+            % % Evaluate sin and cos
+            % c_theta           = cos(theta);
+            % s_theta           = sin(theta);
+            % % Compute the coefficients for the radius restriction
+            % a                 = abs(Kappa(1, 1:Nx).*s_theta - Kappa(2, 1:Nx).*c_theta);
+            % c                 = r;
+            % % Compute the radius expansion
+            % R                 = obj.Radius(a, c);
+            % % Evaluate the primitive
+            % fx(1:3, 1:Nx)     = t + R.*c_theta.*n1 + R.*s_theta.*n2;
+
+            %% Evaluate the primitive
             % Get the pose of the backbone at the query points 
             Pose              = Backbone.Pose;
             % Compute the position in the global frame of each backbone points
             t                 = squeeze(Pose(1:3, 4, 1:Nx));
             n1                = squeeze(Pose(1:3, 1, 1:Nx));
             n2                = squeeze(Pose(1:3, 2, 1:Nx));
-            % Get the curvature strain
-            Kappa             = Backbone.Strain(1:2, 1:Nx);
-            % Compute the polar coordinates of the points x1 and x2
-            [theta, r]        = cart2pol(x(1, 1:Nx), x(2, 1:Nx));
-            % Evaluate sin and cos
-            c_theta           = cos(theta);
-            s_theta           = sin(theta);
-            % Compute the coefficients for the radius restriction
-            a                 = abs(Kappa(1, 1:Nx).*s_theta - Kappa(2, 1:Nx).*c_theta);
-            c                 = r;
-            % Compute the radius expansion
-            R                 = obj.Radius(a, c);
             % Evaluate the primitive
-            fx(1:3, 1:Nx)     = t + R.*c_theta.*n1 + R.*s_theta.*n2;
-            
+            fx(1:3, 1:Nx)     = t + x(1, 1:Nx).*n1 + x(2, 1:Nx).*n2;
+
             %% Evaluate the first order time derivative
             omega             = Backbone.dPose(1:3, 1:Nx);
             dt                = Backbone.dPose(4:6, 1:Nx);
@@ -186,6 +196,8 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             Jt_q                                = pagemtimes(SkewR_xiL, JPose(1:3, 1:nBackbone, 1:Nx)) + pagemtimes(R, JxiL);
             % Overall Jacobian
             JJfx_ref_q                          = reshape([Zeros; Zeros; Jt_q + pagemtimes(reshape(x(1, 1:Nx), 1, 1, Nx), Jn1_q) + pagemtimes(reshape(x(2, 1:Nx), 1, 1, Nx), Jn2_q)], 9*nBackbone, Nx);
+            
+
         end
     end
 

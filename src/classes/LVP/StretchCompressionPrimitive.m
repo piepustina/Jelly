@@ -5,7 +5,7 @@ classdef StretchCompressionPrimitive < LVPPrimitive & BackbonePrimitive
         function obj = StretchCompressionPrimitive(Parameters)
             %Construct an instance of the stretch and compression primitive.
             arguments (Input)
-                Parameters (:, 1) cell
+                Parameters (:, 1) double
             end
 
             % Call the superclass constructor

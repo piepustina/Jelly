@@ -13,7 +13,7 @@ classdef PCTwistShearPrimitive < TwistShearPrimitive
             %Construct an instance of the piecewise constant stretch and compression primitive.
 
             % Call the superclass
-            obj = obj@TwistShearPrimitive({BodyRestLength});
+            obj = obj@TwistShearPrimitive([BodyRestLength]);
 
             % Store the rest length for future use
             obj.BodyRestLength = BodyRestLength;

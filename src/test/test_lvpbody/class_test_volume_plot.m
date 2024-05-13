@@ -4,7 +4,7 @@ femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
 
 model = generateMesh(femodel, "Hmax", 60, "Hmin", 60, "Hgrad", 2);
 %model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
-%model = generateMesh(femodel);
+model = generateMesh(femodel);
 
 % Show the mesh
 %pdemesh(model)
@@ -36,8 +36,6 @@ lighting gouraud
 %q_test = [0; 0; 0; 0; 0; pi];
 
 q_test = [-1; 10; -0.1; 0.1; 2; 1];
-
-q_test = gpuArray([-1; 10; -0.1; 0.1; 2; 1]);
 
 B.plot(q_test, "LineStyle", "-", "FaceAlpha", 1);
 

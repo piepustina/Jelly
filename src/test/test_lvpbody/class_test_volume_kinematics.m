@@ -37,8 +37,8 @@ ddq_min  = -5;
 ddq_max  =  5;
 ddq_test = (ddq_max-dq_min).*rand(B.n,1) + ddq_min;
 
-dq_test = gpuArray(dq_test);
-ddq_test = gpuArray(ddq_test);
+% dq_test = gpuArray(dq_test);
+% ddq_test = gpuArray(ddq_test);
 
 tic
 [xq, dxq, ddxq, Jq, Jx_ref, JJq] = B.UpdateKinematics(q_test, dq_test, ddq_test); 

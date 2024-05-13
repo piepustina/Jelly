@@ -6,7 +6,7 @@ classdef ShearPrimitive < LVPPrimitive & BackbonePrimitive
         function obj = ShearPrimitive(Parameters)
             %Construct an instance of the twist primitive.
             arguments (Input)
-                Parameters (:, 1) cell
+                Parameters (:, 1) double
             end
 
             % Call the superclass constructor

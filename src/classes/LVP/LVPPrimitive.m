@@ -3,13 +3,18 @@ classdef LVPPrimitive < handle
    
     properties(Abstract)
         %Number of DoF associated to the primitive.
-        n int32 {mustBeNonnegative}
+        n %int32 {mustBeNonnegative}
     end
 
     properties (Access = public)
         % Homogeneous cell array of parameters for the primitive.
         % Each element of the parameters is a matrix of doubles that represents an argument for the contructor of the concrete classes inheriting this class.
-        Parameters (:, 1) cell;
+        Parameters (:, 1) double;
+    end
+
+    properties (Constant)
+        MaxParametersNumber     = 10 % Used for code generation
+        MaxPrimitiveNameLength  = 50 % Used for code generation. Maximum number of characters for the primitive name
     end
 
     methods (Abstract)
@@ -20,19 +25,39 @@ classdef LVPPrimitive < handle
     methods (Static)
         function obj = loadobj(S)
             % Load a LVP Primitive
-            Constructor = str2func(S.PrimitiveType);
-            Parameters  = S.PrimitiveParameters;
+            Constructor = str2func(deblank(S.PrimitiveType));
+            nParameters = sum(~isnan(S.PrimitiveParameters));
+            Parameters  = S.PrimitiveParameters(1:nParameters);
+            
             if isempty(Parameters)
                 obj = Constructor();
             else
-                obj = Constructor(Parameters{1:end});
+                obj = Constructor(Parameters);
             end
         end
     end
 
     methods
         function S = saveobj(obj)
-            S = struct('PrimitiveType', class(obj), 'PrimitiveParameters', {obj.Parameters});
+            
+            % Build the primitive name
+            PType   = blanks(LVPPrimitive.MaxPrimitiveNameLength);
+            PName   = class(obj);
+            lPName  = length(PName);
+            if lPName > LVPPrimitive.MaxPrimitiveNameLength
+                error("For code generation, the primitive class name cannot exceed " + LVPPrimitive.MaxPrimitiveNameLength + " characters.");
+            end 
+            PType(1:lPName) = PName;
+
+            % Build the primitive parameters
+            PParameters  = nan(1, LVPPrimitive.MaxParametersNumber);
+            lP = length(obj.Parameters);
+            if lP > LVPPrimitive.MaxParametersNumber
+                error("For code generation, the number of primitive parameters cannot exceed " + LVPPrimitive.MaxParametersNumber + " .");
+            end
+            PParameters(1:lP) = obj.Parameters';
+
+            S = struct('PrimitiveType', PType, 'PrimitiveParameters', PParameters);
         end
     end
     
@@ -41,7 +66,7 @@ classdef LVPPrimitive < handle
             %Construct the locally volume preserving primitve.
 
             arguments (Input)
-                Parameters (:, 1) cell
+                Parameters (:, 1) double
             end
 
             arguments (Output)
@@ -49,7 +74,7 @@ classdef LVPPrimitive < handle
             end
             
             % Store the parameters for the primitive
-            obj.Parameters      = Parameters;
+            obj.Parameters = Parameters;
         end
 
         function S = toStruct(obj)

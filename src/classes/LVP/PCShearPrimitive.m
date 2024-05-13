@@ -13,7 +13,7 @@ classdef PCShearPrimitive < ShearPrimitive
             %Construct an instance of the piecewise constant stretch and compression primitive.
 
             % Call the superclass
-            obj = obj@ShearPrimitive({BodyRestLength});
+            obj = obj@ShearPrimitive([BodyRestLength]);
 
             % Store the rest length for future use
             obj.BodyRestLength = BodyRestLength;
