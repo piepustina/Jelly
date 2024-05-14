@@ -6,8 +6,8 @@ N_B = 1;
 % Load a test mesh
 femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
 
-model = generateMesh(femodel, "Hmax", 60, "Hmin", 60, "Hgrad", 2);
-%model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
+%model = generateMesh(femodel, "Hmax", 60, "Hmin", 60, "Hgrad", 2);
+model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
 %model = generateMesh(femodel);
 
 Nodes    = model.Geometry.Mesh.Nodes./1000;% Scale from [mm] to [m]. The mesh should be already with [m] units!
@@ -46,3 +46,17 @@ r1.g = [0; -9.81; 0];
 
 %% Open the simulink system
 open("simulink_test_bt_lvp.slx")
+
+%% Plot the final configuration
+close all;
+figure; hold on; grid on; view(3)
+light("Position", [-0.1, -0.1, 0.1])
+lighting gouraud
+
+B1{1}.plot(squeeze(out.q.Data(:, :, end)), "LineStyle", "-", "FaceAlpha", 1);
+
+xlabel("$x [m]$", "Interpreter", "latex", "FontSize", 14)
+ylabel("$y [m]$", "Interpreter", "latex", "FontSize", 14)
+zlabel("$z [m]$", "Interpreter", "latex", "FontSize", 14)
+
+axis equal

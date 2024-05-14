@@ -77,7 +77,7 @@ classdef ShearPrimitive < LVPPrimitive & BackbonePrimitive
             JJfx_ref_x      = zeros(27, Nx, "like", x);
             JJfx_ref_q      = zeros(9*nBackbone, Nx, "like", x);
 
-            %% Evaluate the primitive
+                        %% Evaluate the primitive
             % Get the pose of the backbone at the query points 
             Pose              = Backbone.Pose;
             % Compute the position in the global frame of each backbone points
@@ -161,19 +161,22 @@ classdef ShearPrimitive < LVPPrimitive & BackbonePrimitive
             JJfx_ref_x  = reshape([Zeros6x3; reshape(dn1_dx3, 3, 1, Nx), reshape(dn2_dx3, 3, 1, Nx), zeros(3, 1, Nx)], 27, Nx);
 
             %% Evaluate the Jacobian of the vectorized Jacobian w.r.t. x_ref w.r.t. q
-            Jxi                                 = Backbone.StrainJacobian(obj);
+            [Jxi, ~]                            = Backbone.StrainJacobian(obj);
             % Angular contributions
             JxiA                                = Jxi(1:3, 1:nBackbone, 1:Nx);
-            SkewR_xiA                           = skew(reshape(-1*pagemtimes(R, reshape(AngularStrain, 3, 1, Nx)), 3, Nx));
-            R_JxiA                              = -1*pagemtimes(R, JxiA);
-            Jn1_q                               = pagemtimes(skew(reshape(pagemtimes(SkewR_xiA, Pose(1:3, 1, 1:Nx)), 3, Nx)), JA) + pagemtimes(skew(n1), R_JxiA);
-            Jn2_q                               = pagemtimes(skew(reshape(pagemtimes(SkewR_xiA, Pose(1:3, 2, 1:Nx)), 3, Nx)), JA) + pagemtimes(skew(n2), R_JxiA);
+            SkewR_xiA                           = skew(reshape(pagemtimes(R, reshape(AngularStrain, 3, 1, Nx)), 3, Nx));
+            Skewn1                              = skew(n1);
+            Skewn2                              = skew(n2);
+            R_JxiA                              = pagemtimes(R, JxiA);
+            Jn1_q                               = pagemtimes(pagemtimes(Skewn1, SkewR_xiA)-pagemtimes(SkewR_xiA, Skewn1), JA) - pagemtimes(Skewn1, R_JxiA);
+            Jn2_q                               = pagemtimes(pagemtimes(Skewn2, SkewR_xiA)-pagemtimes(SkewR_xiA, Skewn2), JA) - pagemtimes(Skewn2, R_JxiA);
             % Linear contributions
-            SkewR_xiL                           = skew(reshape(-1*pagemtimes(R, reshape(LinearStrain, 3, 1, Nx)), 3, Nx));
+            SkewR_xiL                           = skew(reshape(pagemtimes(R, reshape(LinearStrain, 3, 1, Nx)), 3, Nx));
             JxiL                                = Jxi(4:6, 1:nBackbone, 1:Nx);
-            Jt_q                                = pagemtimes(SkewR_xiL, JPose(1:3, 1:nBackbone, 1:Nx)) + pagemtimes(R, JxiL);
+            Jt_q                                = -pagemtimes(SkewR_xiL, JA) + pagemtimes(R, JxiL);
             % Overall Jacobian
             JJfx_ref_q                          = reshape([Zeros; Zeros; Jt_q + pagemtimes(reshape(x(1, 1:Nx), 1, 1, Nx), Jn1_q) + pagemtimes(reshape(x(2, 1:Nx), 1, 1, Nx), Jn2_q)], 9*nBackbone, Nx);
+            
         end
 
     end
