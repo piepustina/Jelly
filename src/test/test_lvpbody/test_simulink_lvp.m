@@ -42,7 +42,7 @@ J1{end+1} = FixedJoint();
 
 %% Build the robot
 r1 = BodyTree(J1, B1);
-r1.g = [0; 0; 9.81];
+r1.g = [0; -9.81; 0];
 
 %% Open the simulink system
 open("simulink_test_bt_lvp.slx")
