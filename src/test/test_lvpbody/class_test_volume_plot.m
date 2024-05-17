@@ -6,7 +6,7 @@ femodel = femodel(Geometry="./test/meshes/Diamond.stl");
 
 %model = generateMesh(femodel, "Hmax", 60, "Hmin", 60, "Hgrad", 2);
 model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
-model = generateMesh(femodel);
+%model = generateMesh(femodel);
 
 % Show the mesh
 %pdemesh(model)
