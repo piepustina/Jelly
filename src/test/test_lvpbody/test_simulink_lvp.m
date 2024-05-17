@@ -5,6 +5,7 @@ N_B = 1;
 
 % Load a test mesh
 femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
+femodel = femodel(Geometry="./test/meshes/Diamond.stl");
 
 %model = generateMesh(femodel, "Hmax", 60, "Hmin", 60, "Hgrad", 2);
 model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);

@@ -1,9 +1,11 @@
 % Load a test mesh
 clc; clear; close all;
-femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
+%femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
+femodel = femodel(Geometry="./test/meshes/Diamond.stl");
 
-model = generateMesh(femodel, "Hmax", 60, "Hmin", 60, "Hgrad", 2);
-%model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
+
+%model = generateMesh(femodel, "Hmax", 60, "Hmin", 60, "Hgrad", 2);
+model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
 model = generateMesh(femodel);
 
 % Show the mesh
@@ -17,33 +19,34 @@ Elements = model.Geometry.Mesh.Elements;
 %%
 % Build the LVPBody
 
-Primitives = {PCStretchCompressionPrimitive(0.3), ...
-              PCTwistPrimitive(0.3), ...
-              PCShearPrimitive(0.3), ...
-              PCBendingPrimitive(0.3)};
-
-Primitives = {PCStretchCompressionPrimitive(0.3), ...
-              PCTwistShearPrimitive(0.3), ...
-              PCBendingPrimitive(0.3)};
+L0 = max(Nodes(3, :));
+Primitives = {PCStretchCompressionPrimitive(L0), ...
+              PCTwistShearPrimitive(L0), ...
+              PCBendingPrimitive(L0)};
 
 B = LVPBody(Nodes, Elements, Primitives, 1);
 
+B1 = LVPBody(Nodes, Elements, Primitives, 1);
+
 %% Do a plot
+
+r = BodyTree({FixedJoint(); RotationalJoint(zeros(4, 1))}, {B; B1});
+
 close all;
 figure; hold on; grid on; view(3)
 light("Position", [-0.1, -0.1, 0.1])
 lighting gouraud
-%q_test = [0; 0; 0; 0; 0; pi];
 
-q_test = 0*[-1; 10; -0.1; 0.1; 2; 1];
+q_test = [-0.04; 1; -0.01; 0.01; 0.2; 0.1; 0; 0; 1; -0.01; 0.01; 0.2; 0.1];
 
-B.plot(q_test, "LineStyle", "-", "FaceAlpha", 1);
+r.plot(q_test, "LineStyle", "-", "FaceAlpha", 1);
 
 xlabel("$x$", "Interpreter", "latex", "FontSize", 14)
 ylabel("$y$", "Interpreter", "latex", "FontSize", 14)
 zlabel("$z$", "Interpreter", "latex", "FontSize", 14)
 
 axis equal
+view(3)
 
 %% Test code generation
 codegen -o test/test_lvpbody/lvp_codegen_mex lvp_codegen -args {Nodes, Elements}

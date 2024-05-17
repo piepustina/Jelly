@@ -882,6 +882,42 @@ classdef BodyTree < handle
 
         end
 
+        function plot(obj, q, options)
+            % Plot the robot in the current configuration
+            arguments
+                obj                           (1, 1) BodyTree
+                q                             (:, 1) double = zeros(obj.n, 1)
+                options.Color                 (1, 3) double = [0 160 219]./256;
+                options.FaceAlpha             (1, 1) double = 1
+                options.LineStyle             (1, 1) = "none";% Possible values: "-" | "--" | ":" | "-." | "none"
+            end
+            % p must be the output of a patch
+            % Update the status of the tree
+            obj.TreeUpdate(q, zeros(obj.n, 1), zeros(obj.n, 1));
+
+            % Iterate over the bodies, each body must define a plot method that handles its plots for their configuration
+            T0 = obj.T0;
+            for i = 1:obj.N_B
+                % Update the transformation matrix using the joint data
+                T0 = T0*obj.Joints{i}.T_;
+                % Get also the transform induced by the body, since some classes might alter their state during plot we save it
+                TB = obj.Bodies{i}.T_;
+                % Plot the body
+                n_b   = obj.Bodies{i}.n;
+                if n_b ~= 0
+                    % Get the indexes associated with the body
+                    q_start = obj.BodyConfigurationIndexes(i, 1);
+                    q_end   = obj.BodyConfigurationIndexes(i, 2);
+                    % Update the body data
+                    obj.Bodies{i}.plot(q(q_start:q_end), "BaseTransformation", T0, "Color", options.Color, "FaceAlpha", options.FaceAlpha, "LineStyle", options.LineStyle);
+                else
+                    obj.Bodies{i}.plot("BaseTransformation", T0, "Color", options.Color, "FaceAlpha", options.FaceAlpha, "LineStyle", options.LineStyle);
+                end
+                % Update the transformation matrix by accounting for the transform of the body
+                T0 = T0*TB;
+            end
+        end
+
         function J = BodyJacobian(obj, q, idx)
             %Evaluate the body Jacobian of the i-th body. If i is not specified, the method returns the body Jacobian of each body of the chain.
             %
