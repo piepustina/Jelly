@@ -24,6 +24,8 @@ classdef BodyTree < handle
         g    = [0; 0; -9.81];
         %Orientation of the base frame with respect to the world frame.
         T0   = eye(4);
+        %Total number of actuators, required for code generation
+        n_a  = 0;
         
         MassConditionNumber = 0;%TODO: Remove
     end
@@ -94,7 +96,8 @@ classdef BodyTree < handle
                        'BodiesClasses', {BodiesClasses}, ...
                        'JointsArray', {JointsStructArray}, ...
                        'JointsClasses', {JointsClasses}, ...
-                       'ClassName', class(obj));
+                       'ClassName', class(obj), ...
+                       'n_a', obj.n_a);% Number of actuators
         end
     end
     
@@ -142,6 +145,8 @@ classdef BodyTree < handle
                     end
                 end
             end
+            % In a BodyTree class the number of actuators is the same as that of DOFs
+            obj.n_a = obj.n;
             % Assign the joints and bodies
             % obj.Joints = cell(BodyTree.MaxBodiesNumber, 1);
             % obj.Bodies = cell(BodyTree.MaxBodiesNumber, 1);

@@ -1,5 +1,6 @@
-classdef ActuationMatrixSystem < matlab.System
-    % ActuationMatrixSystem Implements the computation of the actuation matrix for any class extending the BodyTree and possibly implementing its own ActuationMatrix method.
+classdef ActuationMatrixSystemSoftRobot < matlab.System
+    %TODO: This is just a backup and has to be removed.
+    % ActuationMatrixSystem Implements the computation of the actuation matrix for a soft robot.
     %
     
     %#codegen
@@ -8,7 +9,7 @@ classdef ActuationMatrixSystem < matlab.System
     properties (Nontunable)
         %
         %Structure representing the robot 
-        RobotStruct             = 0;
+        SoftRobotStruct             = 0;
     end
 
 
@@ -19,7 +20,7 @@ classdef ActuationMatrixSystem < matlab.System
     end
 
     methods
-        function obj = ActuationMatrixSystem(varargin)
+        function obj = ActuationMatrixSystemSoftRobot(varargin)
             setProperties(obj, nargin, varargin{:})
         end
     end
@@ -32,18 +33,22 @@ classdef ActuationMatrixSystem < matlab.System
             % Perform one-time calculations, such as computing constants
             %
             %Convert the robot into a Tree
-            obj.Tree = TreeStructConverter.StructToObject(obj.RobotStruct);
+            obj.Tree = SoftRobotStructConverter.StructToObject(obj.SoftRobotStruct);
         end
 
-        function A = stepImpl(obj, q)
+        function [A, y] = stepImpl(obj, q)
             % Preallocate the output
-            A    = cast(zeros(obj.RobotStruct.n, obj.RobotStruct.n_a), 'like', q);
-            
+            A    = cast(zeros(obj.SoftRobotStruct.TreeStruct.n, obj.SoftRobotStruct.N_A), 'like', q);
+            y    = cast(zeros(obj.SoftRobotStruct.N_A, 1), 'like', q);
             % Compute the actuation matrix and actuator elongation
-            Aq   = obj.Tree.ActuationMatrix(double(q));
+            [Aq, yq] = obj.Tree.ActuationMatrix(double(q));
+
+            %disp(Aq);
+            %disp(yq);
 
             % Assign the output
             A(:) = cast(Aq, 'like', q);
+            y(:) = cast(yq, 'like', q);
         end
 
         function resetImpl(~)
@@ -86,27 +91,31 @@ classdef ActuationMatrixSystem < matlab.System
 
         function num = getNumOutputsImpl(obj)
             %getNumOutputsImpl Define total number of outputs
-            num = 1;
+            num = 2;
         end
         
-        function [out1] = getOutputSizeImpl(obj)
+        function [out1, out2] = getOutputSizeImpl(obj)
             %getOutputSizeImpl Return size for each output port
-            out1 = [obj.RobotStruct.n, obj.RobotStruct.n_a];
+            out1 = [obj.SoftRobotStruct.TreeStruct.n, obj.SoftRobotStruct.N_A];
+            out2 = [obj.SoftRobotStruct.N_A];
         end
 
-        function [out1] = getOutputDataTypeImpl(obj)
+        function [out1, out2] = getOutputDataTypeImpl(obj)
             %getOutputDataTypeImpl Return data type for each output port
             out1 = propagatedInputDataType(obj, 1);
+            out2 = propagatedInputDataType(obj, 1);
         end
 
-        function [out1] = isOutputComplexImpl(obj)
+        function [out1, out2] = isOutputComplexImpl(obj)
             %isOutputComplexImpl Return true for each output port with complex data
             out1 = false;
+            out2 = false;
         end
 
-        function [out1] = isOutputFixedSizeImpl(obj)
+        function [out1, out2] = isOutputFixedSizeImpl(obj)
             %isOutputFixedSizeImpl Return true for each output port with fixed size
             out1 = true;
+            out2 = true;
         end
 
         function flag = isInactivePropertyImpl(~, ~)
