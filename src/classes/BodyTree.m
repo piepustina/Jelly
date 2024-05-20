@@ -30,7 +30,7 @@ classdef BodyTree < handle
         MassConditionNumber = 0;%TODO: Remove
     end
     
-    properties (Access = private)
+    properties (Access = protected)
         % Joints can be treated as bodies with no inertial parameters. Thus,
         % the augments the state by considering also the joints as bodies.
         BodiesInternal;

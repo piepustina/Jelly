@@ -37,7 +37,7 @@ figure; hold on; grid on; view(3)
 light("Position", [-0.1, -0.1, 0.1])
 lighting gouraud
 
-q_test = [-0.04; 1; -0.01; 0.01; 0.2; 0.1; 0; 0; 1; -0.01; 0.01; 0.2; 0.1];
+q_test = 0*[-0.04; 1; -0.01; 0.01; 0.2; 0.1; 0; 0; 1; -0.01; 0.01; 0.2; 0.1];
 
 r.plot(q_test, "LineStyle", "-", "FaceAlpha", 1);
 
