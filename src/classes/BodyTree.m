@@ -93,7 +93,8 @@ classdef BodyTree < handle
                        'BodiesArray', {BodiesStructArray}, ...
                        'BodiesClasses', {BodiesClasses}, ...
                        'JointsArray', {JointsStructArray}, ...
-                       'JointsClasses', {JointsClasses});
+                       'JointsClasses', {JointsClasses}, ...
+                       'ClassName', class(obj));
         end
     end
     
@@ -1033,6 +1034,21 @@ classdef BodyTree < handle
             % disp("v");v
             % disp("omega");omega
             
+        end
+
+        function A = ActuationMatrix(obj, q)
+        % Method to be overridden by custom classes to implement the actuation matrix computation.
+            arguments (Input)
+                obj (1, 1) BodyTree
+                q   (:, 1)
+            end
+
+            arguments (Output)
+                A (:, :)
+            end
+            
+            % By default the actuation matrix is the identity
+            A = eye(obj.n);
         end
 
         % Getter methods.

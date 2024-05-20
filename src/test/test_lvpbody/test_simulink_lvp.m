@@ -1,10 +1,10 @@
 %% Create an instance of the class
 clear; clc;
 
-N_B = 1;
+N_B = 2;
 
 % Load a test mesh
-femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
+%femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
 femodel = femodel(Geometry="./test/meshes/Diamond.stl");
 
 %model = generateMesh(femodel, "Hmax", 60, "Hmin", 60, "Hgrad", 2);
@@ -29,10 +29,6 @@ for i = 1:N_B
     Primitives = {PCStretchCompressionPrimitive(L0), ...
                   PCTwistShearPrimitive(L0), ...
                   PCBendingPrimitive(L0)};
-    %Primitives = {PCBendingPrimitive(L0)};
-    % 
-    % Primitives = {PCStretchCompressionPrimitive(L0), ...
-    %               PCTwistShearPrimitive(L0)};
     B1{i} = LVPBody(Nodes, Elements, Primitives, nGauss, MassDensity, YoungModulus, PoissonRatio, DampingFactor);
     J1{i} = FixedJoint();
 end

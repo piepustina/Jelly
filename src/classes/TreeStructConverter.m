@@ -18,6 +18,7 @@ classdef TreeStructConverter < handle
             end
 
             TreeStruct = R.saveobj();
+            %TreeStruct = struct('ClassName', class(R), 'RobotStruct', R.saveobj());
 
             % OLD CODE
             % % Preallocate the structs used in the method
@@ -63,7 +64,11 @@ classdef TreeStructConverter < handle
         % object. To comply with the code generation it creates additional
         % Bodies and Joints to fill the maximum number allowed. 
         function TreeObject = StructToObject(S)
-            TreeObject = BodyTree.loadobj(S);
+            % Get the class name from the struct S
+            loadRobot   = str2func(S.ClassName + ".loadobj");
+            TreeObject  = loadRobot(S);
+
+            %TreeObject = BodyTree.loadobj(S);
 
             % OLD CODE
             % Joints = cell(BodyTree.MaxBodiesNumber, 1);
