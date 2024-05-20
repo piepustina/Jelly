@@ -1111,7 +1111,7 @@ classdef BodyTree < handle
             %Args:
                 %    q      ([double], [sym]): Configuration variables
                 %    tau    ([double], [sym]): Generalized actuation force
-            eq = obj.GravityForce(q) + obj.K(q) - tau;
+            eq = obj.GravityForce(q) + obj.K(q) - obj.ActuationMatrix(q)*tau;
         end
         
     end
