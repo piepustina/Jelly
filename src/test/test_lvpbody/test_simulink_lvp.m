@@ -12,7 +12,9 @@ femodel = femodel(Geometry="./test/meshes/Diamond_low_res.stl");
 
 
 %model = generateMesh(femodel, "Hmax", 50, "Hmin", 50);
-model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
+model = generateMesh(femodel, "Hmax", 24, "Hmin", 20);
+%model = generateMesh(femodel, "Hmax", 20, "Hmin", 20);
+%model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
 %model = generateMesh(femodel);
 
 Nodes    = model.Geometry.Mesh.Nodes./1000;% Scale from [mm] to [m]. The mesh should be already with [m] units!
