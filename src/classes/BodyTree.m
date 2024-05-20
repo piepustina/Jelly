@@ -70,8 +70,10 @@ classdef BodyTree < handle
                 end
             end
 
-            % Build the BodyTree class
-            obj = BodyTree(Joints, Bodies);
+            % Build the class instance using the class name to automatically handle classes inerihthing from the BodyTree class that do not override this method
+            ClassConstructor = str2func(S.ClassName);
+            obj = ClassConstructor(Joints, Bodies);
+            %obj = BodyTree(Joints, Bodies);
 
             % Restore the other parameters of the tree
             obj.T0 = S.T0;

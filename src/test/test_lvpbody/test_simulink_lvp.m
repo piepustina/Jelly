@@ -1,7 +1,7 @@
 %% Create an instance of the class
 clear; clc;
 
-N_B = 2;
+N_B = 1;
 
 % Load a test mesh
 %femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
@@ -38,7 +38,8 @@ J1{end+1} = FixedJoint();
 
 
 %% Build the robot
-r1 = BodyTree(J1, B1);
+%r1 = BodyTree(J1, B1);
+r1 = LVPBodyTree(J1, B1);
 r1.g = [0; -9.81; 0];
 
 %% Open the simulink system
