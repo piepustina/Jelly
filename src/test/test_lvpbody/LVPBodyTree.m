@@ -17,10 +17,10 @@ classdef LVPBodyTree < BodyTree
 
             % Define the position of the actuators in the stress-free configuration and tip (local) frame
             obj.ActuatorPosition = zeros(obj.n_a, 3);
-            obj.ActuatorPosition(1, 1:3) = [0.01, 0, 0];
-            obj.ActuatorPosition(2, 1:3) = [-0.01, 0, 0];
-            obj.ActuatorPosition(3, 1:3) = [0, 0.01, 0];
-            obj.ActuatorPosition(4, 1:3) = [0,-0.01, 0];
+            obj.ActuatorPosition(1, 1:3) = [0.015, 0, 0];
+            obj.ActuatorPosition(2, 1:3) = [-0.015, 0, 0];
+            obj.ActuatorPosition(3, 1:3) = [0, 0.015, 0];
+            obj.ActuatorPosition(4, 1:3) = [0,-0.015, 0];
 
             % Define the body to which the actuator belongs
             obj.ActuatorBody = zeros(obj.n_a, 1);
