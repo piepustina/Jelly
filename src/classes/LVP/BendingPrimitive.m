@@ -84,7 +84,6 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             t                 = squeeze(Pose(1:3, 4, 1:Nx));
             n1                = squeeze(Pose(1:3, 1, 1:Nx));
             n2                = squeeze(Pose(1:3, 2, 1:Nx));
-            n3                = squeeze(Pose(1:3, 3, 1:Nx));
             % Cartesian position of x
             x1                = x(1, 1:Nx);
             x2                = x(2, 1:Nx);
@@ -93,6 +92,8 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             % Get the curvature strains
             Kappa_x           = Backbone.Strain(1, 1:Nx);
             Kappa_y           = Backbone.Strain(2, 1:Nx);
+            % Get the elongation strain
+            Elongation        = Backbone.Strain(6, 1:Nx);
             
             % Compute the polar coordinates of the points x1 and x2
             [theta, Rad]      = cart2pol(x1, x2);
@@ -100,7 +101,7 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             c_theta           = cos(theta);
             s_theta           = sin(theta);
             % Compute the coefficients for the radius restriction
-            a                 = (2/3)*(Kappa_x.*s_theta - Kappa_y.*c_theta);
+            a                 = (2/3)*(Kappa_x.*s_theta - Kappa_y.*c_theta)./(Elongation);
             a                 = abs(a);% We do consider the absolute value
             c                 = Rad;
             % Find the index of points for which a ~= 0
@@ -133,8 +134,13 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             % First order time derivative of the curvature strains
             dKappa_x_dt       = Backbone.dStrain(1, 1:Nx);
             dKappa_y_dt       = Backbone.dStrain(2, 1:Nx);
+            % First order time derivative of the elongation
+            dElongation_dt    = Backbone.dStrain(6, 1:Nx);
+
             % First order time derivative of a and c
-            da_dt             = (2/3)*( dKappa_x_dt.*s_theta + Kappa_x.*c_theta.*dtheta_dt - dKappa_y_dt.*c_theta + Kappa_y.*s_theta.*dtheta_dt );
+            %da_dt             = (2/3)*( dKappa_x_dt.*s_theta + Kappa_x.*c_theta.*dtheta_dt - dKappa_y_dt.*c_theta + Kappa_y.*s_theta.*dtheta_dt );
+            da_dt             = (2/3)*1./(Elongation.^2).*(Elongation.*( dKappa_x_dt.*s_theta + Kappa_x.*c_theta.*dtheta_dt - dKappa_y_dt.*c_theta + Kappa_y.*s_theta.*dtheta_dt ) - (Kappa_x.*s_theta - Kappa_y.*c_theta).*dElongation_dt);
+            
             dc_dt             = (x1.*dx1_dt + x2.*dx2_dt)./sqrt(x1.^2 + x2.^2);
             dc_dt(idx)        = 0;
             % First order time derivative of r
@@ -164,10 +170,16 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             % Second order time derivative of the curvature strains
             ddKappa_x_ddt     = Backbone.ddStrain(1, 1:Nx);
             ddKappa_y_ddt     = Backbone.ddStrain(2, 1:Nx);
-            
+            % Second order time derivative of the elongation strain
+            ddElongation_ddt  = Backbone.ddStrain(6, 1:Nx);
+
             % Compute the second order time derivative of a and c
-            dda_ddt           = (2/3)*( ddKappa_x_ddt.*s_theta + 2*dKappa_x_dt.*c_theta.*dtheta_dt - Kappa_x.*s_theta.*dtheta_dt.^2 + Kappa_x.*c_theta.*ddtheta_ddt ...
-                                     -  ddKappa_y_ddt.*c_theta + 2*dKappa_y_dt.*s_theta.*dtheta_dt + Kappa_y.*c_theta.*dtheta_dt.^2 + Kappa_y.*s_theta.*ddtheta_ddt);
+            % dda_ddt           = (2/3)*(( ddKappa_x_ddt.*s_theta + 2*dKappa_x_dt.*c_theta.*dtheta_dt - Kappa_x.*s_theta.*dtheta_dt.^2 + Kappa_x.*c_theta.*ddtheta_ddt ...
+            %                             -ddKappa_y_ddt.*c_theta + 2*dKappa_y_dt.*s_theta.*dtheta_dt + Kappa_y.*c_theta.*dtheta_dt.^2 + Kappa_y.*s_theta.*ddtheta_ddt));
+            % 
+            dda_ddt           = (2/3)*1./(Elongation.^4).*( ((Elongation.^2).*(Elongation.*( ddKappa_x_ddt.*s_theta + 2*dKappa_x_dt.*c_theta.*dtheta_dt - Kappa_x.*s_theta.*dtheta_dt.^2 + Kappa_x.*c_theta.*ddtheta_ddt ...
+                                                            -ddKappa_y_ddt.*c_theta + 2*dKappa_y_dt.*s_theta.*dtheta_dt + Kappa_y.*c_theta.*dtheta_dt.^2 + Kappa_y.*s_theta.*ddtheta_ddt) - (Kappa_x.*s_theta - Kappa_y.*c_theta)).*ddElongation_ddt) - ( Elongation.*(dKappa_x_dt.*s_theta + Kappa_x.*c_theta.*dtheta_dt - dKappa_y_dt.*c_theta + Kappa_y.*s_theta.*dtheta_dt)- (Kappa_x.*s_theta - Kappa_y.*c_theta).*dElongation_dt).*(2*Elongation).*dElongation_dt );
+            
             ddc_ddt           = ( sqrt(x1.^2 + x2.^2).*( dx1_dt.^2 + x1.*ddx1_ddt + dx2_dt.^2 + x2.*ddx2_ddt) - (x1.*dx1_dt + x2.*dx2_dt).*(x1.*dx1_dt + x2.*dx2_dt)./(sqrt( x1.^2 + x2.^2 )) )./( x1.^2 + x2.^2 );
             ddc_ddt(idx)      = 0;
 
@@ -193,11 +205,15 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             
             %% Evaluate the Jacobian w.r.t. x
             % Derivative of a and c w.r.t. x1
-            da_dx1              = (2/3)*( Kappa_x.*c_theta.*dtheta_dx1 + Kappa_y.*s_theta.*dtheta_dx1 );
+            %da_dx1              = (2/3)*( Kappa_x.*c_theta.*dtheta_dx1 + Kappa_y.*s_theta.*dtheta_dx1 );
+            da_dx1              = (2/3)*(1./Elongation).*( Kappa_x.*c_theta.*dtheta_dx1 + Kappa_y.*s_theta.*dtheta_dx1 );
+            
             dc_dx1              = x1./sqrt( x1.^2 + x2.^2 );
             dc_dx1(idx)         = 0;
             % Derivative of a and c w.r.t. x2
-            da_dx2              = (2/3)*( Kappa_x.*c_theta.*dtheta_dx2 + Kappa_y.*s_theta.*dtheta_dx2 );
+            %da_dx2              = (2/3)*( Kappa_x.*c_theta.*dtheta_dx2 + Kappa_y.*s_theta.*dtheta_dx2 );
+            da_dx2              = (2/3)*(1./Elongation).*( Kappa_x.*c_theta.*dtheta_dx2 + Kappa_y.*s_theta.*dtheta_dx2 );
+            
             dc_dx2              = x2./sqrt( x1.^2 + x2.^2 );
             dc_dx2(idx)         = 0;
             % Derivative of r w.r.t. x1
@@ -214,9 +230,13 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             % Derivative of the curvature strains w.r.t. x3_ref
             dKappa_x_dx3_ref    = Backbone.dStrain_ds(1, 1:Nx);
             dKappa_y_dx3_ref    = Backbone.dStrain_ds(2, 1:Nx);
+            % Derivative of the elongation strain w.r.t. x3_ref
+            dElongation_dx3_ref = Backbone.dStrain_ds(6, 1:Nx);
             
             % Derivative of a w.r.t. x3_ref
-            da_dx3_ref          = (2/3)*( dKappa_x_dx3_ref.*s_theta - dKappa_y_dx3_ref.*c_theta );
+            %da_dx3_ref          = (2/3)*( dKappa_x_dx3_ref.*s_theta - dKappa_y_dx3_ref.*c_theta );
+            da_dx3_ref          = (2/3)*(1./(Elongation.^2)).*(Elongation.*( dKappa_x_dx3_ref.*s_theta - dKappa_y_dx3_ref.*c_theta ) - (Kappa_x.*s_theta - Kappa_y.*c_theta).*dElongation_dx3_ref);
+            
             % Derivative of r w.r.t. x3_ref
             dr_dx3_ref          = dr_da.*da_dx3_ref;
             
@@ -240,9 +260,12 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             % Derivative of the curvatures w.r.t. q
             dKappa_x_dq       = squeeze(JStrain_dq(1, 1:nBackbone, 1:Nx));
             dKappa_y_dq       = squeeze(JStrain_dq(2, 1:nBackbone, 1:Nx));
+            % Derivatives of the elongation w.r.t. q
+            dElongation_dq    = squeeze(JStrain_dq(6, 1:nBackbone, 1:Nx));
 
             % Derivative of a w.r.t. q
-            da_dq             = (2/3)*( dKappa_x_dq.*s_theta - dKappa_y_dq.*c_theta );
+            %da_dq             = (2/3)*( dKappa_x_dq.*s_theta - dKappa_y_dq.*c_theta );
+            da_dq             = (2/3)*1./(Elongation.^2).*(Elongation.*( dKappa_x_dq.*s_theta - dKappa_y_dq.*c_theta ) - (Kappa_x.*s_theta - Kappa_y.*c_theta).*dElongation_dq);
             % Derivative of r w.r.t. q
             dr_dq             = dr_da.*da_dq;
 
@@ -263,10 +286,12 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             ddr_dcdq          = (-2*c./(r.^2.*( 2 + 3*a.*r).^2)).*( dr_dq.*( 2 + 3*a.*r) + 3*r.*( da_dq.*r + a.*dr_dq ) );
 
             % Derivative of da_dx1 w.r.t.q 
-            dda_dx1dq         = (2/3)*( dKappa_x_dq.*c_theta.*dtheta_dx1 + dKappa_y_dq.*s_theta.*dtheta_dx1 );
+            %dda_dx1dq         = (2/3)*( dKappa_x_dq.*c_theta.*dtheta_dx1 + dKappa_y_dq.*s_theta.*dtheta_dx1 );
+            dda_dx1dq         = (2/3)*(1./(Elongation.^2)).*( Elongation.*( dKappa_x_dq.*c_theta.*dtheta_dx1 + dKappa_y_dq.*s_theta.*dtheta_dx1 ) - (Kappa_x.*c_theta.*dtheta_dx1 + Kappa_y.*s_theta.*dtheta_dx1).*dElongation_dq );
 
             % Derivative of da_dx2 w.r.t.q 
-            dda_dx2dq         = (2/3)*( dKappa_x_dq.*c_theta.*dtheta_dx2 + dKappa_y_dq.*s_theta.*dtheta_dx2 );
+            %dda_dx2dq         = (2/3)*( dKappa_x_dq.*c_theta.*dtheta_dx2 + dKappa_y_dq.*s_theta.*dtheta_dx2 );
+            dda_dx2dq         = (2/3)*(1./(Elongation.^2)).*( Elongation.*( dKappa_x_dq.*c_theta.*dtheta_dx2 + dKappa_y_dq.*s_theta.*dtheta_dx2 ) - (Kappa_x.*c_theta.*dtheta_dx2 + Kappa_y.*s_theta.*dtheta_dx2).*dElongation_dq );
 
             % Derivative of dr_da w.r.t. q
             ddr_dadq          = -( 2*r.*dr_dq.*( 2 + 3*a.*r ) - 3*(r.^2).*( da_dq.*r + a.*dr_dq ) )./( (2 + 3*a.*r).^2 );
@@ -302,8 +327,11 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             ddr_dadx2   = -( 2*r.*dr_dx2.*( 2 +3*a.*r ) - (3*r.^2).*( da_dx2.*r + a.*dr_dx2 ) )./((2 + 3*a.*r).^2);
 
             % Derivative of da_dx3_ref w.r.t. x1 and x2
-            dda_dx3_refdx1 = (2/3)*( dKappa_x_dx3_ref.*c_theta.*dtheta_dx1 + dKappa_y_dx3_ref.*s_theta.*dtheta_dx1 );
-            dda_dx3_refdx2 = (2/3)*( dKappa_x_dx3_ref.*c_theta.*dtheta_dx2 + dKappa_y_dx3_ref.*s_theta.*dtheta_dx2 );
+            %dda_dx3_refdx1 = (2/3)*( dKappa_x_dx3_ref.*c_theta.*dtheta_dx1 + dKappa_y_dx3_ref.*s_theta.*dtheta_dx1 );
+            %dda_dx3_refdx2 = (2/3)*( dKappa_x_dx3_ref.*c_theta.*dtheta_dx2 + dKappa_y_dx3_ref.*s_theta.*dtheta_dx2 );
+            dda_dx3_refdx1 = (2/3)*(1./(Elongation.^2)).*(Elongation.*( dKappa_x_dx3_ref.*c_theta.*dtheta_dx1 + dKappa_y_dx3_ref.*s_theta.*dtheta_dx1 ) - dElongation_dx3_ref.*(Kappa_x.*c_theta.*dtheta_dx1 + Kappa_y.*s_theta.*dtheta_dx1) );
+            dda_dx3_refdx2 = (2/3)*(1./(Elongation.^2)).*(Elongation.*( dKappa_x_dx3_ref.*c_theta.*dtheta_dx2 + dKappa_y_dx3_ref.*s_theta.*dtheta_dx2 ) - dElongation_dx3_ref.*(Kappa_x.*c_theta.*dtheta_dx2 + Kappa_y.*s_theta.*dtheta_dx2) );
+
 
             % Derivative of dr_dx3_ref w.r.t. x1 and x2
             ddr_dx3_refdx1 = ddr_dadx1.*da_dx3_ref + dr_da.*dda_dx3_refdx1;
@@ -322,10 +350,15 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
 
             % Derivative of dKappa_x_dx3_ref and dKappa_y_dx3_ref w.r.t. q
             ddKappa_x_dx3_refdq = squeeze(JdStrain_dx3_refdq(1, 1:nBackbone, 1:Nx));
-            ddKappa_y_dx3_refdq = squeeze(JdStrain_dx3_refdq(1, 1:nBackbone, 1:Nx));
+            ddKappa_y_dx3_refdq = squeeze(JdStrain_dx3_refdq(2, 1:nBackbone, 1:Nx));
+
+            % Derivative of dElongation_dx3_ref w.r.t. q
+            ddElongation_dx3_refdq = squeeze(JdStrain_dx3_refdq(6, 1:nBackbone, 1:Nx));
 
             % Derivative of da_dx3_ref w.r.t. q
-            dda_dx3_refdq       = (2/3)*( ddKappa_x_dx3_refdq.*s_theta - ddKappa_y_dx3_refdq.*c_theta );
+            %dda_dx3_refdq       = (2/3)*( ddKappa_x_dx3_refdq.*s_theta - ddKappa_y_dx3_refdq.*c_theta );
+            dda_dx3_refdq       = (2/3)*(1./(Elongation.^4)).*( (Elongation.^2).*( dElongation_dq.*(dKappa_x_dx3_ref.*s_theta-dKappa_y_dx3_ref.*c_theta) + Elongation.*(ddKappa_x_dx3_refdq.*s_theta - ddKappa_y_dx3_refdq.*c_theta) - ( dElongation_dx3_ref.*( dKappa_x_dq.*s_theta - dKappa_y_dq.*c_theta ) + ( Kappa_x.*s_theta - Kappa_y.*c_theta ).*ddElongation_dx3_refdq )) - 2*Elongation.*dElongation_dq.*( Elongation.*(dKappa_x_dx3_ref.*s_theta - dKappa_y_dx3_ref.*c_theta) - (Kappa_x.*s_theta - Kappa_y.*c_theta).*dElongation_dx3_ref ) );
+            
             % Derivative of dr_dx3_ref w.r.t. q
             ddr_dx3_refdq       = ddr_dadq.*da_dx3_ref + dr_da.*dda_dx3_refdq;
 
