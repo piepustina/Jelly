@@ -8,7 +8,8 @@ femodel = femodel(Geometry="./test/meshes/Diamond_low_res.stl");
 
 
 
-model = generateMesh(femodel, "Hmax", 50, "Hmin", 50);
+%model = generateMesh(femodel, "Hmax", 50, "Hmin", 50);
+model = generateMesh(femodel, "Hmax", 24, "Hmin", 20);
 %model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
 %model = generateMesh(femodel);
 
@@ -34,14 +35,20 @@ B1 = LVPBody(Nodes, Elements, Primitives, 1);
 
 %% Do a plot
 
-r = BodyTree({FixedJoint(); RotationalJoint(zeros(4, 1))}, {B; B1});
+%r = BodyTree({FixedJoint(); RotationalJoint(zeros(4, 1))}, {B; B1});
+
+r = BodyTree({FixedJoint()}, {B});
 
 close all;
 figure; hold on; grid on; view(3)
 light("Position", [-0.1, -0.1, 0.1])
 lighting gouraud
 
-q_test = 0*[-0.04; 1; -0.01; 0.01; 0.2; 0.1; 0; 0; 1; -0.01; 0.01; 0.2; 0.1];
+%q_test = 0*[-0.04; 1; -0.01; 0.01; 0.2; 0.1; 0; 0; 1; -0.01; 0.01; 0.2; 0.1];
+
+q_test = zeros(r.n, 1);
+
+q_test = [0; 0; 0; 0; pi/2; 0];
 
 r.plot(q_test, "LineStyle", "-", "FaceAlpha", 1);
 

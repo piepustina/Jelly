@@ -36,6 +36,7 @@ classdef LVPBody < Body
         CentroidMassTensor              (1, 1, :) % Same as CentroidMass but in tensorized form for some computations
         DeformationGradientCentroid     (3, 3, :) % Deformation gradient at the centroids
         JDeformationGradientCentroid    (9, :, :) % Jacobian of the deformation gradient at the centroids w.r.t. q
+        JCentroid                       (3, :, :) % Jacobian of the function f w.r.t. q
         % dDeformationGradientCentroid    (3, 3, :) % Time derivative of the deformation gradient at the centroids
         nGaussPoints                    (1, 1)
     end
@@ -147,6 +148,7 @@ classdef LVPBody < Body
             obj.ddrCentroids                    = zeros(3, obj.NElements);
             obj.JrCentroids                     = zeros(3, obj.n, obj.NElements);
             obj.DeformationGradientCentroid     = zeros(3, 3, obj.NElements);
+            obj.JCentroid                       = zeros(3, obj.n, obj.NElements);
             % obj.dDeformationGradientCentroid    = zeros(3, 3, obj.NElements);
             obj.JDeformationGradientCentroid    = zeros(9, obj.n, obj.NElements);
 
@@ -631,6 +633,23 @@ classdef LVPBody < Body
 
             F = obj.DeformationGradientCentroid;
         end
+
+        function Jq = BodyJacobian(obj, q)
+            arguments (Input)
+                obj (1, 1) LVPBody
+                q   (:, 1) = zeros(obj.n, 1)
+            end
+            arguments (Output)
+                Jq (3, :, :)
+            end
+            
+            % Update the kinematics
+            if nargin == 2
+                obj.UpdateKinematics(q, zeros(obj.n, 1, "like", q), zeros(obj.n, 1, "like", q));
+            end
+
+            Jq = obj.JCentroid;
+        end
         
         % Compute the stiffness force
         function Kq = K(obj, q, options)
@@ -889,6 +908,8 @@ classdef LVPBody < Body
             obj.DeformationGradientCentroid     = Jx_ref;
             % obj.dDeformationGradientCentroid    = pagemtimes(JJq, dq);
             obj.JDeformationGradientCentroid    = JJq;
+            % Store the gradient of f(x, q) w.r.t. q
+            obj.JCentroid                       = Jq;
             
             % We assume that the successor body is attached to center of the body, i.e., at the end of the backbone
             obj.T_                  = obj.Backbone.T_;

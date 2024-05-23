@@ -568,6 +568,7 @@ classdef LVPBackbone < Body
                 if isa(piP, "LVPPrimitive")
                     if piP == p
                         idxE                                = obj.QIdx(i, 2);
+                        
                         Jxi(1:6, 1:idxE, 1:obj.nPoints)     = obj.JStrain(1:6, 1:idxE, 1:obj.nPoints);
                         dJxi(1:6, 1:idxE, 1:obj.nPoints)    = obj.dJStrain(1:6, 1:idxE, 1:obj.nPoints);
                         break;

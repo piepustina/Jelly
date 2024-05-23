@@ -11,9 +11,7 @@ femodel = femodel(Geometry="./test/meshes/Diamond_low_res.stl");
 
 
 
-%model = generateMesh(femodel, "Hmax", 50, "Hmin", 50);
-model = generateMesh(femodel, "Hmax", 24, "Hmin", 20);
-%model = generateMesh(femodel, "Hmax", 20, "Hmin", 20);
+model = generateMesh(femodel, "Hmax", 50, "Hmin", 50);
 %model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
 %model = generateMesh(femodel);
 
@@ -21,7 +19,7 @@ Nodes    = model.Geometry.Mesh.Nodes./1000;% Scale from [mm] to [m]. The mesh sh
 Elements = model.Geometry.Mesh.Elements;
 
 % Parameters of the body
-L0              = max(Nodes(3, :));
+L0              = 0.3189;%max(Nodes(3, :));
 nGauss          = 2;
 MassDensity     = 960;
 YoungModulus    = 5e5;
@@ -35,6 +33,10 @@ for i = 1:N_B
     Primitives = {PCStretchCompressionPrimitive(L0), ...
                   PCTwistShearPrimitive(L0), ...
                   PCBendingPrimitive(L0)};
+    Primitives = {PCTwistShearPrimitive(L0), ...
+                  PCStretchCompressionPrimitive(L0), ...
+                  PCBendingPrimitive(L0)};
+    %Primitives = {PCStretchCompressionPrimitive(L0)};
     B1{i} = LVPBody(Nodes, Elements, Primitives, nGauss, MassDensity, YoungModulus, PoissonRatio, DampingFactor);
     J1{i} = FixedJoint();
 end
@@ -46,8 +48,9 @@ end
 %% Build the robot
 %r1 = BodyTree(J1, B1);
 r1 = LVPBodyTree(J1, B1);
+%r1 = LVPBodyTreeJAct(J1, B1);
 %r1.g = [0; -9.81; 0];
-r1.g = [0; 0; 9.81];
+r1.g = [0; 0; -9.81];
 
 
 %% Solve for the equilibrium
@@ -56,8 +59,9 @@ figure; hold on; grid on; view(3)
 light("Position", [-0.1, -0.1, 0.1])
 lighting gouraud
 
-q_ss = r1.EquilibriumConfiguration(zeros(r1.n, 1), [100; 0; 0; 0])
+[q_ss, ~] = r1.EquilibriumConfiguration(zeros(r1.n, 1), [20; 0; 0; 0])
 r1.plot(q_ss, "LineStyle", "-", "FaceAlpha", 1);
+%r1.plot([0; 0; 0; 0; pi/4; 0], "LineStyle", "-", "FaceAlpha", 1);
 
 xlabel("$x [m]$", "Interpreter", "latex", "FontSize", 14)
 ylabel("$y [m]$", "Interpreter", "latex", "FontSize", 14)
