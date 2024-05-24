@@ -746,7 +746,7 @@ classdef LVPBackbone < Body
             obj.a_rel_              = obj.dEtaGauss(4:6, end);
             obj.domega_rel_         = obj.dEtaGauss(1:3, end);
             %NOTE: The jacobians are expressed in the tip frame
-            RT                      = obj.T_(1:3, 1:3);
+            RT                      = obj.T_(1:3, 1:3)';
             obj.v_par_              = RT*obj.JEtaGauss(4:6, 1:obj.n, end);
             obj.omega_par_          = RT*obj.JEtaGauss(1:3, 1:obj.n, end);
         end
