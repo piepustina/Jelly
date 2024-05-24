@@ -85,7 +85,7 @@ classdef LVPBodyTreeJAct < BodyTree
                         % Get the Jacobian of the body
                         BJ = obj.Bodies{j}.BodyJacobian();
                         % Compute the effect of the actuator
-                        J_Act   = T(1:3, 1:3)*BJ(1:3, :, obj.ClosestBodyCentroid(i));
+                        J_Act   = (T(1:3, 1:3)')*BJ(1:3, :, obj.ClosestBodyCentroid(i));
                         % Compute the effect of the actuation
                         Ai      = (J_Act')*(obj.ActuatorDirection(i, 1:3)');
         
