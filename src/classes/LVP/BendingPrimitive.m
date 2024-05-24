@@ -107,9 +107,11 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             % Find the index of points for which a ~= 0
             idxAisZero        = a <= 1e-4; % Threshold for the computation of a and to run limits
             % Preallocate the radius expansion
-            a2c2              = (a.^2).*(c.^2);
+            a_c               = complex(a);% Use complex values for the computation of the radius and for code generation
+            c_c               = complex(c);
+            a2c2              = (a_c.^2).*(c_c.^2);
             d                 = (27*a2c2 + sqrt((27*a2c2-2).^2 - 4) - 2).^(1/3);
-            r                 = (real(d./(3*2^(1/3)*a) + (2^(1/3))./(3*a.*d) - 1./(3*a)));
+            r                 = (real(d./(3*2^(1/3)*a_c) + (2^(1/3))./(3*a_c.*d) - 1./(3*a_c)));
             r(idxAisZero)     = Rad(idxAisZero);
             % Compute the primitive
             fx(1:3, 1:Nx)     = t + r.*c_theta.*n1 + r.*s_theta.*n2;

@@ -1,7 +1,7 @@
 %% Create an instance of the class
 clear; clc;
 
-N_B = 1;
+N_B = 2;
 
 % Load a test mesh
 %femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
@@ -41,13 +41,13 @@ for i = 1:N_B
     J1{i} = FixedJoint();
 end
 
-%B1{end+1} = RigidBody([1; zeros(9, 1)]);
-%J1{end+1} = FixedJoint();
+B1{end+1} = RigidBody([1; zeros(9, 1)]);
+J1{end+1} = FixedJoint();
 
 
 %% Build the robot
-r1 = BodyTree(J1, B1);
-%r1 = LVPBodyTree(J1, B1);
+%r1 = BodyTree(J1, B1);
+r1 = LVPBodyTree(J1, B1);
 %r1 = LVPBodyTreeJAct(J1, B1);
 %r1.g = [0; -9.81; 0];
 %r1.g = [-9.81; 0; 0];
@@ -60,9 +60,9 @@ figure; hold on; grid on; view(3)
 light("Position", [-0.1, -0.1, 0.1])
 lighting gouraud
 
-[q_ss, ~] = r1.EquilibriumConfiguration(zeros(r1.n, 1), [0; 0; 0; 0; 0; -10])
-r1.plot(q_ss, "LineStyle", "-", "FaceAlpha", 1);
-%r1.plot([0; 0; 0; 0; pi/4; 0], "LineStyle", "-", "FaceAlpha", 1);
+%[q_ss, ~] = r1.EquilibriumConfiguration(zeros(r1.n, 1), [0; 0; 0; 0])
+%r1.plot(q_ss, "LineStyle", "-", "FaceAlpha", 1);
+r1.plot([0; 0; 0; 0; pi/8; 0; 0; 0; 0; 0; 0; 0], "LineStyle", "-", "FaceAlpha", 1);
 
 xlabel("$x [m]$", "Interpreter", "latex", "FontSize", 14)
 ylabel("$y [m]$", "Interpreter", "latex", "FontSize", 14)
