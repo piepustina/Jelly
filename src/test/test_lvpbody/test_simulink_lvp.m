@@ -19,7 +19,7 @@ Nodes    = model.Geometry.Mesh.Nodes./1000;% Scale from [mm] to [m]. The mesh sh
 Elements = model.Geometry.Mesh.Elements;
 
 % Parameters of the body
-L0              = 0.3189;%max(Nodes(3, :));
+L0              = max(Nodes(3, :));
 nGauss          = 2;
 MassDensity     = 960;
 YoungModulus    = 5e5;
@@ -30,9 +30,6 @@ DampingFactor   = 0.05;
 B1 = cell(N_B, 1);
 J1 = cell(N_B, 1);
 for i = 1:N_B
-    Primitives = {PCStretchCompressionPrimitive(L0), ...
-                  PCTwistShearPrimitive(L0), ...
-                  PCBendingPrimitive(L0)};
     Primitives = {PCTwistShearPrimitive(L0), ...
                   PCStretchCompressionPrimitive(L0), ...
                   PCBendingPrimitive(L0)};
