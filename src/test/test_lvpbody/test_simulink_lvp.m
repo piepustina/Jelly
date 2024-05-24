@@ -49,9 +49,9 @@ J1{end+1} = FixedJoint();
 %r1 = BodyTree(J1, B1);
 r1 = LVPBodyTree(J1, B1);
 %r1 = LVPBodyTreeJAct(J1, B1);
-%r1.g = [0; -9.81; 0];
+r1.g = [0; -9.81; 0];
 %r1.g = [-9.81; 0; 0];
-r1.g = [0; 0; 9.81];
+%r1.g = [0; 0; 9.81];
 
 
 %% Solve for the equilibrium
@@ -79,7 +79,7 @@ figure; hold on; grid on; view(3)
 light("Position", [-0.1, -0.1, 0.1])
 lighting gouraud
 
-B1{1}.plot(squeeze(out.q.Data(:, :, end)), "LineStyle", "-", "FaceAlpha", 1);
+r1.plot(squeeze(out.q.Data(:, :, end)), "LineStyle", "-", "FaceAlpha", 1);
 
 xlabel("$x [m]$", "Interpreter", "latex", "FontSize", 14)
 ylabel("$y [m]$", "Interpreter", "latex", "FontSize", 14)
