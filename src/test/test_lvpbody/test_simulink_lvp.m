@@ -11,8 +11,8 @@ femodel = femodel(Geometry="./test/meshes/Diamond_low_res.stl");
 
 
 
-%model = generateMesh(femodel, "Hmax", 50, "Hmin", 50);
-model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
+model = generateMesh(femodel, "Hmax", 50, "Hmin", 50);
+%model = generateMesh(femodel, "Hmax", 10, "Hmin", 9);
 %model = generateMesh(femodel);
 
 Nodes    = model.Geometry.Mesh.Nodes./1000;% Scale from [mm] to [m]. The mesh should be already with [m] units!
@@ -46,9 +46,9 @@ J1{end+1} = FixedJoint();
 %r1 = BodyTree(J1, B1);
 r1 = LVPBodyTree(J1, B1);
 %r1 = LVPBodyTreeJAct(J1, B1);
-%r1.g = [0; -9.81; 0];
+r1.g = [0; -9.81; 0];
 %r1.g = [-9.81; 0; 0];
-r1.g = [0; 0; 9.81];
+%r1.g = [0; 0; 9.81];
 
 
 %% Solve for the equilibrium
@@ -57,7 +57,7 @@ figure; hold on; grid on; view(3)
 light("Position", [-0.1, -0.1, 0.1])
 lighting gouraud
 
-[q_ss, ~] = r1.EquilibriumConfiguration(zeros(r1.n, 1), [100; 0; 0; 0])
+[q_ss, ~] = r1.EquilibriumConfiguration(zeros(r1.n, 1), [100; 0; 100; 0])
 r1.plot(q_ss, "LineStyle", "-", "FaceAlpha", 1);
 %r1.plot([0; 0; 0; 0; pi/8; 0; 0; 0; 0; 0; 0; 0], "LineStyle", "-", "FaceAlpha", 1);
 
