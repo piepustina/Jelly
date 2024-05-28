@@ -7,6 +7,8 @@ classdef InverseDynamicsSystem < matlab.System
         %
         %robot_struct struct = struct('Mass', 1, 'Type', 'Rigid');
         RobotStruct = 0;
+        % Evaluate generalized external forces such as damping and elastic forces.
+        EvaluateExternalForces (1, 1) logical = true
     end
 
 
@@ -33,7 +35,7 @@ classdef InverseDynamicsSystem < matlab.System
         function u = stepImpl(obj, q, dq, ddq)
             % Run a step of the forward dynamics
             u = cast(zeros(size(q)), 'like', q);
-            u(:) = cast(obj.Tree.InverseDynamics(double(q), double(dq), double(ddq)), 'like', q);
+            u(:) = cast(obj.Tree.InverseDynamics(double(q), double(dq), double(ddq), "EvaluateExternalForces", obj.EvaluateExternalForces), 'like', q);
         end
 
         function resetImpl(~)

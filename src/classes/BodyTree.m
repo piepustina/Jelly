@@ -357,6 +357,14 @@ classdef BodyTree < handle
             % Run the GID algorithm,  q is only passed to
             % retreive its type.
             tau = obj.Kane_aux(obj.g, q);
+            
+            % Add the other external forces, i.e., damping and elastic force, if requested.
+            if options.EvaluateExternalForces == true
+                tau = tau ...
+                    + obj.K(q, "EvaluateKinematicTerms", false, "EvaluateInertialTerms", false) ...
+                    + obj.D(q, dq, "EvaluateKinematicTerms", false, "EvaluateInertialTerms", false);
+            end
+            
         end
         
         function dx = StateSpaceForwardDynamics(obj, t, x, u)
