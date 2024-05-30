@@ -36,7 +36,7 @@ classdef LVPBackbone < Body
         Primitives (:, 1) cell
     end
 
-    properties (Access = protected)
+    properties (Access = public)
         NPrimitives                 (1, 1) = 0
         PrimitiveModifiesBackbone   (:, 1) logical % Vector of length NPrimitives such that PrimitiveModifiesBackbone(i) = true if the primitive modifies the backbone
         QIdx                        (:, 2)% Store the starting and end indexes of the configuration vector for each primitive
@@ -607,6 +607,7 @@ classdef LVPBackbone < Body
             end
         end
         
+
         function Update(obj, q, dq, ddq)
             %Update the status of the backbone.
             %Args:

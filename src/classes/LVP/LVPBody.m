@@ -800,7 +800,7 @@ classdef LVPBody < Body
                         'LineStyle', options.LineStyle);
 
             % Plot also the backbone
-            plot3(squeeze(BackbonePose(1, 4, :)), squeeze(BackbonePose(2, 4, :)), squeeze(BackbonePose(3, 4, :)), "LineWidth", 2, "Color", "r");
+            %plot3(squeeze(BackbonePose(1, 4, :)), squeeze(BackbonePose(2, 4, :)), squeeze(BackbonePose(3, 4, :)), "LineWidth", 2, "Color", "r");
         end
         
         % Evaluate the kinematics in the current configuration
