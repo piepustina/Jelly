@@ -800,8 +800,6 @@ classdef LVPBody < Body
                         'LineStyle', options.LineStyle);
 
             % Plot also the backbone
-            %[~, idxZ] = sort(squeeze(BackbonePose(3, 4, :)));
-            %plot3(squeeze(BackbonePose(1, 4, idxZ)), squeeze(BackbonePose(2, 4, idxZ)), squeeze(BackbonePose(3, 4, idxZ)), "LineWidth", 2, "Color", "r");
             plot3(squeeze(BackbonePose(1, 4, :)), squeeze(BackbonePose(2, 4, :)), squeeze(BackbonePose(3, 4, :)), "LineWidth", 2, "Color", "r");
         end
         

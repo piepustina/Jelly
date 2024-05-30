@@ -1,6 +1,7 @@
 classdef GVSBody < Body
     %Abstract class modeling a 1D continuum under the Geometric Variable Strain (GVS) approach. The internal interaction forces are modeled using a linear visco-elastic law.
     
+    %TODO: This class must be vectorized, see the class LVPBackbone for a possible implementation.
     methods (Abstract)
         %Strain basis as a function of the arc length
         StrainBasis(obj, s);
@@ -89,6 +90,127 @@ classdef GVSBody < Body
         % Mass density along the curvliniear abscissa
         function rhos = LinearMassDensity(obj, s)
             rhos = pi*obj.Radius(s)^2*obj.MassDensity;
+        end
+
+        function p = plot(obj, q, options)
+            % Plot the body in the current configuration
+            arguments
+                obj                           (1, 1) GVSBody
+                q                             (:, 1) double = zeros(obj.n, 1)
+                options.BaseTransformation    (4, 4) double = eye(4)
+                options.Color                 (1, 3) double = [0 160 219]./256;
+                options.FaceAlpha             (1, 1) double = 1
+                options.LineStyle             (1, 1) = "none";% Possible values: "-" | "--" | ":" | "-." | "none"
+            end
+
+            %Compute the mesh of the robot in the current configuration
+            [verts, faces, faces_color] = obj.robotGeometry(q, options.Color, options.BaseTransformation);
+            p = patch('Faces',faces, 'Vertices',verts, ...
+                      'FaceVertexCData', faces_color, ...
+                      'FaceColor', 'flat', ... %Set to 'interp' if we provide the color of the vertexes instead of that of the faces
+                      'LineStyle', options.LineStyle, ...
+                      'FaceAlpha', options.FaceAlpha);
+            
+        end
+
+        function [verts, faces, faces_color] = robotGeometry(obj, q, color, T0)
+            arguments (Input)
+                obj     (1, 1) GVSBody
+                q       (:, 1) double
+                color   (1, 3) double
+                T0      (4, 4) double = eye(4)
+            end
+            
+            %Function hyperparameters increase to have a better representation
+            %Number of disks along each segment
+            s_step   = 100;
+            %Number of points representing each cross sectional area (disk)
+            phi_step = 100;
+        
+            %Preallocate vertex and face matrices
+            %The total number of vertexes includes also the origin and the
+            %tip of the backbone (+2)
+            n_verts = s_step*phi_step + 2;
+            n_faces = s_step*phi_step + phi_step;
+            
+            verts = zeros(n_verts, 3);
+            faces = zeros(n_faces, 4);
+            
+            %Assign the colors of the segment bases
+            faces_color = repmat(color, n_faces, 1);
+            
+            s  = linspace(0, 1, s_step);
+            phi= linspace(0, 2*pi, phi_step);
+
+            T_prev = T0;
+            %Body origin
+            verts(n_verts-1, :) = T_prev(1:3, 4)';
+
+            idx_verts = 1;
+
+            % Iterate over the curvilinear abscissa
+            for j=1:s_step
+                
+                %Get the transformation matrix from current frame to world
+                if s(j) == 0%We use the limit expression at the base to avoid numerical problems
+                    T_s_j = eye(4);
+                else
+                    T_s_j = obj.T_s(q, s(j)*obj.RestLength);
+                end
+                T_ = T_prev*T_s_j;
+                %Linearly interpolate the radius of the segment base
+                %and tip.
+                for k = 1:phi_step
+                    try
+                        rho = obj.Radius(s(j)*obj.RestLength, phi(k), q);
+                    catch
+                        rho = obj.Radius(s(j)*obj.RestLength);
+                    end
+                    vertex = T_*[rho*cos(phi(k));...
+                                 rho*sin(phi(k));...
+                                              0;...
+                                              1];
+                    verts(idx_verts, :) = vertex(1:3)';
+                    idx_verts = idx_verts + 1;
+                end
+            end
+
+            
+            %Close the base layer
+            idx_verts = 1;
+            for idx_faces = 1:phi_step
+                if mod(idx_verts, phi_step) == 0
+                    faces(idx_faces, :) = [idx_verts, n_verts-1, n_verts-1, idx_verts-phi_step+1];
+                else
+                    faces(idx_faces, :) = [idx_verts, n_verts-1, n_verts-1, idx_verts + 1];
+                end
+                idx_verts = idx_verts + 1;
+            end
+            
+            %Reset the counter for the vertices
+            idx_verts = 1;
+        
+            %Build the faces of the mesh
+            for idx_faces = idx_faces+1:n_faces-phi_step
+                if mod(idx_verts, phi_step) == 0
+                    faces(idx_faces, :) = idx_verts + [0 1 phi_step -phi_step+1];
+                else
+                    faces(idx_faces, :) = idx_verts + [0 phi_step phi_step+1 1];
+                end
+                idx_verts = idx_verts + 1;
+            end
+        
+            %Close the last layer
+            %T_ stores the position of the last point on the backbone (tip)
+            verts(n_verts, :) = T_(1:3, 4)';
+            for idx_faces = idx_faces+1:n_faces
+                if mod(idx_verts, phi_step) == 0
+                    faces(idx_faces, :) = [idx_verts, n_verts, n_verts, idx_verts-phi_step+1];
+                else
+                    faces(idx_faces, :) = [idx_verts, n_verts, n_verts, idx_verts + 1];
+                end
+                idx_verts = idx_verts + 1;
+            end
         end
 
         %% Body methods implementation
