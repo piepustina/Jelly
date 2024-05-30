@@ -80,13 +80,13 @@ classdef TwistShearPrimitive < LVPPrimitive & BackbonePrimitive
             %% Evaluate the primitive
             % Get the pose of the backbone at the query points 
             Pose              = Backbone.Pose;
-            % Compute the position in the global frame of each backbone points
+            % Compute the position in the global frame of each backbone point
             t                 = squeeze(Pose(1:3, 4, 1:Nx));
             n1                = squeeze(Pose(1:3, 1, 1:Nx));
             n2                = squeeze(Pose(1:3, 2, 1:Nx));
             % Evaluate the primitive
             fx(1:3, 1:Nx)     = t + x(1, 1:Nx).*n1 + x(2, 1:Nx).*n2;
-
+            
             %% Evaluate the first order time derivative
             omega             = Backbone.dPose(1:3, 1:Nx);
             dt                = Backbone.dPose(4:6, 1:Nx);

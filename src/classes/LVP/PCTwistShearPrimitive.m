@@ -30,14 +30,17 @@ classdef PCTwistShearPrimitive < TwistShearPrimitive
                 dP (3, :)
             end
             
-            % Basis 
+            % Output allocation
             P                 = zeros(3, obj.n);
+            dP                = zeros(3, obj.n);
+            
+            % Basis 
             P(1:3, 1:obj.n)   = [x3/obj.BodyRestLength,                     0,                     0;
                                                      0, x3/obj.BodyRestLength,                     0; 
                                                      0,                     0,-x3/obj.BodyRestLength];
 
+            
             % Derivative of the basis w.r.t. x3 
-            dP                = zeros(3, obj.n);
             dP(1:3, 1:obj.n)  = [1/obj.BodyRestLength,                    0,                    0;
                                                     0, 1/obj.BodyRestLength,                    0; 
                                                     0,                    0,-1/obj.BodyRestLength];

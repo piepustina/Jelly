@@ -90,7 +90,7 @@ classdef LVPBackbone < Body
         JEtaGaussLocal              (6, :, :) double
     end
 
-    properties (Access = private)
+    properties (Access = public)
         % Vector storing the unique points among the points along the backbone provided by the user
         UniquePoints                        (1, :) double
         % Mapping from the unique points to the points along the backbone provided by the user

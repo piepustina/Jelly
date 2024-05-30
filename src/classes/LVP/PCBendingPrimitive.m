@@ -30,19 +30,26 @@ classdef PCBendingPrimitive < BendingPrimitive
                 dP  (2, :)
             end
             
-            % Basis evaluation
+
+            % Output preallocation
             P                   = zeros(2, obj.n);
+            dP                  = zeros(2, obj.n);
+            
+            if x3 == 0 || x3 == obj.BodyRestLength
+                return;
+            end
 
+            % Basis evaluation
+            
             P(1:2, 1:obj.n)     = [1/obj.BodyRestLength,  0; ...
-                                                      0, -1/obj.BodyRestLength];
-
+                                                     0, -1/obj.BodyRestLength];
+            
             % P(1:2, 1:obj.n)     = [sin(pi*x3/obj.BodyRestLength),  0; ...
             %                                           0, -sin(pi*x3/obj.BodyRestLength)];
 
             % Derivative of the basis w.r.t. x3
-            dP                  = zeros(2, obj.n);
             % dP(1:2, 1:obj.n)    = [cos(pi*x3/obj.BodyRestLength)*pi/obj.BodyRestLength,  0; ...
-            %                                           0, -cos(pi*x3/obj.BodyRestLength)*pi/obj.BodyRestLength];
+            %                                            0, -cos(pi*x3/obj.BodyRestLength)*pi/obj.BodyRestLength];
         end
     end
 end

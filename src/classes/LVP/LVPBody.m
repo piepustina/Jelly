@@ -778,6 +778,8 @@ classdef LVPBody < Body
             obj.Backbone.setPoints(obj.Nodes(3, :));
             % Compute the current position of the body points as a function of q
             [Nodesq, ~, ~, ~, ~, ~] = obj.UpdateKinematicsAtX(q, zeros(size(q)), zeros(size(q)), obj.Nodes);
+            % Get the pose of the backbone
+            BackbonePose = pagemtimes(options.BaseTransformation, obj.Backbone.UniquePose);
             % Set back the centroids as target points for the computations of the LVPBackbone
             obj.Backbone.setPoints(obj.Centroids(3, :));
             % Apply the base transformation to all the bodies points
@@ -796,6 +798,11 @@ classdef LVPBody < Body
                         'FaceColor', options.Color, ...
                         'FaceAlpha', options.FaceAlpha, ...
                         'LineStyle', options.LineStyle);
+
+            % Plot also the backbone
+            %[~, idxZ] = sort(squeeze(BackbonePose(3, 4, :)));
+            %plot3(squeeze(BackbonePose(1, 4, idxZ)), squeeze(BackbonePose(2, 4, idxZ)), squeeze(BackbonePose(3, 4, idxZ)), "LineWidth", 2, "Color", "r");
+            plot3(squeeze(BackbonePose(1, 4, :)), squeeze(BackbonePose(2, 4, :)), squeeze(BackbonePose(3, 4, :)), "LineWidth", 2, "Color", "r");
         end
         
         % Evaluate the kinematics in the current configuration
@@ -847,6 +854,15 @@ classdef LVPBody < Body
                     qPrimitive      = q(qIdx, 1);
                     dqPrimitive     = dq(qIdx, 1);
                     ddqPrimitive    = ddq(qIdx, 1);
+                    
+                    % % If the configuration variables and time derivatives are zero for the current primitive, we do not have to evaluate the primitive.
+                    % if all(qPrimitive == 0) && all(dqPrimitive == 0) && all(ddqPrimitive == 0)
+                    %     continue;
+                    % end
+
+                    % qProgressive    = zeros(obj.n, 1, "like", q);
+                    % dqProgressive   = zeros(obj.n, 1, "like", q);
+                    % ddqProgressive  = zeros(obj.n, 1, "like", q);
     
                     % Update the configuration to account for the current deformation primitive
                     qProgressive(qIdx, 1)      = qPrimitive;

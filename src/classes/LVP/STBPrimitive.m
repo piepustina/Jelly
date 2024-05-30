@@ -1,9 +1,9 @@
-classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive 
+classdef STBPrimitive < LVPPrimitive & BackbonePrimitive 
     %Class that models a bending primitive
     
     methods
         % Class constructor
-        function obj = BendingPrimitive(Parameters)
+        function obj = STBPrimitive(Parameters)
             %Construct an instance of the bending primitive.
             arguments (Input)
                 Parameters (:, 1) double
@@ -16,7 +16,7 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
         % Implement the strain basis function and its derivative w.r.t. s from the BackbonePrimitive superclass
         function [J, dJ] = StrainBasis(obj, s)
             arguments (Input)
-                obj (1, 1) BendingPrimitive
+                obj (1, 1) STBPrimitive
                 s   (1, 1)
             end
             
@@ -30,13 +30,13 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
             dJ  = zeros(6, obj.n);
             
             % Call the primitive basis
-            [J(1:2, 1:obj.n), dJ(1:2, 1:obj.n)] = obj.PrimitiveBasis(s);
+            [J(1:5, 1:obj.n), dJ(1:5, 1:obj.n)] = obj.PrimitiveBasis(s);
         end
 
         % Update method for the primitive
         function [fx, dfx, ddfx, Jfq, Jfx, Jfx_ref, JJfx_q, JJfx_ref_x, JJfx_ref_q] = Update(obj, Backbone, q, dq, ddq, x, dx, ddx)
             arguments (Input)
-                obj             (1, 1)  BendingPrimitive
+                obj             (1, 1)  STBPrimitive
                 Backbone        (1, 1)  LVPBackbone
                 q               (:, 1)                  = zeros(obj.n, 1)
                 dq              (:, 1)                  = zeros(obj.n, 1)
@@ -391,32 +391,6 @@ classdef BendingPrimitive < LVPPrimitive & BackbonePrimitive
 
             % Overall Jacobian
             JJfx_ref_q                          = reshape([Zeros; Zeros; JJfx_ref_q3], 9*nBackbone, Nx);
-        end
-    end
-
-    methods (Access = protected)
-        % Compute the radius
-        function R = Radius(obj, a_r, c_r)
-            arguments (Input)
-                obj (1, 1) BendingPrimitive
-                a_r   (1, :) double 
-                c_r   (1, :) double
-            end
-            arguments (Output)
-                R   (1, :) double
-            end
-            % Preallocate the output
-            R_c = complex(c_r);
-            a   = complex(a_r);
-            c   = complex(c_r);
-            
-            % Compute the new radius if a is larger than the limit threshold
-            idxa = a>= 1e-5;
-            R_c(1, idxa) = (-1./(2.*a(1, idxa)) + ...
-                    3./(2.^(2/3).*a(1, idxa).*(-54 + 324*(a(1, idxa).^2).*(c(1, idxa).^2) + sqrt(-2916 + (-54 + 324*(a(1, idxa).^2).*(c(1, idxa).^2)).^2)).^(1/3)) +...
-                    (-54 + 324*(a(1, idxa).^2).*(c(1, idxa).^2) + sqrt(-2916 + (-54 + 324*(a(1, idxa).^2).*(c(1, idxa).^2)).^2)).^(1/3)./(6*2^(1/3).*a(1, idxa)));
-            % Take the real part as the above operation operates on complex
-            R = real(R_c);
         end
     end
 end
