@@ -161,10 +161,13 @@ classdef VGVSBody < Body
             obj.J_                  = obj.J();
             obj.int_dr_             = obj.int_dr(q, dq);%TODO: To be removed since it is not required
             obj.int_ddr_            = obj.int_ddr(q, dq, ddq);%TODO: To be removed since it is always zero
+            obj.Jint_ddr_           = obj.Jint_ddr(q);%TODO: To be removed since it is always zero
             obj.int_r_X_dr_         = obj.int_r_X_dr();
             obj.int_r_X_ddr_        = obj.int_r_X_ddr();
+            obj.Jint_r_X_ddr_       = obj.Jint_r_X_ddr();
             obj.int_dr_X_pv_r_      = obj.int_dr_X_pv_r();
             obj.int_pv_r_O_dd_r_    = obj.int_pv_r_O_dd_r();
+            obj.Jint_pv_r_O_dd_r_   = obj.Jint_pv_r_O_dd_r();
             obj.int_dr_O_dr_        = obj.int_dr_O_dr(q, dq);%TODO: To be removed since it is always zero
             obj.grad_int_dr_        = obj.grad_int_dr(q);%TODO: To be removed since it is always zero
             obj.grad_int_r_X_dr_    = obj.grad_int_r_X_dr();
@@ -304,6 +307,13 @@ classdef VGVSBody < Body
         function int_ddr_ = int_ddr(obj, q, dq, ddq)
             int_ddr_ = zeros(3, 1, 'like', q);
         end
+
+        %% Jacobian w.r.t. \ddot{q} of the integral of \ddot{r} when \dot{q} = 0
+        % TODO: This is always zero, remove
+        function Jint_ddr_ = Jint_ddr(obj, q)
+            Jint_ddr_ = zeros(3, obj.n, 'like', q);
+        end
+
         %% Integral of \cross(r, \dot{r})
         function int_r_X_dr_ = int_r_X_dr(obj, q, dq)
             if nargin == 2 % Update the DK
@@ -348,6 +358,24 @@ classdef VGVSBody < Body
                 end
             end
         end
+
+        %% Jacobian w.r.t. \ddot{q} of the integral of \cross(r, \ddot{r}) when \dot{q} = 0
+        function Jint_r_X_ddr_ = Jint_r_X_ddr(obj, q)
+            if nargin == 2 % Update the DK
+                obj.Kinematics(q, zeros([obj.n, 1], 'like', q), zeros([obj.n, 1], 'like', q));
+            end
+            % Compute the term
+            Jint_r_X_ddr_ = zeros(3, 1, 'like', obj.rGauss(1:3, 1));
+            for i = 1:obj.NGaussPointsInt
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk           = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
+                        Jint_r_X_ddr_    = Jint_r_X_ddr_ + skew(obj.rGauss(1:3, i, j, k))*obj.JdrGauss(1:3, 1:obj.n, i, j, k)*w_ijk;
+                    end
+                end
+            end
+        end
+
         %% Integral of \cross(\dor{r}, \jacobian{r}{q})
         function int_dr_X_pv_r_ = int_dr_X_pv_r(obj, q, dq)
             if nargin == 2 % Update the DK
@@ -388,6 +416,23 @@ classdef VGVSBody < Body
                     for k = 1:obj.NGaussPointsInt
                         w_ijk               = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
                         int_pv_r_O_dd_r_    = int_pv_r_O_dd_r_ + (obj.JdrGauss(1:3, 1:obj.n, i, j, k)'*obj.ddrGauss(1:3, i, j, k))*w_ijk;
+                    end
+                end
+            end
+        end
+
+        %% Jacobian w.r.t. \ddot{q} of the integral of \dot(\jacobian{r}{q}, \ddot{r}) when \dot{q} = 0 
+        function Jint_pv_r_O_dd_r_ = Jint_pv_r_O_dd_r(obj, q, dq, ddq)
+            if nargin == 2 % Update the DK
+                obj.Kinematics(q, zeros([obj.n, 1], 'like', q), zeros([obj.n, 1], 'like', q));
+            end
+            % Compute the term
+            Jint_pv_r_O_dd_r_ = zeros(obj.n, obj.n, 'like', obj.rGauss(1:3, 1));
+            for i = 1:obj.NGaussPointsInt
+                for j = 1:obj.NGaussPointsInt
+                    for k = 1:obj.NGaussPointsInt
+                        w_ijk               = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k)*obj.MassDensity;
+                        Jint_pv_r_O_dd_r_    = Jint_pv_r_O_dd_r_ + (obj.JdrGauss(1:3, 1:obj.n, i, j, k)'*obj.JdrGauss(1:3, 1:obj.n, i, j, k))*w_ijk;
                     end
                 end
             end
@@ -571,7 +616,7 @@ classdef VGVSBody < Body
                                                  RT*(obj.EtaGaussLength(4:6, i) + dp_ijk - obj.EtaGaussLength(4:6, end)));
                         % Jacobian
                         J_p_ijk     = Ri*[cos(Angle_k); sin(Angle_k); 0]*obj.JRadius(obj.GaussPointsLength(i), obj.GaussPointsAngle(k), q);
-                        JdpGauss(:, 1:obj.n, i, j, k) = RT*(obj.JEtaGaussLength(4:6, 1:obj.n, i) + J_p_ijk + skew(obj.gGaussLength(1:3, 4, i))*obj.JEtaGaussLength(1:3, 1:obj.n, end));
+                        JdpGauss(:, 1:obj.n, i, j, k) = RT*(obj.JEtaGaussLength(4:6, 1:obj.n, i) - obj.JEtaGaussLength(4:6, 1:obj.n, end) + J_p_ijk + skew(obj.gGaussLength(1:3, 4, i) - obj.gGaussLength(1:3, 4, end))*obj.JEtaGaussLength(1:3, 1:obj.n, end));
                         % Acceleration
                         ddp_ijk     = ddRi*[cos(Angle_k); sin(Angle_k); 0]*Radius_ij + ...
                                       2*dRi*[cos(Angle_k); sin(Angle_k); 0]*dRadius_ij + ...
@@ -616,21 +661,22 @@ classdef VGVSBody < Body
                 end
             end
             %% Update the gradient of the CoM velocity in the local frame
-            obj.grad_v_com_ = skew(RT'*obj.p_com_)*obj.JEtaGaussLength(1:3, 1:obj.n, end) - obj.JEtaGaussLength(4:6, 1:obj.n, end);
-            % Gradient of the CoM in the base frame
-            grad_v_com_i_1  = zeros(3, obj.n, 'like', q);
-            for i = 1:obj.NGaussPointsInt
-                for j = 1:obj.NGaussPointsInt
-                    for k = 1:obj.NGaussPointsInt
-                        w_ijk          = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k);
-                        Angle_k        = obj.GaussPointsAngle(k);
-                        J_p_ijk        = obj.gGaussLength(1:3, 1:3, i)*[cos(Angle_k); sin(Angle_k); 0]*obj.RadiusBasis(obj.GaussPointsLength(i), obj.GaussPointsAngle(k));
-                        grad_v_com_i_1 = grad_v_com_i_1 + (obj.JEtaGaussLength(4:6, 1:obj.n, i) + J_p_ijk)*w_ijk*obj.MassDensity;
-                    end
-                end
-            end
-            grad_v_com_i_1  = (1/m)*grad_v_com_i_1;
-            obj.grad_v_com_ = (RT*(obj.grad_v_com_ + grad_v_com_i_1))';
+            obj.grad_v_com_   = J_p_comi';
+            % obj.grad_v_com_ = skew(RT'*obj.p_com_)*obj.JEtaGaussLength(1:3, 1:obj.n, end) - obj.JEtaGaussLength(4:6, 1:obj.n, end);
+            % % Gradient of the CoM in the base frame
+            % grad_v_com_i_1  = zeros(3, obj.n, 'like', q);
+            % for i = 1:obj.NGaussPointsInt
+            %     for j = 1:obj.NGaussPointsInt
+            %         for k = 1:obj.NGaussPointsInt
+            %             w_ijk          = obj.GaussPointsRadius(i, j)*obj.GaussWeightsLength(i)*obj.GaussWeightsRadius(i, j)*obj.GaussWeightsAngle(k);
+            %             Angle_k        = obj.GaussPointsAngle(k);
+            %             J_p_ijk        = obj.gGaussLength(1:3, 1:3, i)*[cos(Angle_k); sin(Angle_k); 0]*obj.RadiusBasis(obj.GaussPointsLength(i), obj.GaussPointsAngle(k));
+            %             grad_v_com_i_1 = grad_v_com_i_1 + (obj.JEtaGaussLength(4:6, 1:obj.n, i) + J_p_ijk)*w_ijk*obj.MassDensity;
+            %         end
+            %     end
+            % end
+            % grad_v_com_i_1  = (1/m)*grad_v_com_i_1;
+            % obj.grad_v_com_ = (RT*(obj.grad_v_com_ + grad_v_com_i_1))';
         end
         %% Compute all the kinematic quantities at point s along the backbone
         function [g, omega, v, domega, dv, J_omega, J_v] = Kinematics_s(obj, q, dq, ddq, s)

@@ -253,10 +253,13 @@ classdef GVSBody < Body
                 obj.J_                  = obj.J();
                 obj.int_dr_             = obj.int_dr(q, dq);%TODO: To be removed since it is not required
                 obj.int_ddr_            = obj.int_ddr(q, dq, ddq);%TODO: To be removed since it is always zero
+                obj.Jint_ddr_           = obj.Jint_ddr(q);%TODO: To be removed since it is always zero
                 obj.int_r_X_dr_         = obj.int_r_X_dr();
                 obj.int_r_X_ddr_        = obj.int_r_X_ddr();
+                obj.Jint_r_X_ddr_       = obj.Jint_r_X_ddr();
                 obj.int_dr_X_pv_r_      = obj.int_dr_X_pv_r();
                 obj.int_pv_r_O_dd_r_    = obj.int_pv_r_O_dd_r();
+                obj.Jint_pv_r_O_dd_r_   = obj.Jint_pv_r_O_dd_r();
                 obj.int_dr_O_dr_        = obj.int_dr_O_dr(q, dq);%TODO: To be removed since it is always zero
                 obj.grad_int_dr_        = obj.grad_int_dr(q);%TODO: To be removed since it is always zero
                 obj.grad_int_r_X_dr_    = obj.grad_int_r_X_dr();
@@ -407,6 +410,12 @@ classdef GVSBody < Body
             int_ddr_ = zeros(3, 1, 'like', q);
         end
 
+        % Jacobian w.r.t. \ddot{q} of the Integral of \ddot{r} when \dot{q} = 0
+        % TODO: This is always zero, remove
+        function Jint_ddr_ = Jint_ddr(obj, q)
+            Jint_ddr_ = zeros(3, obj.n, 'like', q);
+        end
+
         % Integral of \cross(r, \dot{r})
         function int_r_X_dr_ = int_r_X_dr(obj, q, dq)
             if nargin == 2% Update the kinematics
@@ -440,6 +449,18 @@ classdef GVSBody < Body
             int_r_X_ddr_ = zeros(3, 1, 'like', obj.rGauss(1:3, 1));
             for i = 1:obj.NGaussPointsInt
                 int_r_X_ddr_ = int_r_X_ddr_ + cross(obj.rGauss(:, i), obj.ddrGauss(:, i))*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
+            end
+        end
+
+        % Jacobian w.r.t. \ddot{q} of the integral of \cross(r, \ddot{r}) evaluated when \dot{q} = 0
+        function Jint_r_X_ddr_ = Jint_r_X_ddr(obj, q)
+            if nargin == 2% Update the kinematics            
+                obj.Kinematics(q, zeros([obj.n, 1], 'like', q), zeros([obj.n, 1], 'like', q));
+            end
+            % Compute the term
+            Jint_r_X_ddr_ = zeros(3, obj.n, 'like', obj.rGauss(1:3, 1));
+            for i = 1:obj.NGaussPointsInt
+                Jint_r_X_ddr_ = Jint_r_X_ddr_ + skew(obj.rGauss(:, i))*obj.JdrGauss(1:3, 1:obj.n, i)*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
             end
         end
         
@@ -476,6 +497,19 @@ classdef GVSBody < Body
             int_pv_r_O_dd_r_ = zeros(obj.n, 1, 'like', obj.rGauss(1:3, 1));
             for i = 1:obj.NGaussPointsInt
                 int_pv_r_O_dd_r_ = int_pv_r_O_dd_r_ + (obj.JdrGauss(1:3, 1:obj.n, i)'*obj.ddrGauss(:, i))*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
+            end
+        end
+
+        %Jacobian w.r.t. \ddot{q} of the integral of \dot(\jacobian{r}{q}, \ddot{r}) when \dot{q} = 0
+        function Jint_pv_r_O_dd_r_ = Jint_pv_r_O_dd_r(obj, q)
+            if nargin == 2 % Update the kinematics
+                obj.Kinematics(q, zeros([obj.n, 1], 'like', q), zeros([obj.n, 1], 'like', q));
+            end
+
+            % Compute the term
+            Jint_pv_r_O_dd_r_ = zeros(obj.n, obj.n, 'like', obj.rGauss(1:3, 1));
+            for i = 1:obj.NGaussPointsInt
+                Jint_pv_r_O_dd_r_ = Jint_pv_r_O_dd_r_ + (obj.JdrGauss(1:3, 1:obj.n, i)'*obj.JdrGauss(1:3, 1:obj.n, i))*obj.LinearMassDensity(obj.GaussPoints(i))*obj.GaussWeights(i);
             end
         end
 
@@ -637,8 +671,6 @@ classdef GVSBody < Body
                 pGauss(:, i)    = RT*(obj.gGauss(1:3, 4, i) - d);
                 dpGauss(:, i)   = (dRT*(obj.gGauss(1:3, 4, i) - obj.gGauss(1:3, 4, end)) + ...
                                          RT*(obj.EtaGauss(4:6, i)  - obj.EtaGauss(4:6, end)));
-                %JdpGauss(:, 1:obj.n, i) = RT*(obj.JEtaGauss(4:6, 1:obj.n, i) + skew(obj.gGauss(1:3, 4, i))*obj.JEtaGauss(1:3, 1:obj.n, end));
-                % The above commented version is likely wrong! The correct version is below.
                 JdpGauss(:, 1:obj.n, i) = RT*(obj.JEtaGauss(4:6, 1:obj.n, i) - obj.JEtaGauss(4:6, 1:obj.n, end)  + skew(obj.gGauss(1:3, 4, i) - obj.gGauss(1:3, 4, end))*obj.JEtaGauss(1:3, 1:obj.n, end));
                 ddpGauss(:, i)  = (ddRT*(obj.gGauss(1:3, 4, i) - obj.gGauss(1:3, 4, end)) + ...
                                          2*dRT*(obj.EtaGauss(4:6, i)  - obj.EtaGauss(4:6, end)) + ...
@@ -677,14 +709,15 @@ classdef GVSBody < Body
                 obj.ddrGauss(1:3, i)            = ddpGauss(1:3, i) - obj.a_com_rel_;
             end
             %% Update the gradient of the CoM velocity in the local frame
-            obj.grad_v_com_ = skew(RT'*obj.p_com_)*obj.JEtaGauss(1:3, 1:obj.n, end) - obj.JEtaGauss(4:6, 1:obj.n, end);
-            % Gradient of the CoM in the base frame
-            grad_v_com_i_1  = zeros(3, obj.n, 'like', q);
-            for i = 1:obj.NGaussPointsInt
-                grad_v_com_i_1 = grad_v_com_i_1 + obj.JEtaGauss(4:6, 1:obj.n, i)*obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i));
-            end
-            grad_v_com_i_1  = (1/m)*grad_v_com_i_1;
-            obj.grad_v_com_ = (RT*(obj.grad_v_com_ + grad_v_com_i_1))';
+            obj.grad_v_com_   = J_p_comi';
+            % obj.grad_v_com_ = skew(RT'*obj.p_com_)*obj.JEtaGauss(1:3, 1:obj.n, end) - obj.JEtaGauss(4:6, 1:obj.n, end);
+            % % Gradient of the CoM in the base frame
+            % grad_v_com_i_1  = zeros(3, obj.n, 'like', q);
+            % for i = 1:obj.NGaussPointsInt
+            %     grad_v_com_i_1 = grad_v_com_i_1 + obj.JEtaGauss(4:6, 1:obj.n, i)*obj.GaussWeights(i)*obj.LinearMassDensity(obj.GaussPoints(i));
+            % end
+            % grad_v_com_i_1  = (1/m)*grad_v_com_i_1;
+            % obj.grad_v_com_ = (RT*(obj.grad_v_com_ + grad_v_com_i_1))';
         end
         %% Compute all the kinematic quantities at point s
         function [g, omega, v, domega, dv, J_omega, J_v] = Kinematics_s(obj, q, dq, ddq, s)

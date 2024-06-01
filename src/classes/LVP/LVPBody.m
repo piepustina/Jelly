@@ -226,10 +226,13 @@ classdef LVPBody < Body
                 obj.J_                  = obj.J();
                 obj.int_dr_             = obj.int_dr(q, dq);%TODO: To be removed since it is not required
                 obj.int_ddr_            = obj.int_ddr(q, dq, ddq);%TODO: To be removed since it is always zero
+                obj.Jint_ddr_           = obj.Jint_ddr(q);%TODO: To be removed since it is always zero
                 obj.int_r_X_dr_         = obj.int_r_X_dr();
                 obj.int_r_X_ddr_        = obj.int_r_X_ddr();
+                obj.Jint_r_X_ddr_       = obj.Jint_r_X_ddr();
                 obj.int_dr_X_pv_r_      = obj.int_dr_X_pv_r();
                 obj.int_pv_r_O_dd_r_    = obj.int_pv_r_O_dd_r();
+                obj.Jint_pv_r_O_dd_r_   = obj.Jint_pv_r_O_dd_r();
                 obj.int_dr_O_dr_        = obj.int_dr_O_dr(q, dq);%TODO: To be removed since it is always zero
                 obj.grad_int_dr_        = obj.grad_int_dr(q);%TODO: To be removed since it is always zero
                 obj.grad_int_r_X_dr_    = obj.grad_int_r_X_dr();
@@ -458,6 +461,12 @@ classdef LVPBody < Body
             int_ddr_ = zeros(3, 1, 'like', q);
         end
 
+        % Jacobian w.r.t. \ddot{q} of the integral of \ddot{r} evaluated when \dot{q} = 0
+        % TODO: This is always zero, remove
+        function Jint_ddr_ = Jint_ddr(obj, q)
+            Jint_ddr_ = zeros(3, obj.n, 'like', q);
+        end
+
         % Integral of \cross(r, \dot{r})
         function int_r_X_dr_ = int_r_X_dr(obj, q, dq)
             arguments (Input)
@@ -496,6 +505,24 @@ classdef LVPBody < Body
 
             % Compute the term
             int_r_X_ddr_    = sum(obj.CentroidMassTensor.*pagemtimes(skew(obj.rCentroids), reshape(obj.ddrCentroids, 3, 1, [])), 3);
+        end
+
+        % Jacobian w.r.t. \ddot{q} of the integral of \cross(r, \ddot{r}) when \dot{q} = 0
+        function Jint_r_X_ddr_ = Jint_r_X_ddr(obj, q)
+            arguments (Input)
+                obj (1, 1) LVPBody
+                q   (:, 1) = zeros(obj.n, 1)
+            end
+            arguments (Output)
+                Jint_r_X_ddr_ (3, :)
+            end
+            % Update the kinematics
+            if nargin == 2            
+                obj.UpdateKinematics(q, zeros(obj.n, 1), zeros(obj.n, 1));
+            end
+
+            % Compute the term
+            Jint_r_X_ddr_    = squeeze(sum(obj.CentroidMassTensor.*pagemtimes(skew(obj.rCentroids), obj.JrCentroids), 3));
         end
         
         
@@ -536,6 +563,24 @@ classdef LVPBody < Body
             end
             % Compute the term
             int_pv_r_O_dd_r_ = sum(obj.CentroidMassTensor.*pagemtimes(pagetranspose(obj.JrCentroids), reshape(obj.ddrCentroids, 3, 1, [])), 3);
+        end
+
+        %Jacobian w.r.t. \ddot{q} of the integral of \dot(\jacobian{r}{q}, \ddot{r}) when \dot{q} = 0
+        function Jint_pv_r_O_dd_r_ = Jint_pv_r_O_dd_r(obj, q)
+            arguments (Input)
+                obj (1, 1) LVPBody
+                q   (:, 1) = zeros(obj.n, 1)
+            end
+            arguments (Output)
+                Jint_pv_r_O_dd_r_ (:, :)
+            end
+
+            % Update the kinematics
+            if nargin >= 2
+                obj.UpdateKinematics(q, zeros(obj.n, 1), zeros(obj.n, 1));
+            end
+            % Compute the term
+            Jint_pv_r_O_dd_r_ = sum(obj.CentroidMassTensor.*pagemtimes(pagetranspose(obj.JrCentroids), obj.JrCentroids), 3);
         end
 
         % Integral of \dot(\dot{r}, \dot{r})
@@ -976,7 +1021,8 @@ classdef LVPBody < Body
             obj.ddrCentroids        = ddpElements   - obj.a_com_rel_;
 
             % Update the gradient of time derivative of the CoM position in the local frame (not the overall CoM velocity!)
-            obj.grad_v_com_         = (RT*(skew(RT'*obj.p_com_)*Jomega - Jd + sum(pagemtimes(dm_tensor, Jq), 3)/m))';
+            %obj.grad_v_com_         = (RT*(skew(RT'*obj.p_com_)*Jomega - Jd + sum(pagemtimes(dm_tensor, Jq), 3)/m))';
+            obj.grad_v_com_         = J_p_comi';
         end
     
     end

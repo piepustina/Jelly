@@ -17,10 +17,13 @@ classdef Body < handle
         J_                  = zeros(3, 3)
         int_dr_             = zeros(3, 1)
         int_ddr_            = zeros(3, 1)
+        Jint_ddr_
         int_r_X_dr_         = zeros(3, 1)
         int_r_X_ddr_        = zeros(3, 1)
+        Jint_r_X_ddr_
         int_dr_X_pv_r_
         int_pv_r_O_dd_r_
+        Jint_pv_r_O_dd_r_
         int_dr_O_dr_        = 0
         grad_int_dr_
         grad_int_r_X_dr_
@@ -170,6 +173,12 @@ classdef Body < handle
                 int_ddr_ = zeros(3, 1, 'like', q);
             end
 
+            % Jacobian w.r.t. \ddot{q} of the integral of \ddot{r} evaluated when \dot{q} = 0
+            % TODO: Always zero, remove.
+            function Jint_ddr_ = Jint_ddr(obj, q)
+                Jint_ddr_ = zeros(3, obj.n, 'like', q);
+            end
+
             % Integral of \cross(r, \dot{r})
             function int_r_X_dr_ = int_r_X_dr(obj, q, dq)
                 %Evaluate :math:`\int_{V} r \times \dot{r} \,\, \mathrm{d}V`, where :math:`r` is the relative position vector of the body particle in the body distal end frame.
@@ -192,6 +201,15 @@ classdef Body < handle
                 int_r_X_ddr_ = zeros(3, 1, 'like', q);
             end
 
+            % Jacobian w.r.t. \ddot{q} of the integral of \cross(r, \ddot{r}) evaluated for \dot{q} = 0.
+            function Jint_r_X_ddr_ = Jint_r_X_ddr(obj, q)
+                %Evaluate :math:`\int_{V} r \times \ddot{r} \,\, \mathrm{d}V`, where :math:`r` is the relative position vector of the body particle in the body distal end frame.
+                %
+                %Args:
+                %    q   ([double], [sym]): Configuration variables
+                Jint_r_X_ddr_ = zeros(3, obj.n, 'like', q);
+            end
+
             % Integral of \cross(\dor{r}, \jacobian{r}{q})
             function int_dr_X_pv_r_ = int_dr_X_pv_r(obj, q, dq)
                 %Evaluate :math:`\int_{V} \left(\tilde{\dot{r}} \frac{\partial r}{\partial q}\right)^{T} \,\, \mathrm{d}V`, where :math:`r` is the relative position vector of the body particle in the body distal end frame.
@@ -211,6 +229,17 @@ classdef Body < handle
                 %    dq  ([double], [sym]): First-order time derivative of the configuration variables
                 %    ddq ([double], [sym]): Second-order time derivative of the configuration variables
                 int_pv_r_O_dd_r_ = zeros(obj.n, 1, 'like', q);
+            end
+
+            % Jacobian w.r.t. \ddot{q} of the integral of \dot(\jacobian{r}{q}, \ddot{r}) when \dot{q} = 0
+            function Jint_pv_r_O_dd_r_ = Jint_pv_r_O_dd_r(obj, q)
+                %Evaluate :math:`\int_{V} \left(\frac{\partial r}{\partial q}\right)^{T} \ddot{r} \,\, \mathrm{d}V`, where :math:`r` is the relative position vector of the body particle in the body distal end frame.
+                %
+                %Args:
+                %    q   ([double], [sym]): Configuration variables
+                %    dq  ([double], [sym]): First-order time derivative of the configuration variables
+                %    ddq ([double], [sym]): Second-order time derivative of the configuration variables
+                Jint_pv_r_O_dd_r_ = zeros(obj.n, obj.n, 'like', q);
             end
             
             % Integral of \dot(\dot{r}, \dot{r})
@@ -313,6 +342,9 @@ classdef Body < handle
             obj.grad_v_com_         = zeros(obj.n, 3);
             obj.K_                  = zeros(obj.n, 1);
             obj.D_                  = zeros(obj.n, 1);
+            obj.Jint_ddr_           = zeros(3, obj.n);
+            obj.Jint_r_X_ddr_       = zeros(3, obj.n);
+            obj.Jint_pv_r_O_dd_r_    = zeros(obj.n, obj.n);
         end
     end
 
@@ -361,8 +393,10 @@ classdef Body < handle
                 obj.J_                  = obj.J(q, dq);
                 obj.int_dr_             = obj.int_dr(q, dq);
                 obj.int_ddr_            = obj.int_ddr(q, dq, ddq);
+                obj.Jint_ddr_           = obj.Jint_ddr(q);
                 obj.int_r_X_dr_         = obj.int_r_X_dr(q, dq);
                 obj.int_r_X_ddr_        = obj.int_r_X_ddr(q, dq, ddq);
+                obj.Jint_r_X_ddr_       = obj.Jint_r_X_ddr(q);
                 obj.int_dr_X_pv_r_      = obj.int_dr_X_pv_r(q, dq);
                 obj.int_pv_r_O_dd_r_    = obj.int_pv_r_O_dd_r(q, dq, ddq);
                 obj.int_dr_O_dr_        = obj.int_dr_O_dr(q, dq);

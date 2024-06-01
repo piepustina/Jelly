@@ -9,7 +9,7 @@ PoissonRatio    = 0.5;
 MaterialDamping = 0.1;
 NGaussPoints    = 10;
 n               = 3;
-N_B             = 2;
+N_B             = 3;
 Parameters      = [L0, BaseRadius, TipRadius, MassDensity, YoungModulus, PoissonRatio, MaterialDamping]';
 b1 = PCC3D([Parameters; NGaussPoints]);
 j1 = FixedJoint();
@@ -26,6 +26,7 @@ J1{end+1} = FixedJoint();
 
 %% Test the direct and differential kinematics with respect to the bodytree class
 r1 = SoftRobot(J1, B1, {});
+
 r2 = BodyTree(J1, B1);
 
 %%

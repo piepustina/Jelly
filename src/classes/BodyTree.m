@@ -338,18 +338,8 @@ classdef BodyTree < handle
                 options.EvaluateInertialTerms  (1, 1) logical  = true
                 options.EvaluateExternalForces (1, 1) logical  = true
             end
-
-            % % Check that the input vectors are in column format.
-            % if ~iscolumn(q)
-            %     q = q';
-            % end
-            % if ~iscolumn(dq)
-            %     dq = dq';
-            % end
-            % if ~iscolumn(ddq)
-            %     ddq = ddq';
-            % end
-            % Update the BodyTree
+            
+            % Update the tree
             obj = obj.TreeUpdate(q, dq, ddq, ...
                                     "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
                                     "EvaluateInertialTerms",  options.EvaluateInertialTerms, ...
@@ -357,6 +347,44 @@ classdef BodyTree < handle
             % Run the GID algorithm,  q is only passed to
             % retreive its type.
             tau = obj.Kane_aux(obj.g, q);
+            
+            % Add the other external forces, i.e., damping and elastic force, if requested.
+            if options.EvaluateExternalForces == true
+                tau = tau ...
+                    + obj.K(q, "EvaluateKinematicTerms", false, "EvaluateInertialTerms", false) ...
+                    + obj.D(q, dq, "EvaluateKinematicTerms", false, "EvaluateInertialTerms", false);
+            end
+            
+        end
+
+        function [Mq, tau] = UnifiedInverseDynamics(obj, q, dq, ddq, options)
+            % Evaluate the unified inverse dynamics using the Generalized Inverse Dynamics (GID) algorithm.
+            %
+            %Args:
+                %    q   ([double], [sym]): Configuration variables
+                %    dq  ([double], [sym]): First-order time derivative of configuration variables
+                %    ddq ([double], [sym]): Second-order time derivative of configuration variables
+
+            arguments (Input)
+                obj (1, 1) BodyTree
+                q   (:, 1)
+                dq  (:, 1)
+                ddq (:, 1)
+                options.EvaluateKinematicTerms (1, 1) logical  = true
+                options.EvaluateInertialTerms  (1, 1) logical  = true
+                options.EvaluateExternalForces (1, 1) logical  = true
+            end
+            
+            % Update the tree
+            obj = obj.TreeUpdate(q, dq, ddq, ...
+                                    "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                    "EvaluateInertialTerms",  options.EvaluateInertialTerms, ...
+                                    "EvaluateExternalForces", options.EvaluateExternalForces);
+            % Run the GID algorithm,  q is only passed to
+            % retreive its type.
+            [Mq, tau] = obj.UnifiedKane(obj.g, q, q, dq, ddq);
+
+            Mq = 1/2*(Mq + Mq');
             
             % Add the other external forces, i.e., damping and elastic force, if requested.
             if options.EvaluateExternalForces == true
@@ -1256,6 +1284,203 @@ classdef BodyTree < handle
                 end
             end
         end
+    
+    
+    
+        function [Mq, tau] = UnifiedKane(obj, g, q_type, q, dq, ddq)
+            %Compute the unified generalized inverse dynamics using the recursion
+            %formulas.
+            %Args:
+                %    g      ([double], [sym]): Gravitational force vector expressed in the base frame
+                %    q_type ([double], [sym]): Dummy variable used to retrieve the type of the configuration variables
+            
+            % Define auxiliary variables
+            % The joints are treated as massless bodies thus we augment the
+            % body dimensions
+            N_B_            = obj.N_B_Internal;
+            
+            % Define the output
+            Mq              = zeros(obj.n, obj.n, "like", q_type);
+            tau             = zeros(obj.n, 1, "like", q_type);
+            % 3 x N_B matrix whose i-th column stores the linear velocity of Body i ( origin of frame {S_i} )
+            v               = zeros(3, N_B_, "like", q_type);
+            % 3 x N_B matrix whose i-th column stores the angular velocity of Body i
+            omega           = zeros(3, N_B_, "like", q_type);
+            % 3 x N_B matrix whose i-th column stores the linear acceleration of Body i ( origin of frame {S_i} )
+            a               = zeros(3, N_B_, "like", q_type);
+            % 3 x n x N_B tensor that stores the Jacobian of the linear acceleration of Body i w.r.t. \ddot{q}
+            Ja              = zeros(3, obj.n, N_B_, "like", q_type);
+            % 3 x N_B matrix whose i-th column stores the angular acceleration of Body i
+            domega          = zeros(3, N_B_, "like", q_type);
+            % 3 x n x N_B tensor that stores the Jacobian of the angular acceleration of Body i w.r.t. \ddot{q}
+            Jdomega         = zeros(3, obj.n, N_B_, "like", q_type);
+            % 3 x N_B matrix whose i-th column stores the linear acceleration of CoM_i
+            a_com           = zeros(3, N_B_, "like", q_type);
+            % 3 x n x N_B tensor that stores the Jacobian of the CoM acceleration of Body i w.r.t. \ddot{q}
+            Ja_com          = zeros(3, obj.n, N_B_, "like", q_type);
+            % 3 x N_B matrix whose i-th column stores vector Gamma_i
+            Gamma           = zeros(3, N_B_, "like", q_type);
+            % 3 x n x N_B tensor that stores the Jacobian of Gamma_i w.r.t. \ddot{q}
+            JGamma          = zeros(3, obj.n, N_B_, "like", q_type);
+            % 3 x N_B matrix whose i-th column stores vector Omega_i
+            Omega           = zeros(3, N_B_, "like", q_type);
+            % 3 x n x N_B tensor that stores the Jacobian of Omega_i w.r.t. \ddot{q}
+            JOmega          = zeros(3, obj.n, N_B_, "like", q_type);
+            % 3 x N_B matrix whose i-th column stores vector M_i
+            M               = zeros(3, N_B_, "like", q_type);
+            % 3 x n x N_B tensor that stores the Jacobian of M_i w.r.t. \ddot{q}
+            JM              = zeros(3, obj.n, N_B_, "like", q_type);
+            % 3 x N_B matrix whose i-th column stores vector N_i
+            N               = zeros(3, N_B_, "like", q_type);
+            % 3 x n x N_B tensor that stores the Jacobian of N_i w.r.t. \ddot{q}
+            JN              = zeros(3, obj.n, N_B_, "like", q_type);
+            % Auxiliary vector to represent the velocity of the preceding body
+            v_i_1           = zeros(3, 1, "like", q_type);
+            omega_i_1       = zeros(3, 1, "like", q_type);
+            % Auxiliary vectors to represent the accelerations of the preceding body
+            a_i_1           = -g;
+            domega_i_1      = zeros(3, 1, "like", q_type);
+            M_i_1           = zeros(3, 1, "like", q_type);
+            N_i_1           = zeros(3, 1, "like", q_type);
+            % Auxiliary vectors to represent the Jacobians of the accelerations of the preceding body
+            Ja_i_1          = zeros(3, obj.n, "like", q_type);
+            Jdomega_i_1     = zeros(3, obj.n, "like", q_type);
+            JM_i_1          = zeros(3, obj.n, "like", q_type);
+            JN_i_1          = zeros(3, obj.n, "like", q_type);
+            % Auxiliary variable that counts the number of DOFs already processed
+            n_i             = 0;
+            % ********************************************************
+            % ********************* Forward step *********************
+            % ********************************************************
+            for i = 1:2*BodyTree.MaxBodiesNumber % Iterative over all the augmented bodies
+                if i <= N_B_
+                    if isnumeric(obj.BodiesInternal{i})
+                        continue;
+                    end
+                    % Step 1
+                    R_i_T        = real(obj.BodiesInternal{i}.T_(1:3, 1:3)');
+                    t_i          = real(obj.BodiesInternal{i}.T_(1:3, 4));
+                    v_rel_i      = real(obj.BodiesInternal{i}.v_rel_);
+                    omega_rel_i  = real(obj.BodiesInternal{i}.omega_rel_);
+                    dv_rel_i     = real(obj.BodiesInternal{i}.a_rel_);
+                    domega_rel_i = real(obj.BodiesInternal{i}.domega_rel_);
+                
+                    p_com_i      = real(obj.BodiesInternal{i}.p_com_);
+                    v_com_rel_i  = real(obj.BodiesInternal{i}.v_com_rel_);
+                    a_com_rel_i  = real(obj.BodiesInternal{i}.a_com_rel_);
+                    
+                    v(:, i)      = real(R_i_T*(v_i_1 + cross(omega_i_1, t_i) + v_rel_i));
+                    omega(:, i)  = real(R_i_T*(omega_i_1 + omega_rel_i));
+                    a(:, i)      = real(R_i_T*(a_i_1 + ...
+                                          -skew(t_i)*domega_i_1 + ...
+                                          skew(omega_i_1)*(skew(omega_i_1)*t_i + v_rel_i) + ...
+                                          skew(omega_i_1)*v_rel_i + ...
+                                          dv_rel_i));
+                    domega(:, i) = real(R_i_T*(domega_i_1 + skew(omega_i_1)*omega_rel_i + domega_rel_i));
+                    a_com(:, i)  = real(a(:, i) - skew(p_com_i)*domega(:, i) + cross(omega(:, i), cross(omega(:, i), p_com_i) + v_com_rel_i) +...
+                                    cross(omega(:, i), v_com_rel_i) + a_com_rel_i);
+                    
+                    n_Body       = obj.BodiesInternal{i}.n;
+                    Ja(:, :, i)  = real(R_i_T*(Ja_i_1 -skew(t_i)*Jdomega_i_1) ...
+                                       + [zeros(3, n_i), obj.BodiesInternal{i}.v_par_, zeros(3, obj.n - n_i - n_Body)]);
+                    Jdomega(:, :, i) = real(R_i_T*(Jdomega_i_1) +  [zeros(3, n_i), obj.BodiesInternal{i}.omega_par_, zeros(3, obj.n - n_i - n_Body)]);
+                    Ja_com(:, :, i)   = real(Ja(:, :, i) - skew(p_com_i)*Jdomega(:, :, i) + [zeros(3, n_i), obj.BodiesInternal{i}.grad_v_com_', zeros(3, obj.n - n_i - n_Body)]);
+                    
+                    
+                    
+                    % Step 2
+                    Gamma(:, i) =real(a_com(:, i)*obj.BodiesInternal{i}.m_ +...
+                                    2*cross(omega(:, i), obj.BodiesInternal{i}.int_dr_) +...
+                                    obj.BodiesInternal{i}.int_ddr_);
+                    Omega(:, i) = real(obj.BodiesInternal{i}.I_*domega(:, i) + cross(omega(:, i), obj.BodiesInternal{i}.I_*omega(:, i)) +...
+                                    obj.BodiesInternal{i}.J_*omega(:, i)+...
+                                    cross(omega(:, i), obj.BodiesInternal{i}.int_r_X_dr_) + ...
+                                    obj.BodiesInternal{i}.int_r_X_ddr_);
+
+                    JGamma(:, :, i) = real(Ja_com(:, :, i)*obj.BodiesInternal{i}.m_ + [zeros(3, n_i), obj.BodiesInternal{i}.Jint_ddr_, zeros(3, obj.n - n_i - n_Body)]);
+                    JOmega(:, :, i) = real(obj.BodiesInternal{i}.I_*Jdomega(:, :, i) + [zeros(3, n_i), obj.BodiesInternal{i}.Jint_r_X_ddr_, zeros(3, obj.n - n_i - n_Body)]);
+                    
+                    
+                    % Update the iteration variables
+                    v_i_1 = v(:, i);
+                    omega_i_1 = omega(:, i);
+                    a_i_1 = a(:, i);
+                    domega_i_1 = domega(:, i);
+
+                    Ja_i_1      = Ja(:, :, i);
+                    Jdomega_i_1 = Jdomega(:, :, i);
+                    n_i         = n_i + n_Body;
+                end
+            end
+            
+            % ********************************************************
+            % ********************* Backward step ********************
+            % ********************************************************
+            % Index for tau vector
+            idx_tau = obj.n;
+            n_i     = obj.n;
+            for i = 2*BodyTree.MaxBodiesNumber:-1:1
+                if i <= N_B_
+                    if isnumeric(obj.BodiesInternal{i})
+                        continue;
+                    end
+                    % Step 3
+                    if i == N_B_
+                        M(:, i) = real(Gamma(:, i));
+                        N(:, i) = real(Omega(:, i) + skew(obj.BodiesInternal{i}.p_com_)*Gamma(:, i));
+                        
+                        JM(:, :, i) = real(JGamma(:, :, i));
+                        JN(:, :, i) = real(JOmega(:, :, i) + skew(obj.BodiesInternal{i}.p_com_)*JGamma(:, :, i));
+                    else
+                        if ~isnumeric(obj.BodiesInternal{i+1})
+                            R_i_1   = real(obj.BodiesInternal{i+1}.T_(1:3, 1:3));
+                            t_i_1   = real(obj.BodiesInternal{i+1}.T_(1:3, 4));
+                            M(:, i) = real(Gamma(:, i) + R_i_1*M_i_1);
+                            N(:, i) = real(Omega(:, i) + skew(obj.BodiesInternal{i}.p_com_)*Gamma(:, i) + R_i_1*N_i_1 + skew(t_i_1)*(R_i_1*M_i_1));
+
+                            JM(:, :, i) = real(JGamma(:, :, i) + R_i_1*JM_i_1);
+                            JN(:, :, i) = real(JOmega(:, :, i) + skew(obj.BodiesInternal{i}.p_com_)*JGamma(:, :, i) + R_i_1*JN_i_1 + skew(t_i_1)*(R_i_1*JM_i_1));
+                        end
+                    end
+                    
+                    % Step 4
+                    if obj.BodiesInternal{i}.n ~= 0
+                        n_Body = obj.BodiesInternal{i}.n;
+
+                        % Update the iteration variable for the DOFs
+                        n_i         = n_i - n_Body;
+
+                        pi_star                         = real(obj.BodiesInternal{i}.grad_int_dr_*a_com(:, i) +...
+                                                                     obj.BodiesInternal{i}.grad_int_r_X_dr_*domega(:, i) +...
+                                                                     arrayfun(@(j) -(1/2)*omega(:, i)'*obj.BodiesInternal{i}.grad_J_(:, :, j)*omega(:, i), (1:size(obj.BodiesInternal{i}.grad_J_, 3))')+...
+                                                                     2*obj.BodiesInternal{i}.int_dr_X_pv_r_*omega(:, i) +...
+                                                                     obj.BodiesInternal{i}.int_pv_r_O_dd_r_ +...
+                                                                     obj.BodiesInternal{i}.grad_v_com_*Gamma(:, i));
+                        J_pi_star                       = real(obj.BodiesInternal{i}.grad_int_dr_*Ja_com(:, :, i) +...
+                                                                     obj.BodiesInternal{i}.grad_int_r_X_dr_*Jdomega(:, :, i) +...
+                                                                     [zeros(n_Body, n_i), obj.BodiesInternal{i}.Jint_pv_r_O_dd_r_, zeros(n_Body, obj.n - n_i - n_Body)] +...
+                                                                     obj.BodiesInternal{i}.grad_v_com_*JGamma(:, :, i));
+                    
+                        tau(idx_tau - n_Body + 1:idx_tau) = real(pi_star +...
+                                                                 (obj.BodiesInternal{i}.v_par_')*M(:, i) +...
+                                                                 (obj.BodiesInternal{i}.omega_par_')*N(:, i));
+                    
+                        Mq(idx_tau - n_Body + 1:idx_tau, 1:obj.n) = real( J_pi_star +...
+                                                                     (obj.BodiesInternal{i}.v_par_')*JM(:, :, i) +...
+                                                                     (obj.BodiesInternal{i}.omega_par_')*JN(:, :, i));
+
+                    end
+                    % Update the iteration variables
+                    M_i_1 = M(:, i);
+                    N_i_1 = N(:, i);
+
+                    JM_i_1 = JM(:, :, i);
+                    JN_i_1 = JN(:, :, i);
+                    idx_tau = idx_tau - obj.BodiesInternal{i}.n;
+                end
+            end
+        end
+    
     end
 end
 
