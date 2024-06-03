@@ -394,6 +394,7 @@ classdef BodyTree < handle
             end
             
         end
+
         
         function dx = StateSpaceForwardDynamics(obj, t, x, u)
             %Evaluate the forward dynamics in state space form.

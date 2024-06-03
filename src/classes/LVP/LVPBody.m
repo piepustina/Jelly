@@ -49,6 +49,7 @@ classdef LVPBody < Body
     methods (Static)
         % Overload the loadobj method from the Body class
         function obj = loadobj(S)
+
             % Load the primitives
             Primitives  = cell(LVPBody.MaxPrimitivesNumber, 1);
 
@@ -64,6 +65,38 @@ classdef LVPBody < Body
 
             % Build the LBPBody object
             obj = LVPBody(S.Nodes, S.Elements, Primitives, S.NGaussPoints, S.MassDensity, S.YoungModulus, S.PoissonRatio, S.DampingFactor);
+            
+            % % Restore the status of the body for loop parallelization
+            % obj.T_                  = S.T;
+            % obj.v_rel_              = S.v_rel;
+            % obj.omega_rel_          = S.omega_rel;
+            % obj.a_rel_              = S.a_rel;
+            % obj.domega_rel_         = S.domega_rel;
+            % obj.v_par_              = S.v_par;
+            % obj.omega_par_          = S.omega_par;
+            % obj.p_com_              = S.p_com;
+            % obj.v_com_rel_          = S.v_com_rel;
+            % obj.a_com_rel_          = S.a_com_rel;
+            % obj.m_                  = S.m;
+            % obj.I_                  = S.I;
+            % obj.J_                  = S.J;
+            % obj.int_dr_             = S.int_dr;
+            % obj.int_ddr_            = S.int_ddr;
+            % obj.Jint_ddr_           = S.Jint_ddr;
+            % obj.int_r_X_dr_         = S.int_r_X_dr;
+            % obj.int_r_X_ddr_        = S.int_r_X_ddr;
+            % obj.Jint_r_X_ddr_       = S.Jint_r_X_ddr;
+            % obj.int_dr_X_pv_r_      = S.int_dr_X_pv_r;
+            % obj.int_pv_r_O_dd_r_    = S.int_pv_r_O_dd_r;
+            % obj.Jint_pv_r_O_dd_r_   = S.Jint_pv_r_O_dd_r;
+            % obj.int_dr_O_dr_        = S.int_dr_O_dr;
+            % obj.grad_int_dr_        = S.grad_int_dr;
+            % obj.grad_int_r_X_dr_    = S.grad_int_r_X_dr;
+            % obj.grad_J_             = S.grad_J;
+            % obj.grad_v_com_         = S.grad_v_com;
+            % obj.xi_                 = S.xi;
+            % obj.K_                  = S.K;
+            % obj.D_                  = S.D;
         end
 
     end
@@ -75,19 +108,23 @@ classdef LVPBody < Body
             % Create a cell array containig a struct representation of the primitives            
             PrimitivesStuctArray = cellfun(@saveobj, obj.Primitives, "UniformOutput", false);
             PrimitivesClass      = cellfun(@class, obj.Primitives, "UniformOutput", false);
+            
+            %PrimitivesStuctArray = cellfun(@saveobj, obj.Primitives(1:obj.NPrimitives), "UniformOutput", false);
+            %PrimitivesClass      = cellfun(@class, obj.Primitives(1:obj.NPrimitives), "UniformOutput", false);
+            
 
             % Build the struct representing the LVPBody
-            S = struct('BodyType', class(obj), ...
-                       'BodyDoF', obj.n, ...
-                       'Nodes', obj.Nodes, ...
-                       'Elements', obj.Elements, ...
-                       'NGaussPoints', obj.nGaussPoints, ...
-                       'MassDensity', obj.MassDensity, ...
-                       'YoungModulus', obj.YoungModulus, ...
-                       'PoissonRatio', obj.PoissonRatio, ...
-                       'DampingFactor', obj.DampingFactor, ...
-                       'BodyPrimitivesClass', char(PrimitivesClass), ...
-                       'BodyPrimitives', {cell2mat(PrimitivesStuctArray)});
+            S = struct( 'BodyType', class(obj), ...
+                        'BodyDoF', obj.n, ...
+                        'Nodes', obj.Nodes, ...
+                        'Elements', obj.Elements, ...
+                        'NGaussPoints', obj.nGaussPoints, ...
+                        'MassDensity', obj.MassDensity, ...
+                        'YoungModulus', obj.YoungModulus, ...
+                        'PoissonRatio', obj.PoissonRatio, ...
+                        'DampingFactor', obj.DampingFactor, ...
+                        'BodyPrimitivesClass', char(PrimitivesClass), ...
+                        'BodyPrimitives', {cell2mat(PrimitivesStuctArray)});
         end
     end
 

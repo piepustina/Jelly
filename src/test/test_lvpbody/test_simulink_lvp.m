@@ -1,7 +1,7 @@
 %% Create an instance of the class
 clear; clc;
 
-N_B = 1;
+N_B = 4;
 
 % Load a test mesh
 %femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
@@ -47,6 +47,18 @@ r1 = LVPBodyTree(J1, B1);
 %r1.g = [0; -9.81; 0];
 %r1.g = [-9.81; 0; 0];
 r1.g = [0; 0; 9.81];
+
+%% Test the parallelization
+a = -10;
+b =  10;
+q = (b-a).*rand(r1.n, 1) + a;
+
+tic,
+[M1, t1 ] = r1.UnifiedInverseDynamics(q, ones(r1.n, 1), ones(r1.n, 1));
+toc
+tic
+[M2, t2 ] = r1.ParUnifiedInverseDynamics(q, ones(r1.n, 1), ones(r1.n, 1));
+toc
 
 %% Solve for the equilibrium
 close all;
