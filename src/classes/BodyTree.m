@@ -382,7 +382,7 @@ classdef BodyTree < handle
                                     "EvaluateExternalForces", options.EvaluateExternalForces);
             % Run the GID algorithm,  q is only passed to
             % retreive its type.
-            [Mq, tau] = obj.UnifiedKane(obj.g, q, q, dq, ddq);
+            [Mq, tau] = obj.UnifiedKane(obj.g, q);
 
             Mq = 1/2*(Mq + Mq');
             
@@ -1287,7 +1287,7 @@ classdef BodyTree < handle
     
     
     
-        function [Mq, tau] = UnifiedKane(obj, g, q_type, q, dq, ddq)
+        function [Mq, tau] = UnifiedKane(obj, g, q_type)
             %Compute the unified generalized inverse dynamics using the recursion
             %formulas.
             %Args:

@@ -1,7 +1,7 @@
 %% Create an instance of the class
 clear; clc;
 
-N_B = 3;
+N_B = 2;
 
 % Load a test mesh
 %femodel = femodel(Geometry="./test/meshes/Cylinder_coarse.stl");
@@ -30,11 +30,8 @@ DampingFactor   = 0.05;
 B1 = cell(N_B, 1);
 J1 = cell(N_B, 1);
 for i = 1:N_B
-    Primitives = {PCStretchCompressionPrimitive(L0)};
-    Primitives = {PCStretchCompressionPrimitive(L0); PCSTBPrimitive(L0)};
-    % Primitives = {PCStretchCompressionPrimitive(L0); ...
-    %               PCTwistShearPrimitive(L0)};
-    %Primitives = {PCStretchCompressionPrimitive(L0)};
+    Primitives = {PCStretchCompressionPrimitive(L0); ...
+                  PCSTBPrimitive(L0)};
     B1{i} = LVPBody(Nodes, Elements, Primitives, nGauss, MassDensity, YoungModulus, PoissonRatio, DampingFactor);
     J1{i} = FixedJoint();
 end
@@ -50,22 +47,6 @@ r1 = LVPBodyTree(J1, B1);
 r1.g = [0; -9.81; 0];
 %r1.g = [-9.81; 0; 0];
 %r1.g = [0; 0; 9.81];
-
-r1.g = [0; 0; 0];
-
-%%
-
-a = -1;
-b = 1;
-q = a + (b-a).*rand(r1.n,1);
-dq = a + (b-a).*rand(r1.n,1);
-ddq = a + (b-a).*rand(r1.n,1);
-
-Mq1      = r1.MassMatrix(q);
-tau1     = r1.InverseDynamics(q, zeros(r1.n, 1), ddq, "EvaluateExternalForces", false);
-[Mq2, tau2] = r1.UnifiedInverseDynamics(q, zeros(r1.n, 1), ddq, "EvaluateExternalForces", false);
-
-Mq1 - Mq2
 
 %% Solve for the equilibrium
 close all;
