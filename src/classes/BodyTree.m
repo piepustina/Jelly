@@ -666,16 +666,16 @@ classdef BodyTree < handle
             %   ([double], [sym]): Homogeneous transformation matrices for the body specified by idx.   
 
             % Arguments definition
-            arguments
+            arguments (Input)
                 obj (1, 1) BodyTree
-                q {mustBeVector} = zeros(obj.n, 1)
-                idx {mustBeVector} = linspace(1, obj.N_B, obj.N_B);
+                q {mustBeVector}    = zeros(obj.n, 1)
+                idx {mustBeVector}  = linspace(1, obj.N_B, obj.N_B);
             end
 
-            % switch nargin
-            %     case 2
-            %         idx = linspace(1, obj.N_B, obj.N_B);
-            % end
+            arguments (Output)
+                %T (:, 4)
+                T (4, 4, :)
+            end
 
             % Update the state of the kinematic tree
             Zeron   = zeros(obj.n, 1, "like", q);
@@ -695,7 +695,8 @@ classdef BodyTree < handle
             end
 
             % T is matrix of vertically stacked 4x4 transformation matrices
-            T   = repmat(eye(4, 'like', q), length(idx), 1);
+            %T   = repmat(eye(4, 'like', q), length(idx), 1);
+            T   = repmat(eye(4, 'like', q), 1, 1, length(idx));
             
             % Variables initialization
             T_i         = obj.T0;
@@ -711,8 +712,9 @@ classdef BodyTree < handle
 
                     % Check if the index is zero, i.e., the base.
                     if idx(j) == 0
-                        T(1+4*(j-1):4*j, 1:4) = T_i;
-                        j           = j + 1;
+                        %T(1+4*(j-1):4*j, 1:4)   = T_i;
+                        T(1:4, 1:4, j)          = T_i;
+                        j                       = j + 1;
                         if j > idxLength % Verify if idx = [0]; in case exit to avoid access out of range
                             break;
                         end
@@ -725,7 +727,8 @@ classdef BodyTree < handle
                     % Check if the current body is in the index list and in
                     % case assign T_i as output
                     if i == idx(j)
-                        T(1+4*(j-1):4*j, 1:4)   = T_i;
+                        %T(1+4*(j-1):4*j, 1:4)   = T_i;
+                        T(1:4, 1:4, j)          = T_i;
                         j                       = j + 1;
                     end
     
@@ -737,7 +740,6 @@ classdef BodyTree < handle
             end
         end
 
-        %function [q, converged, e] = InverseKinematics(obj, T, idx, q0, N, task_flags, AngularErrorThsd, LinearErrorThsd, UseGradientDescent, GradientDescentStepSize, ErrorWeight)
         function [q, converged, e] = InverseKinematics(obj, T, options)
             %Evaluate the inverse kinematics numerically using a Newton-Rapson iteration scheme.
             %
@@ -753,7 +755,7 @@ classdef BodyTree < handle
             arguments
                 obj 
                 T
-                options.BodyIndexes             = linspace(1, obj.N_B, obj.N_B)
+                options.BodyIndexes             = 1:obj.N_B
                 options.InitialGuess            = zeros(obj.n, 1)
                 options.TaskFlags               = ones(obj.N_B*6, 1)
                 options.MaxIterationNumber      = 4
@@ -774,73 +776,6 @@ classdef BodyTree < handle
             UseGradientDescent = options.UseGradientDescent;
             GradientDescentStepSize = options.GradientDescentStepSize;
             ErrorWeight = options.ErrorWeight;
-            
-
-            % % Default values
-            % DefaultN                    = 4;   %Number of Newton iterations
-            % DefaultAngularErrorThsd     = 1e-3;%Default threshold in the Newton scheme for the angular position
-            % DefaultLinearErrorThsd      = 1e-2;%Default threshold in the Newton scheme for the linear position
-            % DefaultUseGradientDescent   = false;% By default use a Newton iteration
-            % DefaultGradientDescentStepSize = 1;% By default, the gradient descent step size is 1
-            % DefaultErrorWeight          = 1;% By default all the error componenets of the task vector are equally weighted
-
-
-            % switch nargin
-            %     case 2
-            %         idx         = linspace(1, obj.N_B, obj.N_B);
-            %         q0          = zeros(obj.n, 1);
-            %         N           = DefaultN;
-            %         task_flags  = ones(obj.N_B*6, 1);
-            %         AngularErrorThsd = DefaultAngularErrorThsd;
-            %         LinearErrorThsd  = DefaultLinearErrorThsd;
-            %         UseGradientDescent = DefaultUseGradientDescent;
-            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
-            %         ErrorWeight = DefaultErrorWeight;
-            %     case 3
-            %         q0  = zeros(obj.n, 1);
-            %         N   = DefaultN;
-            %         task_flags  = ones(obj.N_B*6, 1);
-            %         AngularErrorThsd = DefaultAngularErrorThsd;
-            %         LinearErrorThsd  = DefaultLinearErrorThsd;
-            %         UseGradientDescent = DefaultUseGradientDescent;
-            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
-            %         ErrorWeight = DefaultErrorWeight;
-            %     case 4
-            %         N   = DefaultN;
-            %         task_flags  = ones(obj.N_B*6, 1);
-            %         AngularErrorThsd = DefaultAngularErrorThsd;
-            %         LinearErrorThsd  = DefaultLinearErrorThsd;
-            %         UseGradientDescent = DefaultUseGradientDescent;
-            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
-            %         ErrorWeight = DefaultErrorWeight;
-            %     case 5
-            %         task_flags  = ones(obj.N_B*6, 1);
-            %         AngularErrorThsd = DefaultAngularErrorThsd;
-            %         LinearErrorThsd  = DefaultLinearErrorThsd;
-            %         UseGradientDescent = DefaultUseGradientDescent;
-            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
-            %         ErrorWeight = DefaultErrorWeight;
-            %     case 6
-            %         AngularErrorThsd = DefaultAngularErrorThsd;
-            %         LinearErrorThsd  = DefaultLinearErrorThsd;
-            %         UseGradientDescent = DefaultUseGradientDescent;
-            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
-            %         ErrorWeight = DefaultErrorWeight;
-            %     case 7
-            %         LinearErrorThsd  = DefaultLinearErrorThsd;
-            %         UseGradientDescent = DefaultUseGradientDescent;
-            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
-            %         ErrorWeight = DefaultErrorWeight;
-            %     case 8
-            %         UseGradientDescent = DefaultUseGradientDescent;
-            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
-            %         ErrorWeight = DefaultErrorWeight;
-            %     case 9
-            %         GradientDescentStepSize = DefaultGradientDescentStepSize;
-            %         ErrorWeight = DefaultErrorWeight;
-            %     case 10
-            %         ErrorWeight = DefaultErrorWeight;
-            % end
 
             % Store useful variables
             idxLength = length(idx);
@@ -884,13 +819,14 @@ classdef BodyTree < handle
             for i = 1:N
                 % Evaluate the direct kinematics in the current configuration
                 T_q         = obj.DirectKinematics(q, idx);
-                % Evaluate the body Jacobian in the current configuration
-                J_q         = obj.BodyJacobian(q, idx);
+                % Evaluate the body Jacobian in the current configuration and reshape it as vertically stacked jacobians
+                J_q         = reshape(permute(obj.BodyJacobian(q, idx), [1, 3, 2]), 6*idxLength, []);
                 
                 % Iterate over all the requried bodies
                 for j = 1:idxLength
                     % Evaluate the desired configuration in the current frame
-                    T_qd_j = invTransformation(T_q(1+4*(j-1):4*j, 1:4))*T(1+4*(j-1):4*j, 1:4);
+                    %T_qd_j = invTransformation(T_q(1+4*(j-1):4*j, 1:4))*T(1+4*(j-1):4*j, 1:4);
+                    T_qd_j = invTransformation(T_q(1:4, 1:4, j))*T(1+4*(j-1):4*j, 1:4);
                     
                     % Compute the error
                     e_j                                 = skew4_inv(logmat(T_qd_j));
@@ -976,18 +912,15 @@ classdef BodyTree < handle
             %   {[double], [sym]}: length(idx)*6 x n body Jacobian with angular and linear components for each body specified by idx
             
             % Arguments definition
-            arguments
+            arguments (Input)
                 obj (1, 1) BodyTree
-                q {mustBeVector} = zeros(obj.n, 1)
-                idx {mustBeVector} = linspace(1, obj.N_B, obj.N_B)
+                q {mustBeVector}    = zeros(obj.n, 1)
+                idx {mustBeVector}  = linspace(1, obj.N_B, obj.N_B)
             end
-            % switch nargin
-            %     case 1
-            %         q   = zeros(obj.n, 1);
-            %         idx = linspace(1, obj.N_B, obj.N_B);
-            %     case 2
-            %         idx = linspace(1, obj.N_B, obj.N_B);
-            % end
+
+            arguments (Output)
+                J (6, :, :)
+            end
 
             % Update the BodyTree
             Zeron   = zeros(obj.n, 1, 'like', q);
@@ -1009,11 +942,9 @@ classdef BodyTree < handle
             N_B_ = obj.N_B_Internal;
             
             % Define the output
-            J      = zeros(length(idx)*6, obj.n, 'like', q);
+            %J      = zeros(length(idx)*6, obj.n, 'like', q);
+            J      = zeros(6, obj.n, length(idx), 'like', q);
             
-            % Uncomment below for testing purposes
-            % v      = zeros(3, 1, "like", q);
-            % omega  = zeros(3, 1, "like", q);
             
             % Auxiliary variables for the iteration
             J_i        = zeros(6, obj.n, 'like', q);
@@ -1052,16 +983,11 @@ classdef BodyTree < handle
                         J_i(1:3, 1:q_idx-1)       = real(R_i_T*J_i(1:3, 1:q_idx-1));
                     end
                     J_i(1:6, q_idx:q_idx+nBody-1) = [omega_par_i; v_par_i];
-                    
-                    % Uncomment below for testing purposes
-                    %v_rel_i         = real(obj.BodiesInternal{i}.v_rel_);
-                    %omega_rel_i     = real(obj.BodiesInternal{i}.omega_rel_);
-                    %v               = real(R_i_T*(v + cross(omega, t_i) + v_rel_i));
-                    %omega           = real(R_i_T*(omega + omega_rel_i));
 
                     % Save the value if i hits the current body value
                     if i == idx(j)
-                        J(1 + 6*(j-1):6*j, 1:obj.n) = J_i;
+                        %J(1 + 6*(j-1):6*j, 1:obj.n) = J_i;
+                        J(1:6, 1:obj.n, j) = J_i;
                         % Update the index for the body
                         j               = j + 1;
                     end
@@ -1076,10 +1002,6 @@ classdef BodyTree < handle
                     
                 end
             end
-            
-            % Uncomment below for testing purposes
-            % disp("v");v
-            % disp("omega");omega
             
         end
 
@@ -1099,6 +1021,8 @@ classdef BodyTree < handle
         end
 
         % Getter methods.
+        
+        
         function Bidx = getBodyConfigurationIndex(obj, idx)
             % Get the indexes of the configuration vector for the bodies
             % specified by idx.

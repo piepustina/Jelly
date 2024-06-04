@@ -42,7 +42,7 @@ classdef DirectKinematicsSystem < matlab.System
 
         function T = stepImpl(obj, q)
             % Compute the direct kinematics 
-            T    = cast(zeros(4*obj.BodyIndexesLength, 4), 'like', q);
+            T    = cast(zeros(4, 4, obj.BodyIndexesLength), 'like', q);
             T(:) = cast(obj.Tree.DirectKinematics(double(q), obj.BodyIndexes), 'like', q);
         end
 
@@ -91,7 +91,8 @@ classdef DirectKinematicsSystem < matlab.System
         
         function out = getOutputSizeImpl(obj)
             %getOutputSizeImpl Return size for each output port
-            out = [length(obj.BodyIndexes)*4, 4];
+            %out = [length(obj.BodyIndexes)*4, 4];
+            out = [4, 4, length(obj.BodyIndexes)];
         end
 
         function out = getOutputDataTypeImpl(obj)

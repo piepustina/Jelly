@@ -9,6 +9,10 @@ classdef BodyJacobianSystem < matlab.System
         %
         %robot_struct struct = struct('Mass', 1, 'Type', 'Rigid');
         RobotStruct = 0;
+        % Indexes of the bodies for which the Jacobian is to be evaluated
+        BodyIndexes = 0;
+        % Length of the body indexes
+        BodyIndexesLength;
     end
 
 
@@ -37,8 +41,8 @@ classdef BodyJacobianSystem < matlab.System
 
         function J = stepImpl(obj, q)
             % Compute the body Jacobian
-            J    = cast(zeros(6*obj.Tree.N_B, length(q)), 'like', q);
-            J(:) = cast(obj.Tree.BodyJacobian(double(q)), 'like', q);
+            J    = cast(zeros(6, length(q), obj.BodyIndexesLength), 'like', q);
+            J(:) = cast(obj.Tree.BodyJacobian(double(q), obj.BodyIndexes), 'like', q);
         end
 
         function resetImpl(~)
@@ -86,7 +90,8 @@ classdef BodyJacobianSystem < matlab.System
         
         function out = getOutputSizeImpl(obj)
             %getOutputSizeImpl Return size for each output port
-            out = [obj.RobotStruct.n];
+            %out = [obj.RobotStruct.n];
+            out = [6, obj.RobotStruct.n, length(obj.BodyIndexes)];
         end
 
         function out = getOutputDataTypeImpl(obj)

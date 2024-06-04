@@ -9,7 +9,7 @@ PoissonRatio    = 0.5;
 MaterialDamping = 0.1;
 NGaussPoints    = 10;
 n               = 3;
-N_B             = 15;
+N_B             = 2;
 Parameters      = [L0, BaseRadius, TipRadius, MassDensity, YoungModulus, PoissonRatio, MaterialDamping]';
 b1 = PCC3D([Parameters; NGaussPoints]);
 j1 = FixedJoint();
@@ -20,9 +20,9 @@ for i = 1:N_B
     %B1{i} = PCC2D([Parameters; NGaussPoints]);
     J1{i} = FixedJoint();
 end
-% Add also a rigid body at the tip with a mass of 1Kg at the tip
-B1{end+1} = RigidBody([1; 0; 0; 0; 0; 0; 0; 0; 0; 0]);
-J1{end+1} = FixedJoint();
+% % Add also a rigid body at the tip with a mass of 1Kg at the tip
+% B1{end+1} = RigidBody([1; 0; 0; 0; 0; 0; 0; 0; 0; 0]);
+% J1{end+1} = FixedJoint();
 
 %% Test the direct and differential kinematics with respect to the bodytree class
 r1 = SoftRobot(J1, B1, {});
@@ -36,12 +36,12 @@ dq_test = ones(r1.n, 1);
 % Transformation matries
 T1 = r1.DirectKinematics(q_test, L0*(1:N_B))
 
-%T2 = r2.DirectKinematics(q_test)
+T2 = r2.DirectKinematics(q_test)
 
 % Body Jacobian
 JAC1 = r1.BodyJacobian(q_test, L0*(1:N_B))
 
-%J2 = r2.BodyJacobian(q_test)
+J2 = r2.BodyJacobian(q_test)
 
 %% Test the inverse kinematics with a random configuration
 q_min  = -2;
@@ -50,6 +50,8 @@ disp("The configuration is ")
 q_test = (q_max-q_min).*rand(r1.n,1) + q_min
 % Direct kinematics
 T = r1.DirectKinematics(q_test, L0*(1:N_B));
+
+T = reshape(permute(T, [1, 3, 2]), 4*N_B, []);
 
 %%
 % Inverse kinematics with Newton-Rapson

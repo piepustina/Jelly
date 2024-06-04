@@ -82,74 +82,76 @@ classdef SoftRobot < BodyTree
             % Compute the number of actuators
             obj.N_A = 0;
             l_B     = length(Actuators);
-            for i = 1:SoftRobot.MaxActuatorsNumber
-                if i <= l_B
-                    if ~isnumeric(Actuators{i})
-                        obj.N_A = obj.N_A + 1;
+            if ~isempty(Actuators)
+                for i = 1:SoftRobot.MaxActuatorsNumber
+                    if i <= l_B
+                        if ~isnumeric(Actuators{i})
+                            obj.N_A = obj.N_A + 1;
+                        end
                     end
                 end
-            end
-            % Assign the actuators
-            obj.Actuators = cell(SoftRobot.MaxActuatorsNumber, 1);
-            obj.Actuators = Actuators;
-            
-            if coder.target("MATLAB")
-                N_A = obj.N_A;
-            else
-                N_A = SoftRobot.MaxActuatorsNumber;
-            end
-
-            % Allocate the Gaussian points and weights for each actuator. Because of the discontinuity of the strain, the integrals are expanded for actuators that span more than one body.
-            obj.ActuatorGaussianPoints      = cell(N_A, 1);
-            obj.ActuatorGaussianWeights     = cell(N_A, 1);
-            obj.ActuatorGaussianPointLength = zeros(N_A, 1);
-            % Get the rest length of the robot
-            RobotLength = obj.BodiesInterval(obj.N_B, 2);
-            for i = 1:N_A
-                if isnumeric(Actuators{i})%Needed for code generation
-                    obj.ActuatorGaussianPoints{i}  = 0;
-                    obj.ActuatorGaussianWeights{i} = 0;
-                    continue;
-                end
-                % Get the index of the body where the actuator starts
-                sStart   = Actuators{i}.sStart;
-                if sStart == RobotLength
-                    idxBodyStart = obj.N_B;
-                elseif sStart == 0
-                    idxBodyStart = 1;
-                else
-                    idxBodyStart = find(sStart >= obj.BodiesInterval(1:obj.N_B, 1) & sStart <= obj.BodiesInterval(1:obj.N_B, 2), 1);
-                end
-                % Get the index of the body where the actuator ends
-                sEnd     = Actuators{i}.sEnd;
-                if sEnd == RobotLength
-                    idxBodyEnd = obj.N_B;
-                elseif sEnd == 0
-                    idxBodyEnd = 1;
-                else
-                    idxBodyEnd = find(sEnd >= obj.BodiesInterval(1:obj.N_B, 1) & sEnd <= obj.BodiesInterval(1:obj.N_B, 2), 1);
-                end
-                % Compute the number of bodies trough which the actuator extends
-                idxBodyInterval = idxBodyEnd(1) - idxBodyStart(1) + 1;
+                % Assign the actuators
+                %obj.Actuators = cell(SoftRobot.MaxActuatorsNumber, 1);
+                obj.Actuators = Actuators;
                 
-                % Preallocate the Gauss points and weights
-                NGauss = obj.Actuators{i}.NGaussPoints;
-                obj.ActuatorGaussianPointLength(i) = idxBodyInterval*NGauss;
-                obj.ActuatorGaussianPoints{i}  = zeros(idxBodyInterval*NGauss, 1);
-                obj.ActuatorGaussianWeights{i} = zeros(idxBodyInterval*NGauss, 1);
-                % Assign the Gauss points and weights
-                k = 1;
-                for j = idxBodyStart(1):idxBodyEnd(1)
-                    % Check if we are at the start body of the actuator
-                    if j == idxBodyStart(1)
-                        [obj.ActuatorGaussianPoints{i}((k-1)*NGauss+1:k*NGauss), obj.ActuatorGaussianWeights{i}((k-1)*NGauss+1:k*NGauss)] = lgwt(NGauss, obj.Actuators{i}.sStart, obj.BodiesInterval(j, 2));
-                    elseif j == idxBodyEnd(1) % Check if we are at the end body of the actuator
-                        [obj.ActuatorGaussianPoints{i}((k-1)*NGauss+1:k*NGauss), obj.ActuatorGaussianWeights{i}((k-1)*NGauss+1:k*NGauss)] = lgwt(NGauss, obj.BodiesInterval(j, 1), obj.Actuators{i}.sEnd);
-                    else % Check if we are in a body through which the actuator passes completely
-                        [obj.ActuatorGaussianPoints{i}((k-1)*NGauss+1:k*NGauss), obj.ActuatorGaussianWeights{i}((k-1)*NGauss+1:k*NGauss)] = lgwt(NGauss, obj.BodiesInterval(j, 1), obj.BodiesInterval(j, 2));
+                if coder.target("MATLAB")
+                    N_A = obj.N_A;
+                else
+                    N_A = SoftRobot.MaxActuatorsNumber;
+                end
+    
+                % Allocate the Gaussian points and weights for each actuator. Because of the discontinuity of the strain, the integrals are expanded for actuators that span more than one body.
+                obj.ActuatorGaussianPoints      = cell(N_A, 1);
+                obj.ActuatorGaussianWeights     = cell(N_A, 1);
+                obj.ActuatorGaussianPointLength = zeros(N_A, 1);
+                % Get the rest length of the robot
+                RobotLength = obj.BodiesInterval(obj.N_B, 2);
+                for i = 1:N_A
+                    if isnumeric(Actuators{i})%Needed for code generation
+                        obj.ActuatorGaussianPoints{i}  = 0;
+                        obj.ActuatorGaussianWeights{i} = 0;
+                        continue;
                     end
-                    % Update iterationv variables
-                    k = k + 1;
+                    % Get the index of the body where the actuator starts
+                    sStart   = Actuators{i}.sStart;
+                    if sStart == RobotLength
+                        idxBodyStart = obj.N_B;
+                    elseif sStart == 0
+                        idxBodyStart = 1;
+                    else
+                        idxBodyStart = find(sStart >= obj.BodiesInterval(1:obj.N_B, 1) & sStart <= obj.BodiesInterval(1:obj.N_B, 2), 1);
+                    end
+                    % Get the index of the body where the actuator ends
+                    sEnd     = Actuators{i}.sEnd;
+                    if sEnd == RobotLength
+                        idxBodyEnd = obj.N_B;
+                    elseif sEnd == 0
+                        idxBodyEnd = 1;
+                    else
+                        idxBodyEnd = find(sEnd >= obj.BodiesInterval(1:obj.N_B, 1) & sEnd <= obj.BodiesInterval(1:obj.N_B, 2), 1);
+                    end
+                    % Compute the number of bodies trough which the actuator extends
+                    idxBodyInterval = idxBodyEnd(1) - idxBodyStart(1) + 1;
+                    
+                    % Preallocate the Gauss points and weights
+                    NGauss = obj.Actuators{i}.NGaussPoints;
+                    obj.ActuatorGaussianPointLength(i) = idxBodyInterval*NGauss;
+                    obj.ActuatorGaussianPoints{i}  = zeros(idxBodyInterval*NGauss, 1);
+                    obj.ActuatorGaussianWeights{i} = zeros(idxBodyInterval*NGauss, 1);
+                    % Assign the Gauss points and weights
+                    k = 1;
+                    for j = idxBodyStart(1):idxBodyEnd(1)
+                        % Check if we are at the start body of the actuator
+                        if j == idxBodyStart(1)
+                            [obj.ActuatorGaussianPoints{i}((k-1)*NGauss+1:k*NGauss), obj.ActuatorGaussianWeights{i}((k-1)*NGauss+1:k*NGauss)] = lgwt(NGauss, obj.Actuators{i}.sStart, obj.BodiesInterval(j, 2));
+                        elseif j == idxBodyEnd(1) % Check if we are at the end body of the actuator
+                            [obj.ActuatorGaussianPoints{i}((k-1)*NGauss+1:k*NGauss), obj.ActuatorGaussianWeights{i}((k-1)*NGauss+1:k*NGauss)] = lgwt(NGauss, obj.BodiesInterval(j, 1), obj.Actuators{i}.sEnd);
+                        else % Check if we are in a body through which the actuator passes completely
+                            [obj.ActuatorGaussianPoints{i}((k-1)*NGauss+1:k*NGauss), obj.ActuatorGaussianWeights{i}((k-1)*NGauss+1:k*NGauss)] = lgwt(NGauss, obj.BodiesInterval(j, 1), obj.BodiesInterval(j, 2));
+                        end
+                        % Update iterationv variables
+                        k = k + 1;
+                    end
                 end
             end
             
@@ -203,7 +205,8 @@ classdef SoftRobot < BodyTree
             [idxUnique, ~, idxUniqueOcc] = unique(idx);
 
             % T is matrix of vertically stacked 4x4 transformation matrices
-            T   = repmat(eye(4, 'like', q), pointsLength, 1);
+            %T   = repmat(eye(4, 'like', q), pointsLength, 1);
+            T   = repmat(eye(4, 'like', q), 1, 1, pointsLength);
 
             % Compute the DK for all the precedeing bodies to which the points belong
             TPrevBodies = DirectKinematics@BodyTree(obj, q, idxUnique-1);
@@ -234,7 +237,8 @@ classdef SoftRobot < BodyTree
                             % Evaluate the direct kinematics at the query point
                             T_i(1:4, 1:4)         = obj.Bodies{i}.T_s(q(idxBody(k, 1):idxBody(k, 2), 1), pointsBody(k));
                             % Update the output
-                            T(4*(k-1)+1:4*k, 1:4) = TPrevBodies(4*(idxUniqueOcc(k)-1)+1:4*idxUniqueOcc(k), 1:4)*T_i;% Use the same transform of the preceideing body for the same occurrences
+                            %T(4*(k-1)+1:4*k, 1:4) = TPrevBodies(4*(idxUniqueOcc(k)-1)+1:4*idxUniqueOcc(k), 1:4)*T_i;% Use the same transform of the preceideing body for the same occurrences
+                            T(1:4, 1:4, k) = TPrevBodies(1:4, 1:4, idxUniqueOcc(k))*T_i;
                         end
                     end
                 end
@@ -273,7 +277,8 @@ classdef SoftRobot < BodyTree
             pointsLength = length(points);
 
             % Preallocate the output for code generation
-            J = zeros(6*pointsLength, obj.n, "like", q);
+            %J = zeros(6*pointsLength, obj.n, "like", q);
+            J = zeros(6, obj.n, pointsLength, "like", q);
 
             % For each point, find the index of the corresponding body in
             % the chain and the remapped curvilinear abscissa in the body
@@ -325,7 +330,8 @@ classdef SoftRobot < BodyTree
             
                             % Initialize the Jacobian value using the Jacobian of the
                             % previous bodies
-                            J_i = J_prev(1+6*(idxUniqueOcc(k)-1):6*idxUniqueOcc(k), 1:obj.n);
+                            %J_i = J_prev(1+6*(idxUniqueOcc(k)-1):6*idxUniqueOcc(k), 1:obj.n);
+                            J_i = J_prev(1:6, 1:obj.n, idxUniqueOcc(k));
                             
                             % Update the value of the Jacobian for the bodies previous
                             % to the current one by rotating them in the body frame of
@@ -337,7 +343,8 @@ classdef SoftRobot < BodyTree
                             J_i(1:6, q_idx_start:q_idx_end) = [J_omega; J_v];
             
                             % Assign J_i to the output
-                            J(1 + 6*(k-1):6*k, 1:obj.n) = J_i(1:6, 1:obj.n);
+                            %J(1 + 6*(k-1):6*k, 1:obj.n) = J_i(1:6, 1:obj.n);
+                            J(1:6, 1:obj.n, k) = J_i(1:6, 1:obj.n);
                         end
                     end
                 end
