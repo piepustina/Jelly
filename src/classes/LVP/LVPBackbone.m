@@ -484,32 +484,38 @@ classdef LVPBackbone < Body
             end
             
             % Pre-evaluate the strain basis at the unique points and at their zanna quadrature points
-            for i = 1:obj.nUniquePoints
-                [obj.UniqueJStrain(1:6, 1:obj.n, i), obj.UniquedJStrain(1:6, 1:obj.n, i)] = obj.StrainBasis(obj.UniquePoints(i));
-                [JxiGaussZanna1, dJxiGaussZanna1]           = obj.StrainBasis(Zanna1(i));
-                [JxiGaussZanna2, dJxiGaussZanna2]           = obj.StrainBasis(Zanna2(i));
-                obj.UniqueJStrainZanna1(1:6, 1:obj.n, i)    = JxiGaussZanna1;
-                obj.UniqueJStrainZanna2(1:6, 1:obj.n, i)    = JxiGaussZanna2;
-                obj.UniquedJStrainZanna(1:6, 1:obj.n, i, 1) = dJxiGaussZanna1;
-                obj.UniquedJStrainZanna(1:6, 1:obj.n, i, 2) = dJxiGaussZanna2;
-            end
+            % for i = 1:obj.nUniquePoints
+            %     [obj.UniqueJStrain(1:6, 1:obj.n, i), obj.UniquedJStrain(1:6, 1:obj.n, i)] = obj.StrainBasis(obj.UniquePoints(i));
+            %     [JxiGaussZanna1, dJxiGaussZanna1]           = obj.StrainBasis(Zanna1(i));
+            %     [JxiGaussZanna2, dJxiGaussZanna2]           = obj.StrainBasis(Zanna2(i));
+            %     obj.UniqueJStrainZanna1(1:6, 1:obj.n, i)    = JxiGaussZanna1;
+            %     obj.UniqueJStrainZanna2(1:6, 1:obj.n, i)    = JxiGaussZanna2;
+            %     obj.UniquedJStrainZanna(1:6, 1:obj.n, i, 1) = dJxiGaussZanna1;
+            %     obj.UniquedJStrainZanna(1:6, 1:obj.n, i, 2) = dJxiGaussZanna2;
+            % end
+            [obj.UniqueJStrain(1:6, 1:obj.n, :), obj.UniquedJStrain(1:6, 1:obj.n, :)] = obj.StrainBasis(obj.UniquePoints);
+            [obj.UniqueJStrainZanna1(1:6, 1:obj.n, :), obj.UniquedJStrainZanna(1:6, 1:obj.n, :, 1)] = obj.StrainBasis(Zanna1);
+            [obj.UniqueJStrainZanna2(1:6, 1:obj.n, :), obj.UniquedJStrainZanna(1:6, 1:obj.n, :, 2)] = obj.StrainBasis(Zanna2);
         end
         
         %Strain basis. By default a LVPBackbone has no DOF, thus returns and empty basis
         function [Phi, dPhi] = StrainBasis(obj, s)
             arguments (Input)
                 obj (1, 1) LVPBackbone
-                s   (1, 1) 
+                s   (:, 1) 
             end
             
             arguments (Output)
-                Phi     (6, :)
-                dPhi    (6, :)
+                %Phi     (6, :)
+                %dPhi    (6, :)
+                Phi     (6, :, :)
+                dPhi    (6, :, :)
             end
-
+            
             % Output preallocation for code generation
-            Phi     = zeros(6, obj.n);
-            dPhi    = zeros(6, obj.n);
+            ls      = length(s);
+            Phi     = zeros(6, obj.n, ls);
+            dPhi    = zeros(6, obj.n, ls);
 
             % Iterate over the primitives to update the strain basis
             for i = 1:LVPBody.MaxPrimitivesNumber
@@ -519,7 +525,7 @@ classdef LVPBackbone < Body
                     end
                     % Check for the primitives that modify the strain
                     if obj.PrimitiveModifiesBackbone(i)
-                        [Phi(1:6, obj.QIdx(i, 1):obj.QIdx(i, 2)), dPhi(1:6, obj.QIdx(i, 1):obj.QIdx(i, 2))] = obj.Primitives{i}.StrainBasis(s);
+                        [Phi(1:6, obj.QIdx(i, 1):obj.QIdx(i, 2), :), dPhi(1:6, obj.QIdx(i, 1):obj.QIdx(i, 2), :)] = obj.Primitives{i}.StrainBasis(s);
                     end
                 end
             end

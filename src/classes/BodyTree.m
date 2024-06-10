@@ -871,13 +871,19 @@ classdef BodyTree < handle
                 options.Color                 (1, 3) double = [0 160 219]./256;
                 options.FaceAlpha             (1, 1) double = 1
                 options.LineStyle             (1, 1) = "none";% Possible values: "-" | "--" | ":" | "-." | "none"
+                options.TransformationMatrix  (4, 4) double = zeros(4, 4)
             end
             % p must be the output of a patch
             % Update the status of the tree
             obj.TreeUpdate(q, zeros(obj.n, 1), zeros(obj.n, 1));
 
             % Iterate over the bodies, each body must define a plot method that handles its plots for their configuration
-            T0 = obj.T0;
+            if all(all(options.TransformationMatrix == 0))
+                T0 = obj.T0;
+            else
+                T0 = options.TransformationMatrix;
+            end
+            
             for i = 1:obj.N_B
                 % Update the transformation matrix using the joint data
                 T0 = T0*obj.Joints{i}.T_;

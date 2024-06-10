@@ -17,20 +17,21 @@ classdef STBPrimitive < LVPPrimitive & BackbonePrimitive
         function [J, dJ] = StrainBasis(obj, s)
             arguments (Input)
                 obj (1, 1) STBPrimitive
-                s   (1, 1)
+                s   (:, 1)
             end
             
             arguments (Output)
-                J   (6, :)
-                dJ  (6, :)
+                J   (6, :, :)
+                dJ  (6, :, :)
             end
 
             % Output preallocation
-            J   = zeros(6, obj.n);
-            dJ  = zeros(6, obj.n);
-            
+            ls  = length(s);
+            J   = zeros(6, obj.n, ls);
+            dJ  = zeros(6, obj.n, ls);
+             
             % Call the primitive basis
-            [J(1:5, 1:obj.n), dJ(1:5, 1:obj.n)] = obj.PrimitiveBasis(s);
+            [J(1:5, 1:obj.n, :), dJ(1:5, 1:obj.n, :)] = obj.PrimitiveBasis(s);
         end
 
         % Update method for the primitive

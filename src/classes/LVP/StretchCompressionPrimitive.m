@@ -18,19 +18,19 @@ classdef StretchCompressionPrimitive < LVPPrimitive & BackbonePrimitive
         function [J, dJ] = StrainBasis(obj, s)
             arguments (Input)
                 obj (1, 1) StretchCompressionPrimitive
-                s   (1, 1)
+                s   (:, 1)
             end
             
             arguments (Output)
-                J   (6, :)
-                dJ  (6, :)
+                J   (6, :, :)
+                dJ  (6, :, :)
             end
 
-            % Output preallocation
-            J   = zeros(6, obj.n);
-            dJ  = zeros(6, obj.n);
-
-            [J(6, 1:obj.n), dJ(6, 1:obj.n)] = obj.PrimitiveBasis(s);
+            % % Output preallocation
+            ls  = length(s);
+            J   = zeros(6, obj.n, ls);
+            dJ  = zeros(6, obj.n, ls);
+            [J(6, 1:obj.n, :), dJ(6, 1:obj.n, :)] = obj.PrimitiveBasis(s);
         end
 
         function [fx, dfx, ddfx, Jfq, Jfx, Jfx_ref, JJfx_q, JJfx_ref_x, JJfx_ref_q] = Update(obj, Backbone, q, dq, ddq, x, dx, ddx)

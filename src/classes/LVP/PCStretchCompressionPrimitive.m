@@ -23,20 +23,21 @@ classdef PCStretchCompressionPrimitive < StretchCompressionPrimitive
         function [P, dP] = PrimitiveBasis(obj, x3)
             arguments (Input)
                 obj (1, 1) PCStretchCompressionPrimitive
-                x3  (1, 1) double
+                x3  (:, 1) double
             end
             arguments (Output)
-                P   (1, :)
-                dP  (1, :)
+                P   (1, :, :)
+                dP  (1, :, :)
             end
 
             % Basis
-            P           = zeros(1, obj.n);
-            P(1:obj.n)  = (x3/obj.BodyRestLength)*(x3/obj.BodyRestLength-1);
+            lx3                 = length(x3);
+            P                   = zeros(1, obj.n, lx3);
+            P(1, 1:obj.n, :)    = -(x3./obj.BodyRestLength).*(x3./obj.BodyRestLength-1);
 
             % Derivative of the basis w.r.t. x3
-            dP          = zeros(1, obj.n);
-            dP(1:obj.n) = 2*x3/(obj.BodyRestLength^2)-1/obj.BodyRestLength;
+            dP          = zeros(1, obj.n, lx3);
+            dP(1, 1:obj.n, :)   = -(2*x3./(obj.BodyRestLength^2)-1/obj.BodyRestLength);
         end
     end
 end

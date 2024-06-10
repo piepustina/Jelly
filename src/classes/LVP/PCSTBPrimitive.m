@@ -23,7 +23,7 @@ classdef PCSTBPrimitive < STBPrimitive
         function [P, dP] = PrimitiveBasis(obj, x3)
             arguments (Input)
                 obj (1, 1) PCSTBPrimitive
-                x3  (1, 1) double
+                x3  (:, 1) double
             end
             arguments (Output)
                 P   (5, :)
@@ -32,30 +32,31 @@ classdef PCSTBPrimitive < STBPrimitive
             
 
             % Output preallocation
-            P                   = zeros(5, obj.n);
-            dP                  = zeros(5, obj.n);
+            lx3                 = length(x3);
+            P                   = zeros(5, obj.n, lx3);
+            dP                  = zeros(5, obj.n, lx3);
             
 
             % Basis evaluation
             % Curvature
-            if x3 ~= 0 && x3 ~= obj.BodyRestLength
-                P(1, 1)         = 1/obj.BodyRestLength;
-                P(2, 2)         = -1/obj.BodyRestLength;
-            end
+            %if x3 ~= 0 && x3 ~= obj.BodyRestLength
+            %    P(1, 1)         = 1/obj.BodyRestLength;
+            %    P(2, 2)         = -1/obj.BodyRestLength;
+            %end
+            KappaIdx        = x3 ~= 0 & x3 ~= obj.BodyRestLength;
+            P(1, 1, KappaIdx)         = 1/obj.BodyRestLength;
+            P(2, 2, KappaIdx)         = -1/obj.BodyRestLength;
+            
             
             % Twist
-            P(3, 3)             = x3/obj.BodyRestLength;
-            dP(3, 3)            = 1/obj.BodyRestLength;
+            P(3, 3, :)             = x3./obj.BodyRestLength;
+            dP(3, 3, :)            = 1/obj.BodyRestLength;
             
             %Shear
-            P(4, 4)             = x3/obj.BodyRestLength;
-            P(5, 5)             = -x3/obj.BodyRestLength;
-            dP(4, 4)            = 1/obj.BodyRestLength;
-            dP(5, 5)            = -1/obj.BodyRestLength;
-
-            % % Elongation
-            % P(6, 6)             = (x3/obj.BodyRestLength)*(x3/obj.BodyRestLength-1);
-            % dP(6, 6)            =  2*x3/(obj.BodyRestLength^2)-1/obj.BodyRestLength;
+            P(4, 4, :)             = x3./obj.BodyRestLength;
+            P(5, 5, :)             = -x3./obj.BodyRestLength;
+            dP(4, 4, :)            = 1/obj.BodyRestLength;
+            dP(5, 5, :)            = -1/obj.BodyRestLength;
                         
         end
     end

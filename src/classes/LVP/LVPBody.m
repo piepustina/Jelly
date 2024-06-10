@@ -935,15 +935,6 @@ classdef LVPBody < Body
                     dqPrimitive     = dq(qIdx, 1);
                     ddqPrimitive    = ddq(qIdx, 1);
                     
-                    % % If the configuration variables and time derivatives are zero for the current primitive, we do not have to evaluate the primitive.
-                    % if all(qPrimitive == 0) && all(dqPrimitive == 0) && all(ddqPrimitive == 0)
-                    %     continue;
-                    % end
-
-                    % qProgressive    = zeros(obj.n, 1, "like", q);
-                    % dqProgressive   = zeros(obj.n, 1, "like", q);
-                    % ddqProgressive  = zeros(obj.n, 1, "like", q);
-    
                     % Update the configuration to account for the current deformation primitive
                     qProgressive(qIdx, 1)      = qPrimitive;
                     dqProgressive(qIdx, 1)     = dqPrimitive;
@@ -956,8 +947,6 @@ classdef LVPBody < Body
                     
                     % Apply the primitive and its time derivatives
                     % Note that the order of update of accelerations, velocities and positions is relevant because we use single variables
-                    % [xq, dxq, ddxq, JfxqPrimitive_vec, Jfxx_vec, Jfxx_ref_vec, Jdfxx_vec, Jdfxx_ref_vec, Jdfxdx_vec, JJfx_q_vec, JJfx_ref_x_vec, JJfx_ref_q_vec] = obj.Primitives{i}.Update(obj.Backbone, qPrimitive, dqPrimitive, ddqPrimitive, xq, dxq, ddxq);
-
                     [xq, dxq, ddxq, JfxqPrimitive_vec, Jfxx_vec, Jfxx_ref_vec, JJfx_q_vec, JJfx_ref_x_vec, JJfx_ref_q_vec] = obj.Primitives{i}.Update(obj.Backbone, qPrimitive, dqPrimitive, ddqPrimitive, xq, dxq, ddxq);
 
                     
