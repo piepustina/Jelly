@@ -66,37 +66,37 @@ classdef LVPBody < Body
             % Build the LBPBody object
             obj = LVPBody(S.Nodes, S.Elements, Primitives, S.NGaussPoints, S.MassDensity, S.YoungModulus, S.PoissonRatio, S.DampingFactor);
             
-            % % Restore the status of the body for loop parallelization
-            % obj.T_                  = S.T;
-            % obj.v_rel_              = S.v_rel;
-            % obj.omega_rel_          = S.omega_rel;
-            % obj.a_rel_              = S.a_rel;
-            % obj.domega_rel_         = S.domega_rel;
-            % obj.v_par_              = S.v_par;
-            % obj.omega_par_          = S.omega_par;
-            % obj.p_com_              = S.p_com;
-            % obj.v_com_rel_          = S.v_com_rel;
-            % obj.a_com_rel_          = S.a_com_rel;
-            % obj.m_                  = S.m;
-            % obj.I_                  = S.I;
-            % obj.J_                  = S.J;
-            % obj.int_dr_             = S.int_dr;
-            % obj.int_ddr_            = S.int_ddr;
-            % obj.Jint_ddr_           = S.Jint_ddr;
-            % obj.int_r_X_dr_         = S.int_r_X_dr;
-            % obj.int_r_X_ddr_        = S.int_r_X_ddr;
-            % obj.Jint_r_X_ddr_       = S.Jint_r_X_ddr;
-            % obj.int_dr_X_pv_r_      = S.int_dr_X_pv_r;
-            % obj.int_pv_r_O_dd_r_    = S.int_pv_r_O_dd_r;
-            % obj.Jint_pv_r_O_dd_r_   = S.Jint_pv_r_O_dd_r;
-            % obj.int_dr_O_dr_        = S.int_dr_O_dr;
-            % obj.grad_int_dr_        = S.grad_int_dr;
-            % obj.grad_int_r_X_dr_    = S.grad_int_r_X_dr;
-            % obj.grad_J_             = S.grad_J;
-            % obj.grad_v_com_         = S.grad_v_com;
-            % obj.xi_                 = S.xi;
-            % obj.K_                  = S.K;
-            % obj.D_                  = S.D;
+            % Restore the status of the body for loop parallelization
+            obj.T_                  = S.T;
+            obj.v_rel_              = S.v_rel;
+            obj.omega_rel_          = S.omega_rel;
+            obj.a_rel_              = S.a_rel;
+            obj.domega_rel_         = S.domega_rel;
+            obj.v_par_              = S.v_par;
+            obj.omega_par_          = S.omega_par;
+            obj.p_com_              = S.p_com;
+            obj.v_com_rel_          = S.v_com_rel;
+            obj.a_com_rel_          = S.a_com_rel;
+            obj.m_                  = S.m;
+            obj.I_                  = S.I;
+            obj.J_                  = S.J;
+            obj.int_dr_             = S.int_dr;
+            obj.int_ddr_            = S.int_ddr;
+            obj.Jint_ddr_           = S.Jint_ddr;
+            obj.int_r_X_dr_         = S.int_r_X_dr;
+            obj.int_r_X_ddr_        = S.int_r_X_ddr;
+            obj.Jint_r_X_ddr_       = S.Jint_r_X_ddr;
+            obj.int_dr_X_pv_r_      = S.int_dr_X_pv_r;
+            obj.int_pv_r_O_dd_r_    = S.int_pv_r_O_dd_r;
+            obj.Jint_pv_r_O_dd_r_   = S.Jint_pv_r_O_dd_r;
+            obj.int_dr_O_dr_        = S.int_dr_O_dr;
+            obj.grad_int_dr_        = S.grad_int_dr;
+            obj.grad_int_r_X_dr_    = S.grad_int_r_X_dr;
+            obj.grad_J_             = S.grad_J;
+            obj.grad_v_com_         = S.grad_v_com;
+            obj.xi_                 = S.xi;
+            obj.K_                  = S.K;
+            obj.D_                  = S.D;
         end
 
     end
@@ -106,11 +106,11 @@ classdef LVPBody < Body
         function S = saveobj(obj)
             % NOTE: Since MATLAB does not support nested struct with cell arrays, for the primitives we have to use struct arrays all with fileds that are primitive datatypes.
             % Create a cell array containig a struct representation of the primitives            
-            PrimitivesStuctArray = cellfun(@saveobj, obj.Primitives, "UniformOutput", false);
-            PrimitivesClass      = cellfun(@class, obj.Primitives, "UniformOutput", false);
+            %PrimitivesStuctArray = cellfun(@saveobj, obj.Primitives, "UniformOutput", false);
+            %PrimitivesClass      = cellfun(@class, obj.Primitives, "UniformOutput", false);
             
-            %PrimitivesStuctArray = cellfun(@saveobj, obj.Primitives(1:obj.NPrimitives), "UniformOutput", false);
-            %PrimitivesClass      = cellfun(@class, obj.Primitives(1:obj.NPrimitives), "UniformOutput", false);
+            PrimitivesStuctArray = cellfun(@saveobj, obj.Primitives(1:obj.NPrimitives), "UniformOutput", false);
+            PrimitivesClass      = cellfun(@class, obj.Primitives(1:obj.NPrimitives), "UniformOutput", false);
             
 
             % Build the struct representing the LVPBody
@@ -124,7 +124,37 @@ classdef LVPBody < Body
                         'PoissonRatio', obj.PoissonRatio, ...
                         'DampingFactor', obj.DampingFactor, ...
                         'BodyPrimitivesClass', char(PrimitivesClass), ...
-                        'BodyPrimitives', {cell2mat(PrimitivesStuctArray)});
+                        'BodyPrimitives', {cell2mat(PrimitivesStuctArray)}, ...
+                        'T', obj.T_, ...
+                        'v_rel', obj.v_rel_, ...
+                        'omega_rel', obj.omega_rel_, ...
+                        'a_rel', obj.a_rel_, ...
+                        'domega_rel', obj.domega_rel_, ...
+                        'v_par', obj.v_par_, ...
+                        'omega_par', obj.omega_par_, ...
+                        'p_com', obj.p_com_, ...
+                        'v_com_rel', obj.v_com_rel_, ...
+                        'a_com_rel', obj.a_com_rel_, ...
+                        'm', obj.m_, ...
+                        'I', obj.I_, ...
+                        'J', obj.J_, ...
+                        'int_dr', obj.int_dr_, ...
+                        'int_ddr', obj.int_ddr_, ...
+                        'Jint_ddr', obj.Jint_ddr_, ...
+                        'int_r_X_dr', obj.int_r_X_dr_, ...
+                        'int_r_X_ddr', obj.int_r_X_ddr_, ...
+                        'Jint_r_X_ddr', obj.Jint_r_X_ddr_, ...
+                        'int_dr_X_pv_r', obj.int_dr_X_pv_r_, ...
+                        'int_pv_r_O_dd_r', obj.int_pv_r_O_dd_r_, ...
+                        'Jint_pv_r_O_dd_r', obj.Jint_pv_r_O_dd_r_, ...
+                        'int_dr_O_dr', obj.int_dr_O_dr_, ...
+                        'grad_int_dr', obj.grad_int_dr_, ...
+                        'grad_int_r_X_dr', obj.grad_int_r_X_dr_, ...
+                        'grad_J', obj.grad_J_, ...
+                        'grad_v_com', obj.grad_v_com_, ...
+                        'xi', obj.xi_, ...
+                        'K', obj.K_, ...
+                        'D', obj.D_);
         end
     end
 
@@ -143,6 +173,8 @@ classdef LVPBody < Body
                 PoissonRatio    (1, 1) = 0
                 DampingFactor   (1, 1) = 0
             end
+            % Call the superclass constructor
+            obj                 = obj@Body();
             % Assign the inputs
             obj.Nodes           = Nodes;
             obj.Elements        = Elements;

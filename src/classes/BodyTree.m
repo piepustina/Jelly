@@ -152,10 +152,10 @@ classdef BodyTree < handle
             % Assign the joints and bodies
             % obj.Joints = cell(BodyTree.MaxBodiesNumber, 1);
             % obj.Bodies = cell(BodyTree.MaxBodiesNumber, 1);
-            % if coder.target("MATLAB")% Augment the joints and bodies
-            %     Joints = [Joints; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
-            %     Bodies = [Bodies; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
-            % end
+            if coder.target("MATLAB")% Augment the joints and bodies
+                 Joints = [Joints; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
+                 Bodies = [Bodies; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
+            end
             obj.Joints = Joints;
             obj.Bodies = Bodies;
 
@@ -178,75 +178,8 @@ classdef BodyTree < handle
             end
         end
        
-        % function obj = TreeUpdate(obj, q, dq, ddq)
-        %     %Update the state of the BodyTree. 
-        %     %
-        %     %Args:
-        %         %    q   ([double], [sym]): Configuration variables
-        %         %    dq  ([double], [sym]): First-order time derivative of configuration variables
-        %         %    ddq ([double], [sym]): Second-order time derivative of configuration variables
-        % 
-        %     % Check that the vectors q, dq and ddq are columns.
-        %     if ~iscolumn(q)
-        %         q = q';
-        %     end
-        %     if ~iscolumn(dq)
-        %         dq = dq';
-        %     end
-        %     if ~iscolumn(ddq)
-        %         ddq = ddq';
-        %     end
-        % 
-        %     % Initialize variables
-        %     k_i = 1;
-        %     l_B = length(obj.Bodies);
-        %     for i = 1:BodyTree.MaxBodiesNumber
-        %         if i <= l_B
-        %             if isnumeric(obj.Bodies{i})
-        %                 continue;
-        %             end
-        %             % JOINT UPDATE
-        %             % Get the DOFs associated with the joint
-        %             n_j   = obj.Joints{i}.n;
-        %             if n_j ~= 0
-        %                 % Compute the last index of q associated with the current
-        %                 % joint
-        %                 k_i_1 = k_i + n_j - 1;
-        %                 % Compute (q, dq, ddq) associated with the joint
-        %                 q_j   = q(k_i:k_i_1);
-        %                 dq_j  = dq(k_i:k_i_1);
-        %                 ddq_j = ddq(k_i:k_i_1);
-        %                 % Update the joint data
-        %                 obj.Joints{i}.Update(q_j, dq_j, ddq_j);
-        %                 % Update the joint index for the next iteration
-        %                 k_i = k_i_1 + 1;
-        %             else
-        %                 obj.Joints{i}.Update([], [], []);
-        %             end
-        % 
-        %             % BODY UPDATE
-        %             % Get the DOFs associated with the body
-        %             n_b   = obj.Bodies{i}.n;
-        %             if n_b ~= 0
-        %                 % Compute the last index of q associated with the current
-        %                 % body
-        %                 k_i_1 = k_i + n_b - 1;
-        %                 % Compute (q, dq, ddq) associated with the body
-        %                 q_b   = q(k_i:k_i_1);
-        %                 dq_b  = dq(k_i:k_i_1);
-        %                 ddq_b = ddq(k_i:k_i_1);
-        %                 % Update the body data
-        %                 obj.Bodies{i}.Update(q_b, dq_b, ddq_b);
-        %                 % Update the body index for the next iteration
-        %                 k_i = k_i_1 + 1;
-        %             else
-        %                 obj.Bodies{i}.Update([], [], []);
-        %             end
-        %         end
-        %     end
-        % end
         
-        % New update function with parallel support
+        % Non parallelized version of the tree update
         function obj = TreeUpdate(obj, q, dq, ddq, options)
             %Update the state of the BodyTree. 
             %
@@ -320,7 +253,106 @@ classdef BodyTree < handle
                 end
             end
         end
-        
+
+
+        % Parallilzed verion of the tree update
+        function obj = ParTreeUpdate(obj, q, dq, ddq, options)
+            %Update the state of the BodyTree. 
+            %
+            %Args:
+                %    q   ([double], [sym]): Configuration variables
+                %    dq  ([double], [sym]): First-order time derivative of configuration variables
+                %    ddq ([double], [sym]): Second-order time derivative of configuration variables
+            
+            % Arguments definition
+            arguments
+                obj (1, 1) BodyTree
+                q {mustBeVector}
+                dq {mustBeVector}
+                ddq {mustBeVector}
+                options.EvaluateKinematicTerms (1, 1) logical = true
+                options.EvaluateInertialTerms (1, 1) logical  = true
+                options.EvaluateExternalForces (1, 1) logical = true
+            end
+            
+            % Check that the vectors q, dq and ddq are columns.
+            if ~iscolumn(q)
+                q = q';
+            end
+            if ~iscolumn(dq)
+                dq = dq';
+            end
+            if ~iscolumn(ddq)
+                ddq = ddq';
+            end
+
+            % Initialize variables
+            l_B  = length(obj.Bodies);
+            B    = obj.Bodies;
+            J    = obj.Joints;
+            JIdx1 = obj.JointConfigurationIndexes(:, 1);
+            JIdx2 = obj.JointConfigurationIndexes(:, 2);
+            BIdx1 = obj.BodyConfigurationIndexes(:, 1);
+            BIdx2 = obj.BodyConfigurationIndexes(:, 2);
+            parfor i = 1:BodyTree.MaxBodiesNumber
+                Ji    = J{i};
+                Bi    = B{i};
+                    
+                if i <= l_B
+                    if isnumeric(B{i}) || isnumeric(J{i})
+                        continue;
+                    end
+                    % JOINT UPDATE
+                    % Get the DOFs associated with the joint
+                    n_j   = Ji.n;
+                    if n_j ~= 0
+                        % Get the indexes associated with the joint
+                        q_start = JIdx1(i);
+                        q_end   = JIdx2(i);
+                        % Update the joint data
+                        Ji.Update(q(q_start:q_end), dq(q_start:q_end), ddq(q_start:q_end), "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                                                                                      "EvaluateInertialTerms" ,  options.EvaluateInertialTerms, ...
+                                                                                                      "EvaluateExternalForces", options.EvaluateExternalForces);
+                    else
+                        Ji.Update([], [], [], "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                                         "EvaluateInertialTerms" ,  options.EvaluateInertialTerms, ...
+                                                         "EvaluateExternalForces", options.EvaluateExternalForces);
+                    end
+                    
+                    % BODY UPDATE
+                    % Get the DOFs associated with the body
+                    n_b   = Bi.n;
+                    if n_b ~= 0
+                        % Get the indexes associated with the body
+                        q_start = BIdx1(i);
+                        q_end   = BIdx2(i);
+                        % Update the body data
+                        Bi.Update(q(q_start:q_end), dq(q_start:q_end), ddq(q_start:q_end), "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                                                                                      "EvaluateInertialTerms" ,  options.EvaluateInertialTerms, ...
+                                                                                                      "EvaluateExternalForces", options.EvaluateExternalForces);
+                    else
+                        Bi.Update([], [], [], "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                                         "EvaluateInertialTerms" ,  options.EvaluateInertialTerms, ...
+                                                         "EvaluateExternalForces", options.EvaluateExternalForces);
+                    end
+
+                end
+
+                B{i} = Bi;
+                J{i} = Ji;
+            end
+            for i = 1:BodyTree.MaxBodiesNumber
+                obj.Bodies{i} = B{i};
+                obj.Joints{i} = J{i};
+                if mod(i, 2) == 0
+                    obj.BodiesInternal{i} = B{i};
+                else
+                    obj.BodiesInternal{i} = J{i};
+                end
+            end
+        end
+
+      
         function tau = InverseDynamics(obj, q, dq, ddq, options)
             % Evaluate the inverse dynamics using the Generalized Inverse Dynamics (GID) algorithm.
             %
@@ -396,6 +428,44 @@ classdef BodyTree < handle
         end
 
         
+        function [Mq, tau] = ParUnifiedInverseDynamics(obj, q, dq, ddq, options)
+            % Evaluate the unified inverse dynamics using the Generalized Inverse Dynamics (GID) algorithm.
+            %
+            %Args:
+                %    q   ([double], [sym]): Configuration variables
+                %    dq  ([double], [sym]): First-order time derivative of configuration variables
+                %    ddq ([double], [sym]): Second-order time derivative of configuration variables
+
+            arguments (Input)
+                obj (1, 1) BodyTree
+                q   (:, 1)
+                dq  (:, 1)
+                ddq (:, 1)
+                options.EvaluateKinematicTerms (1, 1) logical  = true
+                options.EvaluateInertialTerms  (1, 1) logical  = true
+                options.EvaluateExternalForces (1, 1) logical  = true
+            end
+            
+            % Update the tree
+            obj = obj.ParTreeUpdate(q, dq, ddq, ...
+                                    "EvaluateKinematicTerms", options.EvaluateKinematicTerms, ...
+                                    "EvaluateInertialTerms",  options.EvaluateInertialTerms, ...
+                                    "EvaluateExternalForces", options.EvaluateExternalForces);
+            % Run the GID algorithm,  q is only passed to
+            % retreive its type.
+            [Mq, tau] = obj.UnifiedKane(obj.g, q);
+
+            Mq = 1/2*(Mq + Mq');
+            
+            % Add the other external forces, i.e., damping and elastic force, if requested.
+            if options.EvaluateExternalForces == true
+                tau = tau ...
+                    + obj.K(q, "EvaluateKinematicTerms", false, "EvaluateInertialTerms", false) ...
+                    + obj.D(q, dq, "EvaluateKinematicTerms", false, "EvaluateInertialTerms", false);
+            end
+            
+        end
+
         function dx = StateSpaceForwardDynamics(obj, t, x, u)
             %Evaluate the forward dynamics in state space form.
             %
