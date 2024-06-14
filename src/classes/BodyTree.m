@@ -152,10 +152,10 @@ classdef BodyTree < handle
             % Assign the joints and bodies
             % obj.Joints = cell(BodyTree.MaxBodiesNumber, 1);
             % obj.Bodies = cell(BodyTree.MaxBodiesNumber, 1);
-            if coder.target("MATLAB")% Augment the joints and bodies
-                 Joints = [Joints; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
-                 Bodies = [Bodies; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
-            end
+            % if coder.target("MATLAB")% Augment the joints and bodies
+            %      Joints = [Joints; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
+            %      Bodies = [Bodies; cell(obj.MaxBodiesNumber-obj.N_B, 1)];
+            % end
             obj.Joints = Joints;
             obj.Bodies = Bodies;
 
@@ -938,12 +938,20 @@ classdef BodyTree < handle
             arguments
                 obj                           (1, 1) BodyTree
                 q                             (:, 1) double = zeros(obj.n, 1)
-                options.Color                 (1, 3) double = [0 160 219]./256;
-                options.FaceAlpha             (1, 1) double = 1
-                options.LineStyle             (1, 1) = "none";% Possible values: "-" | "--" | ":" | "-." | "none"
+                options.Color                 (:, 3) double = [0 160 219]./256;
+                options.FaceAlpha             (:, 1) double = 1
+                options.LineStyle             (:, 1) string = "none";% Possible values: "-" | "--" | ":" | "-." | "none"
                 options.TransformationMatrix  (4, 4) double = zeros(4, 4)
             end
-            % p must be the output of a patch
+            % Get the size of the plotting properties
+            ColorLength     = size(options.Color, 1);
+            FaceAlphaLength = size(options.FaceAlpha, 1);
+            LineStyleLength = size(options.LineStyle, 1);
+            
+            % Utility function to circullary wrap vectors indexes during iteration
+            wrapN = @(i, N) (1 + mod(i-1, N));
+            
+
             % Update the status of the tree
             obj.TreeUpdate(q, zeros(obj.n, 1), zeros(obj.n, 1));
 
@@ -954,6 +962,8 @@ classdef BodyTree < handle
                 T0 = options.TransformationMatrix;
             end
             
+            % Counter for the properties
+            j     = 1;
             for i = 1:obj.N_B
                 % Update the transformation matrix using the joint data
                 T0 = T0*obj.Joints{i}.T_;
@@ -968,10 +978,19 @@ classdef BodyTree < handle
                         q_start = obj.BodyConfigurationIndexes(i, 1);
                         q_end   = obj.BodyConfigurationIndexes(i, 2);
                         % Update the body data
-                        obj.Bodies{i}.plot(q(q_start:q_end), "BaseTransformation", T0, "Color", options.Color, "FaceAlpha", options.FaceAlpha, "LineStyle", options.LineStyle);
+                        obj.Bodies{i}.plot(q(q_start:q_end), "BaseTransformation", T0, ...
+                                                             "Color", options.Color(wrapN(j, ColorLength), 1:3), ...
+                                                             "FaceAlpha", options.FaceAlpha(wrapN(j, FaceAlphaLength)), ...
+                                                             "LineStyle", options.LineStyle(wrapN(j, LineStyleLength)));
                     else
-                        obj.Bodies{i}.plot("BaseTransformation", T0, "Color", options.Color, "FaceAlpha", options.FaceAlpha, "LineStyle", options.LineStyle);
+                        obj.Bodies{i}.plot("BaseTransformation", T0, ...
+                                           "Color", options.Color(wrapN(j, ColorLength), 1:3), ...
+                                           "FaceAlpha", options.FaceAlpha(wrapN(j, FaceAlphaLength)), ...
+                                           "LineStyle", options.LineStyle(wrapN(j, LineStyleLength)));
                     end
+
+                    % Update the counter for the properties
+                    j = j + 1;
                 end
                 % Update the transformation matrix by accounting for the transform of the body
                 T0 = T0*TB;
