@@ -29,6 +29,15 @@ classdef RotationalJoint < Joint
         % Overload the methods that describe the joint motion
         % Transformation from base to body tip
         function T_ = T(obj, q)
+            arguments (Input)
+                obj (1, 1) RotationalJoint
+                q   (1, 1) = 0
+            end
+
+            arguments (Output)
+                T_ (4, 4)
+            end
+
             alpha   = obj.Parameters(1);
             a       = obj.Parameters(2);
             d       = obj.Parameters(3);
@@ -44,19 +53,51 @@ classdef RotationalJoint < Joint
         end
         % Relative velocity of the body tip
         function v_rel_ = v_rel(obj, q, dq)
+            arguments (Input)
+                obj (1, 1) RotationalJoint
+                q   (1, 1) = 0
+                dq  (1, 1) = 0
+            end
+
+            arguments (Output)
+                v_rel_ (3, 1)
+            end
+
             a       = obj.Parameters(2);
             theta   = obj.Parameters(4) + q;
             dtheta  = dq;
             v_rel_ = [-a*dtheta*sin(theta);
                        a*dtheta*cos(theta);
                                          0];
+
         end
         % Relative angular velocity
-        function omega_rel_ = omega_rel(~, ~, dq)
+        function omega_rel_ = omega_rel(obj, q, dq)
+            arguments (Input)
+                obj (1, 1) RotationalJoint
+                q   (1, 1) = 0
+                dq  (1, 1) = 0
+            end
+
+            arguments (Output)
+                omega_rel_ (3, 1)
+            end
+
             omega_rel_ = [0; 0; dq];
         end
         % Relative linear acceleration of the tip 
         function a_rel_ = a_rel(obj, q, dq, ddq)
+            arguments (Input)
+                obj (1, 1) RotationalJoint
+                q   (1, 1) = 0
+                dq  (1, 1) = 0
+                ddq (1, 1) = 0
+            end
+
+            arguments (Output)
+                a_rel_ (3, 1)
+            end
+
             a       = obj.Parameters(2);
             theta   = obj.Parameters(4) + q;
             dtheta  = dq;
@@ -66,11 +107,31 @@ classdef RotationalJoint < Joint
                                                                    0];
         end
         % Relative angular acceleration
-        function domega_rel_ = domega_rel(~, ~, ~, ddq)
+        function domega_rel_ = domega_rel(obj, q, dq, ddq)
+            arguments (Input)
+                obj (1, 1) RotationalJoint
+                q   (1, 1) = 0
+                dq  (1, 1) = 0
+                ddq (1, 1) = 0
+            end
+
+            arguments (Output)
+                domega_rel_ (3, 1)
+            end
+
             domega_rel_ = [0; 0; ddq];
         end
         % Jacobian of the linear velocity of the tip with respect to q in the tip frame
-        function v_par_ = v_par(obj, ~)
+        function v_par_ = v_par(obj, q)
+            arguments (Input)
+                obj (1, 1) RotationalJoint
+                q   (1, 1) = 0
+            end
+
+            arguments (Output)
+                v_par_ (3, 1)
+            end
+
             alpha   = obj.Parameters(1);
             a       = obj.Parameters(2);
             v_par_ = [           0;
@@ -78,7 +139,16 @@ classdef RotationalJoint < Joint
                      -a*sin(alpha)];
         end
         % Jacobian of the angular velocity with respect to q in the tip frame
-        function omega_par_ = omega_par(obj, ~)
+        function omega_par_ = omega_par(obj, q)
+            arguments (Input)
+                obj (1, 1) RotationalJoint
+                q   (1, 1) = 0
+            end
+
+            arguments (Output)
+                omega_par_ (3, 1)
+            end
+
             alpha       = obj.Parameters(1);
             omega_par_  = [0; sin(alpha); cos(alpha)];
         end

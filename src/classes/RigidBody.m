@@ -27,6 +27,11 @@ classdef RigidBody < Body
                 Parameters = Parameters';
             end
             obj.Parameters  = Parameters;
+
+            % Set the status of body parameters becuase the update method is not called on rigid bodies
+            obj.p_com_ = obj.p_com();
+            obj.I_     = obj.I();
+            obj.m_     = obj.m();
         end
 
         %% Overload the methods required to describe the motion of the body

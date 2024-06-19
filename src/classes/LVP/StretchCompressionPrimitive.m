@@ -78,7 +78,7 @@ classdef StretchCompressionPrimitive < LVPPrimitive & BackbonePrimitive
             
             %% Evaluate the primitive
             % Get the elongation strain of the backbone, the strain is already updated by the LVPBody
-            xiL               = abs(Backbone.Strain(6, 1:nX));%abs(Backbone.Strain(6, 1:nX));
+            xiL               = (Backbone.Strain(6, 1:nX));%abs(Backbone.Strain(6, 1:nX));
             % Compute the inverse square root of the elongation strain at x
             xiL12             = xiL.^(-1/2);
             % Evaluate the primitive
@@ -121,7 +121,7 @@ classdef StretchCompressionPrimitive < LVPPrimitive & BackbonePrimitive
             xiL32Strain_ds  = (-1/2)*xiL32.*Backbone.Strain_ds(6, 1:nX);
             Jfx_ref(3, 1:nX) = xiL32Strain_ds.*x(1, 1:nX);
             Jfx_ref(6, 1:nX) = xiL32Strain_ds.*x(2, 1:nX);
-            Jfx_ref(9, 1:nX) = xiL;
+            Jfx_ref(9, 1:nX) = xiL - 1;
             
             %% Evaluate the Jacobian of the primitive w.r.t. q
             [JElongation, JElongationStrain]    = Backbone.ElongationJacobian(obj);
