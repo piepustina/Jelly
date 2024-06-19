@@ -532,7 +532,7 @@ classdef LVPBackbone < Body
                         continue;
                     end
                     % Check for the primitives that modify the strain
-                    if obj.PrimitiveModifiesBackbone(i)
+                    if isa(obj.Primitives{i}, "BackbonePrimitive")
                         [Phi(1:6, obj.QIdx(i, 1):obj.QIdx(i, 2), :), dPhi(1:6, obj.QIdx(i, 1):obj.QIdx(i, 2), :)] = obj.Primitives{i}.StrainBasis(s);
                     end
                 end
