@@ -295,7 +295,7 @@ classdef LVPBackbone < Body
                     if isa(Primitives{i}, "BackbonePrimitive")
                         obj.PrimitiveModifiesBackbone(i) = true;
                     end
-                    % Assign the starting and end index for the configurationv vector
+                    % Assign the starting and end index for the configuration vector
                     obj.QIdx(i, 1:2) = [qStart, qStart + Primitives{i}.n - 1];
                     qStart           = obj.QIdx(i, 2) + 1;
                 end

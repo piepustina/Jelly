@@ -948,12 +948,13 @@ classdef LVPBody < Body
             JJq         = zeros(9, obj.n, Nx, "like", x);% Jacobian of the primitive Jacobian w.r.t. x_ref w.r.t. q
             I3          = repmat(eye(3, "like", x), 1, 1, Nx);
 
-            % Create a configuration vector for the backbone that is progressively update as the primitives are applied.
+            % Create a configuration vector for the backbone that is progressively updated as the primitives are applied.
             % This way the backbone and the overall body keep a consistent status over the computations.
             qProgressive    = zeros(obj.n, 1, "like", q);
             dqProgressive   = zeros(obj.n, 1, "like", q);
             ddqProgressive  = zeros(obj.n, 1, "like", q);
             
+
             % Update the kinematics by applying progressively the primitives to the body
             for i = 1:obj.MaxPrimitivesNumber
                 if i <= obj.NPrimitives
@@ -982,27 +983,42 @@ classdef LVPBody < Body
                     [xq, dxq, ddxq, JfxqPrimitive_vec, Jfxx_vec, Jfxx_ref_vec, JJfx_q_vec, JJfx_ref_x_vec, JJfx_ref_q_vec] = obj.Primitives{i}.Update(obj.Backbone, qPrimitive, dqPrimitive, ddqPrimitive, xq, dxq, ddxq);
 
                     
-                    % Convert the Jacobians to 3D tensors
-                    Jfxq            = reshape(JfxqPrimitive_vec, 3, obj.n, Nx); 
-                    Jfxx            = reshape(Jfxx_vec, 3, 3, Nx);
-                    Jfxx_ref        = reshape(Jfxx_ref_vec, 3, 3, Nx);
-                    % Jdfxx           = reshape(Jdfxx_vec, 3, 3, Nx);
-                    % Jdfxx_ref       = reshape(Jdfxx_ref_vec, 3, 3, Nx);
-                    % Jdfxdx          = reshape(Jdfxdx_vec, 3, 3, Nx);
-                    JJfx_q          = reshape(JJfx_q_vec, 9, obj.n, Nx);
-                    JJfx_ref_x      = reshape(JJfx_ref_x_vec, 9, 3, Nx);
-                    JJfx_ref_q      = reshape(JJfx_ref_q_vec, 9, obj.n, Nx) + pagemtimes(JJfx_ref_x, Jq);
-                    % Update the Jacobian w.r.t. q
+                    % Convert the Jacobians to 3D tensors and assign only the right configuration variables
+                    Jfxx                        = reshape(Jfxx_vec, 3, 3, Nx);
+                    Jfxx_ref                    = reshape(Jfxx_ref_vec, 3, 3, Nx);
+                    JJfx_ref_x                  = reshape(JJfx_ref_x_vec, 9, 3, Nx);
+                    if obj.PrimitiveUsesBackbone(i) == false
+                        
+                        Jfxq                        = zeros(3, obj.n, Nx);
+                        Jfxq(1:3, qIdx, 1:Nx)       = reshape(JfxqPrimitive_vec, 3, [], Nx);
+                        JJfx_q                      = zeros(9, obj.n, Nx);
+                        JJfx_q(1:9, qIdx, 1:Nx)     = reshape(JJfx_q_vec, 9, [], Nx);
+                        JJfx_ref_q                  = zeros(9, obj.n, Nx);
+                        JJfx_ref_q(1:9, qIdx, 1:Nx) = reshape(JJfx_ref_q_vec, 9, [], Nx);
+                        JJfx_ref_q                  = JJfx_ref_q + pagemtimes(JJfx_ref_x, Jq);
+                    else
+                        Jfxq            = reshape(JfxqPrimitive_vec, 3, obj.n, Nx); 
+                        JJfx_q          = reshape(JJfx_q_vec, 9, obj.n, Nx);
+                        JJfx_ref_q      = reshape(JJfx_ref_q_vec, 9, obj.n, Nx) + pagemtimes(JJfx_ref_x, Jq);
+                    end
+                    
+                    % OLD (not correct implementation)
+                    %Jfxq            = reshape(JfxqPrimitive_vec, 3, obj.n, Nx); 
+                    %Jfxx            = reshape(Jfxx_vec, 3, 3, Nx);
+                    %fxx_ref        = reshape(Jfxx_ref_vec, 3, 3, Nx);
+                    %JJfx_q          = reshape(JJfx_q_vec, 9, obj.n, Nx);
+                    %JJfx_ref_x      = reshape(JJfx_ref_x_vec, 9, 3, Nx);
+                    %JJfx_ref_q      = reshape(JJfx_ref_q_vec, 9, obj.n, Nx) + pagemtimes(JJfx_ref_x, Jq);
+                    
+                    % Update the Jacobians
                     if i == 1
                         JJq     = JJfx_ref_q + JJfx_q;
                         Jq      = Jfxq;
                         Jx_ref  = Jfxx_ref + Jfxx;
-                        % Jdx_ref = Jdfxx_ref + Jdfxx;
                     else
                         JJq     = JJfx_ref_q + ...
                                 + pagemtimes(pagemkron(I3, Jfxx), JJq) ...
                                 + pagemtimes(pagemkron(pagetranspose(Jx_ref), I3), JJfx_q);
-                        % Jdx_ref = Jdfxx_ref + pagemtimes(Jdfxx, Jx_ref) + pagemtimes(Jdfxdx, Jdx_ref);
                         Jq      = Jfxq + pagemtimes(Jfxx, Jq);
                         Jx_ref  = Jfxx_ref + pagemtimes(Jfxx, Jx_ref);
                     end
