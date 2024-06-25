@@ -70,7 +70,7 @@ classdef SourcePrimitive < LVPPrimitive
             x2              = x(2, :);
             x3              = x(3, :);
             r_rest          = sqrt(x1.^2 + x2.^2);
-            r               = sqrt(mc + x1.^2 + x2.^2);
+            r               = real(sqrt(mc + x1.^2 + x2.^2));
             fx              = [(r./r_rest).*x1; (r./r_rest).*x2; x3];
 
 

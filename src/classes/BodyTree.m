@@ -39,7 +39,7 @@ classdef BodyTree < handle
         % vector for each body
         BodyConfigurationIndexes;
         % Matrix that stores the start and end indexes of the configuration
-        % vector for each joint
+        % vector for each jointp
         JointConfigurationIndexes;
     end
 
@@ -680,16 +680,23 @@ classdef BodyTree < handle
             obj.g = g_;
         end
         
-        function [q_eq, f_val] = EquilibriumConfiguration(obj, q0, tau)
+        function [q_eq, f_val] = EquilibriumConfiguration(obj, q0, tau, options)
             %Find an equilibrium configuration by solving numerically the equilibrium equations.
             %
             %Args:
                 %    q0  ([double]): Initial guess for the equlibrium
                 %    tau ([double]): Generalized actuation force
-
-            % options = optimoptions('fmincon', 'FunctionTolerance', 1e-4);
-            % q_eq = fsolve(@(q) obj.EquilibriumEquation(q, tau), q0, options);
-            [q_eq, f_val] = fsolve(@(q) obj.EquilibriumEquation(q, tau), q0);
+            arguments
+                obj (1, 1) BodyTree
+                q0  (:, 1) double
+                tau (:, 1) double
+                options.FunctionTolerance   (1, 1) double = 1e-6
+                options.StepTolerance       (1, 1) double = 1e-6
+            end
+            opt_options = optimoptions('fsolve', ...
+                                       'FunctionTolerance', options.FunctionTolerance, ...
+                                       'StepTolerance', options.StepTolerance);
+            [q_eq, f_val] = fsolve(@(q) obj.EquilibriumEquation(q, tau), q0, opt_options);
         end
         
 

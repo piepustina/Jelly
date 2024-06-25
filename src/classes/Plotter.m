@@ -49,6 +49,25 @@ classdef Plotter < handle
             end
             obj.Colors = colors;
         end
+
+        function y = formatdata(obj, x)
+            % Function that formats a given data to be used by the plot function. 
+            % In particular, the dimension of x is reduced to the minimum one and organized in columns
+            arguments (Input)
+                obj (1, 1) Plotter
+                x double
+            end
+            
+            % Squeeze the input and assign it to y
+            y = squeeze(x);
+
+            [s1, s2] = size(y);
+            if s1 > s2
+                y = y';
+            end
+
+
+        end
         
         %Custom plot function
         %function plot(obj, varargin)
@@ -132,6 +151,7 @@ classdef Plotter < handle
            %Set the font of the axes
            ax = gca();
            ax.FontSize = options.AxesFontSize;
+           ax.TickLabelInterpreter = options.Interpreter;
 
            %Set the x- and y-ticks
            if ~isempty(options.XTicks)
