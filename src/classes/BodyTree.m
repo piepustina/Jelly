@@ -1121,7 +1121,18 @@ classdef BodyTree < handle
             % By default the actuation matrix is the identity
             A = eye(obj.n);
         end
-
+        
+        function y = ActuationCoordinate(obj, q)
+            arguments (Input)
+                obj (1, 1) BodyTree
+                q   (:, 1) double
+            end
+            arguments (Output)
+                y   (:, 1) double
+            end
+            % By default the actuation coordinates are set to the configurationv variables.
+            y = q;
+        end
         % Getter methods.
         
         

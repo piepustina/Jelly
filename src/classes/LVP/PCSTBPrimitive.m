@@ -26,8 +26,8 @@ classdef PCSTBPrimitive < STBPrimitive
                 x3  (:, 1) double
             end
             arguments (Output)
-                P   (5, :)
-                dP  (5, :)
+                P   (5, :, :)
+                dP  (5, :, :)
             end
             
 
@@ -43,7 +43,7 @@ classdef PCSTBPrimitive < STBPrimitive
             %    P(1, 1)         = 1/obj.BodyRestLength;
             %    P(2, 2)         = -1/obj.BodyRestLength;
             %end
-            KappaIdx        = x3 ~= 0 & x3 ~= obj.BodyRestLength;
+            KappaIdx                  = x3 ~= 0 & x3 ~= obj.BodyRestLength;
             P(1, 1, KappaIdx)         = 1/obj.BodyRestLength;
             P(2, 2, KappaIdx)         = -1/obj.BodyRestLength;
             
