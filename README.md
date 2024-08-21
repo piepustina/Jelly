@@ -8,4 +8,4 @@ Read the <a href="https://piepustina.github.io/Jelly/index.html" target="_blank"
 
 
 ## References
-[^1]: P. Pustina, C. Della Santina, A. De Luca, Unified Inverse Dynamics of Modular Serial Mechanical Systems with Application to Soft Robotics, in IEEE Trans. on Robotics, under review.
+[^1]: P. Pustina, C. Della Santina, A. De Luca, Recursive Model-agnostic Inverse Dynamics of Serial Soft-Rigid Robots, under review, <a href="https://arxiv.org/abs/2402.07037" target="_blank">preprint</a> .
