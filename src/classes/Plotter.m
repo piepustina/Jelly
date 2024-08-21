@@ -69,8 +69,135 @@ classdef Plotter < handle
 
         end
         
+        %Custom fill function
+        function fill(obj, XData, YData, options)
+            arguments (Input)
+               obj (1, 1) Plotter
+               XData = []
+               YData = []
+               options.LineSpec = '-'
+               options.LineWidth = obj.LineWidth
+               options.FaceColor = ''
+               options.EdgeColor = ''
+               options.MarkerSize = obj.MarkerSize
+               options.HandleVisibility (:, 1) = obj.HandleVisibility
+               options.FontSize = obj.FontSize
+               options.Interpreter = obj.Interpreter
+               options.XLabel = obj.XLabel
+               options.YLabel = obj.YLabel
+               options.XTicks = []
+               options.YTicks = []
+               options.XLim = []
+               options.YLim = []
+               options.Hold = obj.Hold
+               options.Box = obj.Box
+               options.Grid = obj.Grid
+               options.PBaspect = obj.PBaspect
+               options.DisplayName = ''
+               options.Legend = 'on'
+               options.LegendLabels = {}
+               options.LegendOrientation = 'horizontal'
+               options.LegendLocation = obj.LegendLocation
+               options.LegendColumns = obj.LegendColumns
+               options.YScale = obj.YScale
+               options.XScale = obj.XScale
+               options.Drawnow = obj.DrawNow
+               options.LegendItemTokenSize = obj.LegendItemTokenSize
+               options.AxesFontSize = obj.AxesFontSize
+               options.FaceAlpha  = 1;
+               options.LineStyle  = "none";
+            end
+
+          
+           if ~isempty(XData) && ~isempty(YData)
+               pl = fill(XData, YData, options.LineSpec, 'LineWidth', options.LineWidth, 'MarkerSize', options.MarkerSize, 'FaceAlpha', options.FaceAlpha, "LineStyle", options.LineStyle);
+               set(gca, 'XScale', options.XScale);
+               set(gca, 'YScale', options.YScale);
+           end
+           % Set the diplayname
+           DisplayNames = options.DisplayName;
+           if ~iscell(DisplayNames)
+               DisplayNames = {DisplayNames};
+           end
+           [s1, ~] = size(DisplayNames);
+           if s1 == 1%Enforce a column cell array
+                DisplayNames = DisplayNames';
+           end
+           if exist("pl", "var")
+                set(pl, {'DisplayName'}, DisplayNames);
+           end
+           % Set the handle visibility
+           HandleVisibilities = options.HandleVisibility;
+           if ~iscell(HandleVisibilities)
+               HandleVisibilities = {HandleVisibilities};
+           end
+           [s1, ~] = size(HandleVisibilities);
+           if s1 == 1%Enforce a column cell array
+                HandleVisibilities = HandleVisibilities';
+           end
+           if exist("pl", "var")
+                set(pl, {'HandleVisibility'}, HandleVisibilities);
+           end
+           %
+           if ~isempty(char(options.FaceColor))
+                pl.FaceColor = options.FaceColor;
+           else
+                colororder(gca(), obj.Colors);% If no color is specified use the color order
+           end
+
+           if ~isempty(char(options.EdgeColor))
+                pl.EdgeColor = options.EdgeColor;
+           else
+                colororder(gca(), obj.Colors);% If no color is specified use the color order
+           end
+
+           %Set the font of the axes
+           ax = gca();
+           ax.FontSize = options.AxesFontSize;
+           ax.TickLabelInterpreter = options.Interpreter;
+
+           %Set the x- and y-ticks
+           if ~isempty(options.XTicks)
+               xticks(options.XTicks);
+           end
+           if ~isempty(options.YTicks)
+               yticks(options.YTicks);
+           end
+
+           %Set the x- and y-lim
+           if ~isempty(options.XLim)
+               xlim(options.XLim);
+           end
+           if ~isempty(options.YLim)
+               ylim(options.YLim);
+           end
+
+           %Make the plot
+           xlabel(options.XLabel, 'Interpreter', options.Interpreter, 'FontSize', options.FontSize);
+           ylabel(options.YLabel, 'Interpreter', options.Interpreter, 'FontSize', options.FontSize);
+           pbaspect(options.PBaspect);
+           grid(options.Grid);
+           hold(options.Hold);
+           box(options.Box);
+
+           
+           if strcmp(options.Legend, 'on')
+                lg = legend(options.LegendLabels, ...
+                        'Interpreter', options.Interpreter, ...
+                        'FontSize', options.FontSize, ...
+                        'Orientation', options.LegendOrientation, ...
+                        'Location', options.LegendLocation, ...
+                        'NumColumns', options.LegendColumns);
+                lg.ItemTokenSize = options.LegendItemTokenSize;
+           end
+
+           if options.Drawnow
+               drawnow;
+           end
+        end
+
+
         %Custom plot function
-        %function plot(obj, varargin)
         function plot(obj, XData, YData, options)
             arguments (Input)
                obj (1, 1) Plotter
@@ -106,10 +233,10 @@ classdef Plotter < handle
                options.LegendItemTokenSize = obj.LegendItemTokenSize
                options.AxesFontSize = obj.AxesFontSize
             end
-           
 
+          
            if ~isempty(XData) && ~isempty(YData)
-               if options.LogScale
+                if options.LogScale
                    pl = loglog(XData, YData, options.LineSpec, 'LineWidth', options.LineWidth, 'MarkerSize', options.MarkerSize);
                else
                    pl = plot(XData, YData, options.LineSpec, 'LineWidth', options.LineWidth, 'MarkerSize', options.MarkerSize);
@@ -192,132 +319,6 @@ classdef Plotter < handle
                drawnow;
            end
         end
-
-
-        % function plot(obj, varargin)
-        % 
-        %    % Parse the input
-        %    p = inputParser;
-        %    addOptional(p,  'XData', []);
-        %    addOptional(p,  'YData', []);
-        %    addParameter(p, 'LineSpec', '-');
-        %    addParameter(p, 'LineWidth', obj.LineWidth);
-        %    addParameter(p, 'Color', '');
-        %    addParameter(p, 'MarkerSize', obj.MarkerSize);
-        %    addParameter(p, 'HandleVisibility', obj.HandleVisibility);
-        %    addParameter(p, 'FontSize', obj.FontSize);
-        %    addParameter(p, 'Interpreter', obj.Interpreter);
-        %    addParameter(p, 'XLabel', obj.XLabel);
-        %    addParameter(p, 'YLabel', obj.YLabel);
-        %    addParameter(p, 'XTicks', []);
-        %    addParameter(p, 'YTicks', []);
-        %    addParameter(p, 'XLim', []);
-        %    addParameter(p, 'YLim', []);
-        %    addParameter(p, 'Hold', obj.Hold);
-        %    addParameter(p, 'Box', obj.Box);
-        %    addParameter(p, 'Grid', obj.Grid);
-        %    addParameter(p, 'PBaspect', obj.PBaspect);
-        %    addParameter(p, 'DisplayName', '');
-        %    addParameter(p, 'Legend', 'on');
-        %    addParameter(p, 'LegendLabels', {});
-        %    addParameter(p, 'LegendOrientation', 'horizontal');
-        %    addParameter(p, 'LegendLocation', obj.LegendLocation);
-        %    addParameter(p, 'LegendColumns', obj.LegendColumns);
-        %    addParameter(p, 'LogScale', obj.LogScale);
-        %    addParameter(p, 'YScale', obj.YScale);
-        %    addParameter(p, 'XScale', obj.XScale);
-        %    addParameter(p, 'Drawnow', obj.DrawNow);
-        %    addParameter(p, 'LegendItemTokenSize', obj.LegendItemTokenSize);
-        %    addParameter(p, 'AxesFontSize', obj.AxesFontSize);
-        % 
-        %    parse(p, varargin{:});
-        % 
-        %    X_data = p.Results.XData;
-        %    Y_data = p.Results.YData;
-        % 
-        %    if ~isempty(X_data) && ~isempty(Y_data)
-        %        if p.Results.LogScale
-        %            pl = loglog(X_data, Y_data, p.Results.LineSpec, 'LineWidth', p.Results.LineWidth, 'MarkerSize', p.Results.MarkerSize);
-        %        else
-        %            pl = plot(X_data, Y_data, p.Results.LineSpec, 'LineWidth', p.Results.LineWidth, 'MarkerSize', p.Results.MarkerSize);
-        %            set(gca, 'XScale', p.Results.XScale);
-        %            set(gca, 'YScale', p.Results.YScale);
-        %        end
-        %    end
-        %    % Set the diplayname
-        %    DisplayNames = p.Results.DisplayName;
-        %    if ~iscell(DisplayNames)
-        %        DisplayNames = {DisplayNames};
-        %    end
-        %    [s1, ~] = size(DisplayNames);
-        %    if s1 == 1%Enforce a column cell array
-        %         DisplayNames = DisplayNames';
-        %    end
-        %    if exist("pl", "var")
-        %         set(pl, {'DisplayName'}, DisplayNames);
-        %    end
-        %    % Set the handle visibility
-        %    HandleVisibilities = p.Results.HandleVisibility;
-        %    if ~iscell(HandleVisibilities)
-        %        HandleVisibilities = {HandleVisibilities};
-        %    end
-        %    [s1, ~] = size(HandleVisibilities);
-        %    if s1 == 1%Enforce a column cell array
-        %         HandleVisibilities = HandleVisibilities';
-        %    end
-        %    if exist("pl", "var")
-        %         set(pl, {'HandleVisibility'}, HandleVisibilities);
-        %    end
-        %    %
-        %    if ~isempty(char(p.Results.Color))
-        %         pl.Color = p.Results.Color;
-        %    else
-        %         colororder(gca(), obj.Colors);% If no color is specified use the color order
-        %    end
-        % 
-        %    %Set the font of the axes
-        %    ax = gca();
-        %    ax.FontSize = p.Results.AxesFontSize;
-        % 
-        %    %Set the x- and y-ticks
-        %    if ~isempty(p.Results.XTicks)
-        %        xticks(p.Results.XTicks);
-        %    end
-        %    if ~isempty(p.Results.YTicks)
-        %        yticks(p.Results.YTicks);
-        %    end
-        % 
-        %    %Set the x- and y-lim
-        %    if ~isempty(p.Results.XLim)
-        %        xlim(p.Results.XLim);
-        %    end
-        %    if ~isempty(p.Results.YLim)
-        %        ylim(p.Results.YLim);
-        %    end
-        % 
-        %    %Make the plot
-        %    xlabel(p.Results.XLabel, 'Interpreter', p.Results.Interpreter, 'FontSize', p.Results.FontSize);
-        %    ylabel(p.Results.YLabel, 'Interpreter', p.Results.Interpreter, 'FontSize', p.Results.FontSize);
-        %    pbaspect(p.Results.PBaspect);
-        %    grid(p.Results.Grid);
-        %    hold(p.Results.Hold);
-        %    box(p.Results.Box);
-        % 
-        % 
-        %    if strcmp(p.Results.Legend, 'on')
-        %         lg = legend(p.Results.LegendLabels, ...
-        %                 'Interpreter', p.Results.Interpreter, ...
-        %                 'FontSize', p.Results.FontSize, ...
-        %                 'Orientation', p.Results.LegendOrientation, ...
-        %                 'Location', p.Results.LegendLocation, ...
-        %                 'NumColumns', p.Results.LegendColumns);
-        %         lg.ItemTokenSize = p.Results.LegendItemTokenSize;
-        %    end
-        % 
-        %    if p.Results.Drawnow
-        %        drawnow;
-        %    end
-        % end
 
         %Function to save the plots
         function save(~, figs, path, varargin)
